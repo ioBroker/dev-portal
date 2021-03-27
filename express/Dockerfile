@@ -5,8 +5,6 @@ WORKDIR /app
 
 COPY frontend/ ./
 
-RUN ls -laR
-
 RUN npm ci \
     && npm run build
 
@@ -16,8 +14,6 @@ RUN mkdir -p /app
 WORKDIR /app
 
 COPY backend/ ./
-
-RUN ls -laR
 
 RUN npm ci \
     && npm run build
