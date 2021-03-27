@@ -110,18 +110,25 @@ export default function App() {
 
 	const handleLogin = () => {
 		const url = encodeURIComponent(window.location.pathname);
-		window.location.href = `/login?redirect=${url}`;
+		if (window.location.port === "3000") {
+			alert(
+				"Login is not supported in local development mode, please use docker-compose to test login",
+			);
+		} else {
+			window.location.href = `/login?redirect=${url}`;
+		}
 	};
 
 	const handleLogout = () => {
-		removeCookie(gitHubTokenCookie);
-		setUser(undefined);
 		setHasLogin(true);
+		removeCookie(gitHubTokenCookie);
+		delete cookies[gitHubTokenCookie];
+		setUser(undefined);
 	};
 
-	const ghToken = cookies[gitHubTokenCookie];
 	useEffect(() => {
-		if (ghToken && !user) {
+		const ghToken = cookies[gitHubTokenCookie];
+		if (ghToken && !user && !hasLogin) {
 			const fetchUser = async () => {
 				try {
 					const requestWithAuth = request.defaults({
@@ -144,7 +151,7 @@ export default function App() {
 		} else if (!user) {
 			setHasLogin(true);
 		}
-	}, [ghToken, user, removeCookie]);
+	}, [cookies, user, hasLogin, removeCookie]);
 
 	const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
