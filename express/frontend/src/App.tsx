@@ -14,11 +14,13 @@ import GitHubIcon from "@material-ui/icons/GitHub";
 import NotificationsIcon from "@material-ui/icons/Notifications";
 import clsx from "clsx";
 import React, { useEffect } from "react";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import { request } from "@octokit/request";
 import Tooltip from "@material-ui/core/Tooltip";
 import UserMenu, { GitHubUser } from "./UserMenu";
+import Container from "@material-ui/core/Container";
+import Dashboard from "./Dashboard";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";
@@ -81,6 +83,16 @@ const useStyles = makeStyles((theme) => ({
 			width: theme.spacing(9),
 		},
 	},
+	appBarSpacer: theme.mixins.toolbar,
+	content: {
+		flexGrow: 1,
+		height: "100vh",
+		overflow: "auto",
+	},
+	container: {
+		paddingTop: theme.spacing(4),
+		paddingBottom: theme.spacing(4),
+	},
 	paper: {
 		padding: theme.spacing(2),
 		display: "flex",
@@ -91,6 +103,17 @@ const useStyles = makeStyles((theme) => ({
 		height: 240,
 	},
 }));
+
+export function handleLogin() {
+	const url = encodeURIComponent(window.location.pathname);
+	if (window.location.port === "3000") {
+		alert(
+			"Login is not supported in local development mode, please use docker-compose to test login",
+		);
+	} else {
+		window.location.href = `/login?redirect=${url}`;
+	}
+}
 
 export default function App() {
 	const classes = useStyles();
@@ -106,17 +129,6 @@ export default function App() {
 
 	const handleDrawerClose = () => {
 		setOpen(false);
-	};
-
-	const handleLogin = () => {
-		const url = encodeURIComponent(window.location.pathname);
-		if (window.location.port === "3000") {
-			alert(
-				"Login is not supported in local development mode, please use docker-compose to test login",
-			);
-		} else {
-			window.location.href = `/login?redirect=${url}`;
-		}
 	};
 
 	const handleLogout = () => {
@@ -226,6 +238,23 @@ export default function App() {
 					</div>
 					<Divider />
 				</Drawer>
+				<main className={classes.content}>
+					<div className={classes.appBarSpacer} />
+					<Container maxWidth="lg" className={classes.container}>
+						<Switch>
+							{/* 
+          <Route path="/about">
+            <About />
+          </Route>
+          <Route path="/users">
+            <Users />
+          </Route>*/}
+							<Route path="/">
+								<Dashboard user={user} />
+							</Route>
+						</Switch>
+					</Container>
+				</main>
 			</div>
 		</Router>
 	);
