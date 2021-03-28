@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
@@ -6,11 +7,15 @@ import CardMedia from "@material-ui/core/CardMedia";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import React, { useEffect, useState } from "react";
-import { GitHubUser } from "./UserMenu";
 import { Link } from "react-router-dom";
 import IconButton from "@material-ui/core/IconButton";
-import { handleLogin } from "./App";
+import { handleLogin } from "../App";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import { GitHubComm, User } from "../lib/gitHub";
+import { Repository } from "../lib/ioBroker";
+import axios from "axios";
+import clsx from "clsx";
+import GitHubIcon from "@material-ui/icons/GitHub";
 
 interface CardButtonProps {
 	text?: string;
@@ -74,8 +79,17 @@ const useCardStyles = makeStyles((theme) => ({
 	cardMedia: {
 		paddingTop: "56.25%", // 16:9
 	},
+	adapterCardMedia: {
+		marginLeft: "22%",
+		marginRight: "22%",
+	},
 	cardContent: {
 		flexGrow: 1,
+	},
+	loadingProgress: {
+		marginTop: "40%",
+		marginBottom: "40%",
+		marginLeft: "25%",
 	},
 }));
 
@@ -84,15 +98,19 @@ interface DashboardCardProps {
 	img: string;
 	text: string;
 	buttons?: JSX.Element[];
+	squareImg?: boolean;
 }
 
 function DashboardCard(props: DashboardCardProps) {
-	const { title, img, text, buttons } = props;
+	const { title, img, text, buttons, squareImg } = props;
 	const classes = useCardStyles();
 	return (
 		<Card className={classes.card}>
 			<CardMedia
-				className={classes.cardMedia}
+				className={clsx(
+					classes.cardMedia,
+					squareImg && classes.adapterCardMedia,
+				)}
 				image={img}
 				title={title}
 			/>
@@ -111,6 +129,15 @@ function DashboardCard(props: DashboardCardProps) {
 	);
 }
 
+function LoadingCard() {
+	const classes = useCardStyles();
+	return (
+		<Card className={classes.card}>
+			<CircularProgress size="50%" className={classes.loadingProgress} />
+		</Card>
+	);
+}
+
 const useStyles = makeStyles((theme) => ({
 	cardGrid: {
 		marginTop: theme.spacing(1),
@@ -118,8 +145,32 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
+interface CardGridProps {
+	cards: DashboardCardProps[];
+}
+
+function CardGrid(props: CardGridProps) {
+	const { cards } = props;
+	const classes = useStyles();
+	return (
+		<Grid container spacing={4} className={classes.cardGrid}>
+			{cards.length > 0 &&
+				cards.map((card) => (
+					<Grid item key={card.title} xs={12} sm={6} md={4} lg={3}>
+						<DashboardCard {...card} />
+					</Grid>
+				))}
+			{cards.length === 0 && (
+				<Grid item xs={12} sm={6} md={4} lg={3}>
+					<LoadingCard />
+				</Grid>
+			)}
+		</Grid>
+	);
+}
+
 interface DashboardProps {
-	user?: GitHubUser;
+	user?: User;
 }
 
 export default function Dashboard(props: DashboardProps) {
@@ -160,6 +211,17 @@ export default function Dashboard(props: DashboardProps) {
 			],
 		},
 		{
+			title: "Community Initiatives",
+			img: "images/iobroker.png",
+			text: "Project management board for ioBroker Community Initiatives",
+			buttons: [
+				<CardButton
+					text="open"
+					url="https://github.com/ioBroker/Community/projects/1"
+				/>,
+			],
+		},
+		{
 			title: "Documentation",
 			img: "images/doc.jpg",
 			text:
@@ -171,12 +233,100 @@ export default function Dashboard(props: DashboardProps) {
 				/>,
 			],
 		},
+		{
+			title: "Forum",
+			img: "images/iobroker.png",
+			text:
+				"Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
+			buttons: [
+				<CardButton
+					text="Open"
+					url="https://forum.iobroker.net/category/8/entwicklung"
+				/>,
+			],
+		},
 	];
-	const [initiatives, setInitatives] = useState<DashboardCardProps[]>([]);
 	const [adapters, setAdapters] = useState<DashboardCardProps[]>([]);
 
 	useEffect(() => {
+		const loadAdapters = async (user: User) => {
+			setAdapters([]); // clear the list (and show the spinner)
+			const adapters: DashboardCardProps[] = [];
+
+			const gitHub = GitHubComm.forToken(user.token);
+			const repos = await gitHub.request("GET /users/{username}/repos", {
+				username: user.login,
+			});
+			const latest = await Repository.getLatest();
+			//console.log(repos);
+			for (const repo of repos.data.filter((r) =>
+				r.name.startsWith("ioBroker."),
+			)) {
+				try {
+					const parts = repo.name.split(".");
+					if (parts.length !== 2) {
+						continue;
+					}
+					const adapterName = parts[1];
+					let info = latest[adapterName];
+					if (repo.fork) {
+						if (
+							!info?.meta ||
+							!info.meta.includes(`/${repo.full_name}/`)
+						) {
+							// we are not the true source of this adapter
+							continue;
+						}
+					}
+					const defaultBranch = repo.default_branch || "master";
+					if (!info) {
+						try {
+							const ioPackage = await axios.get(
+								`https://raw.githubusercontent.com/${repo.full_name}/${defaultBranch}/io-package.json`,
+							);
+							info = ioPackage.data.common;
+						} catch (error) {
+							console.error(error);
+							continue;
+						}
+					}
+					//console.log(repo);
+					adapters.push({
+						title: repo.name,
+						img: info?.extIcon,
+						text: info?.desc?.en || repo.description || "",
+						squareImg: true,
+						buttons: [
+							<CardButton
+								icon={<GitHubIcon />}
+								url={repo.html_url}
+							/>,
+						],
+					});
+				} catch (error) {
+					console.error(error);
+				}
+			}
+
+			if (adapters.length === 0) {
+				adapters.push({
+					title: "No adapters found",
+					img: "images/adapter-creator.png",
+					text:
+						"You can create your first ioBroker adapter by answering questions in the Adapter Creator.",
+					buttons: [
+						<CardButton
+							text="Open Adapter Creator"
+							link="/create-adapter"
+						/>,
+					],
+				});
+			}
+			setAdapters([...adapters]);
+		};
+
 		if (user) {
+			loadAdapters(user).catch((e) => console.log(e));
 		} else {
 			const loginCard = (type: string) => ({
 				title: "Login Required",
@@ -184,7 +334,6 @@ export default function Dashboard(props: DashboardProps) {
 				text: `You must be logged in to see your ${type}.`,
 				buttons: [<CardButton text="Login" onClick={handleLogin} />],
 			});
-			setInitatives([loginCard("initiatives")]);
 			setAdapters([loginCard("adapters")]);
 		}
 	}, [user]);
@@ -192,39 +341,10 @@ export default function Dashboard(props: DashboardProps) {
 	return (
 		<>
 			<Typography variant="h5">Tools</Typography>
-
-			<Grid container spacing={4} className={classes.cardGrid}>
-				{tools.map((tool, i) => (
-					<Grid item key={i} xs={12} sm={6} md={4} lg={3}>
-						<DashboardCard {...tool} />
-					</Grid>
-				))}
-			</Grid>
+			<CardGrid cards={tools} />
 
 			<Typography variant="h5">My Adapters</Typography>
-			<Grid container spacing={4} className={classes.cardGrid}>
-				{adapters.map((adapter) => (
-					<Grid item key={adapter.title} xs={12} sm={6} md={4} lg={3}>
-						<DashboardCard {...adapter} />
-					</Grid>
-				))}
-			</Grid>
-
-			<Typography variant="h5">My Initiatives</Typography>
-			<Grid container spacing={4} className={classes.cardGrid}>
-				{initiatives.map((initiative) => (
-					<Grid
-						item
-						key={initiative.title}
-						xs={12}
-						sm={6}
-						md={4}
-						lg={3}
-					>
-						<DashboardCard {...initiative} />
-					</Grid>
-				))}
-			</Grid>
+			<CardGrid cards={adapters} />
 		</>
 	);
 }

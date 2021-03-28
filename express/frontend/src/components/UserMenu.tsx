@@ -8,12 +8,10 @@ import Paper from "@material-ui/core/Paper";
 import Popper from "@material-ui/core/Popper";
 import { makeStyles } from "@material-ui/core/styles";
 import Tooltip from "@material-ui/core/Tooltip";
-import { components } from "@octokit/openapi-types/dist-types/generated/types";
 import React from "react";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import Typography from "@material-ui/core/Typography";
-
-export type GitHubUser = components["schemas"]["public-user"];
+import { User } from "../lib/gitHub";
 
 const useStyles = makeStyles((theme) => ({
 	avatar: {
@@ -23,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface UserMenuProps {
-	user: GitHubUser;
+	user: User;
 	onLogout: () => void;
 }
 

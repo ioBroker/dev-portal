@@ -1,5 +1,4 @@
 import AppBar from "@material-ui/core/AppBar";
-import Badge from "@material-ui/core/Badge";
 import Button from "@material-ui/core/Button";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import Divider from "@material-ui/core/Divider";
@@ -11,16 +10,14 @@ import Typography from "@material-ui/core/Typography";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import MenuIcon from "@material-ui/icons/Menu";
 import GitHubIcon from "@material-ui/icons/GitHub";
-import NotificationsIcon from "@material-ui/icons/Notifications";
 import clsx from "clsx";
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { useCookies } from "react-cookie";
-import { request } from "@octokit/request";
-import Tooltip from "@material-ui/core/Tooltip";
-import UserMenu, { GitHubUser } from "./UserMenu";
+import UserMenu from "./components/UserMenu";
 import Container from "@material-ui/core/Container";
-import Dashboard from "./Dashboard";
+import Dashboard from "./components/Dashboard";
+import { GitHubComm, User } from "./lib/gitHub";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";
@@ -118,9 +115,11 @@ export function handleLogin() {
 export default function App() {
 	const classes = useStyles();
 
-	const [cookies, setCookie, removeCookie] = useCookies([gitHubTokenCookie]);
+	const [cookies /*setCookie*/, , removeCookie] = useCookies([
+		gitHubTokenCookie,
+	]);
 	const [open, setOpen] = React.useState(false);
-	const [user, setUser] = React.useState<GitHubUser | undefined>();
+	const [user, setUser] = React.useState<User | undefined>();
 	const [hasLogin, setHasLogin] = React.useState(false);
 
 	const handleDrawerOpen = () => {
@@ -143,13 +142,8 @@ export default function App() {
 		if (ghToken && !user && !hasLogin) {
 			const fetchUser = async () => {
 				try {
-					const requestWithAuth = request.defaults({
-						headers: {
-							authorization: `token ${ghToken}`,
-						},
-					});
-					const user = await requestWithAuth("GET /user");
-					setUser(user.data);
+					const gitHub = GitHubComm.forToken(ghToken as string);
+					setUser(await gitHub.getUser());
 					return;
 				} catch (e) {
 					console.error(e);
