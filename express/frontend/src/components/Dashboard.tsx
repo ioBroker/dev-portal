@@ -16,6 +16,7 @@ import { Repository } from "../lib/ioBroker";
 import axios from "axios";
 import clsx from "clsx";
 import GitHubIcon from "@material-ui/icons/GitHub";
+import Badge from "@material-ui/core/Badge";
 
 interface CardButtonProps {
 	text?: string;
@@ -298,7 +299,14 @@ export default function Dashboard(props: DashboardProps) {
 						squareImg: true,
 						buttons: [
 							<CardButton
-								icon={<GitHubIcon />}
+								icon={
+									<Badge
+										badgeContent={repo.open_issues}
+										color="secondary"
+									>
+										<GitHubIcon />
+									</Badge>
+								}
 								url={repo.html_url}
 							/>,
 						],

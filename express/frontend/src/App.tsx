@@ -195,12 +195,6 @@ export default function App() {
 						>
 							ioBroker Developer Portal
 						</Typography>
-						{/* 
-						<IconButton color="inherit">
-							<Badge badgeContent={4} color="secondary">
-								<NotificationsIcon />
-							</Badge>
-						</IconButton>*/}
 						{hasLogin && !user && (
 							<Button
 								color="inherit"
