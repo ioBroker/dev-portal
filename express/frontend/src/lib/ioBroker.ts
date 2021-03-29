@@ -42,7 +42,7 @@ export type LatestAdapters = Record<string, LatestAdapter>;
 export class Repository {
 	public static readonly getLatest = AsyncCache.of(async () => {
 		const result = await axios.get<LatestAdapters>(
-			"http://repo.iobroker.live/sources-dist-latest.json",
+			"https://repo.iobroker.live/sources-dist-latest.json",
 		);
 		return result.data;
 	});
