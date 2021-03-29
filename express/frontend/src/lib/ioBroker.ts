@@ -1,4 +1,6 @@
 import axios from "axios";
+import { GitHubComm } from "./gitHub";
+import { AsyncCache } from "./utils";
 
 export type TranslatedText = Record<string, string>;
 
@@ -37,15 +39,38 @@ export interface LatestAdapter {
 
 export type LatestAdapters = Record<string, LatestAdapter>;
 
-const awaitLatest = (async () => {
-	return await axios.get(
-		"http://repo.iobroker.live/sources-dist-latest.json",
-	);
-})();
-
 export class Repository {
-	public static async getLatest(): Promise<LatestAdapters> {
-		const result = await awaitLatest;
+	public static readonly getLatest = AsyncCache.of(async () => {
+		const result = await axios.get<LatestAdapters>(
+			"http://repo.iobroker.live/sources-dist-latest.json",
+		);
 		return result.data;
-	}
+	});
 }
+
+export const getMyAdapterRepos = async (ghToken: string) => {
+	const gitHub = GitHubComm.forToken(ghToken);
+	const repos = await gitHub.getUserRepos();
+	const latest = await Repository.getLatest();
+	//console.log(repos);
+	return repos.filter((repo) => {
+		if (!repo.name.startsWith("ioBroker.")) {
+			return false;
+		}
+
+		const parts = repo.name.split(".");
+		if (parts.length !== 2) {
+			return false;
+		}
+		const adapterName = parts[1];
+		let info = latest[adapterName];
+		if (repo.fork) {
+			if (!info?.meta || !info.meta.includes(`/${repo.full_name}/`)) {
+				// we are not the true source of this adapter
+				return false;
+			}
+		}
+
+		return true;
+	});
+};

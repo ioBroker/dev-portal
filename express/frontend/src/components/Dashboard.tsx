@@ -12,7 +12,7 @@ import IconButton from "@material-ui/core/IconButton";
 import { handleLogin } from "../App";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { GitHubComm, User } from "../lib/gitHub";
-import { Repository } from "../lib/ioBroker";
+import { getMyAdapterRepos, Repository } from "../lib/ioBroker";
 import axios from "axios";
 import clsx from "clsx";
 import GitHubIcon from "@material-ui/icons/GitHub";
@@ -254,31 +254,12 @@ export default function Dashboard(props: DashboardProps) {
 			setAdapters([]); // clear the list (and show the spinner)
 			const adapters: DashboardCardProps[] = [];
 
-			const gitHub = GitHubComm.forToken(user.token);
-			const repos = await gitHub.request("GET /users/{username}/repos", {
-				username: user.login,
-			});
+			const repos = await getMyAdapterRepos(user.token);
 			const latest = await Repository.getLatest();
 			//console.log(repos);
-			for (const repo of repos.data.filter((r) =>
-				r.name.startsWith("ioBroker."),
-			)) {
+			for (const repo of repos) {
 				try {
-					const parts = repo.name.split(".");
-					if (parts.length !== 2) {
-						continue;
-					}
-					const adapterName = parts[1];
-					let info = latest[adapterName];
-					if (repo.fork) {
-						if (
-							!info?.meta ||
-							!info.meta.includes(`/${repo.full_name}/`)
-						) {
-							// we are not the true source of this adapter
-							continue;
-						}
-					}
+					let info = latest[repo.name.split(".")[1]];
 					const defaultBranch = repo.default_branch || "master";
 					if (!info) {
 						try {
@@ -295,7 +276,10 @@ export default function Dashboard(props: DashboardProps) {
 					adapters.push({
 						title: repo.name,
 						img: info?.extIcon,
-						text: info?.desc?.en || repo.description || "",
+						text:
+							info?.desc?.en ||
+							repo.description ||
+							"No description available",
 						squareImg: true,
 						buttons: [
 							<CardButton

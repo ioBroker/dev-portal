@@ -1,6 +1,7 @@
 import { components } from "@octokit/openapi-types/dist-types/generated/types";
 import { request } from "@octokit/request";
 import { RequestInterface } from "@octokit/types";
+import { AsyncCache } from "./utils";
 
 export type User = components["schemas"]["public-user"] & {
 	token: string;
@@ -26,8 +27,16 @@ export class GitHubComm {
 		return GitHubComm.comms[token];
 	}
 
-	public async getUser(): Promise<User> {
+	public readonly getUser = AsyncCache.of(async () => {
 		const user = await this.request("GET /user");
 		return { ...user.data, token: this.token };
-	}
+	});
+
+	public readonly getUserRepos = AsyncCache.of(async () => {
+		const user = await this.getUser();
+		const repos = await this.request("GET /users/{username}/repos", {
+			username: user.login,
+		});
+		return repos.data;
+	});
 }
