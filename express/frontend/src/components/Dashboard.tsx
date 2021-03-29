@@ -7,7 +7,7 @@ import CardMedia from "@material-ui/core/CardMedia";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import IconButton from "@material-ui/core/IconButton";
 import { handleLogin } from "../App";
 import CircularProgress from "@material-ui/core/CircularProgress";
@@ -17,6 +17,7 @@ import axios from "axios";
 import clsx from "clsx";
 import GitHubIcon from "@material-ui/icons/GitHub";
 import Badge from "@material-ui/core/Badge";
+import CardActionArea from "@material-ui/core/CardActionArea";
 
 interface CardButtonProps {
 	text?: string;
@@ -97,32 +98,46 @@ const useCardStyles = makeStyles((theme) => ({
 interface DashboardCardProps {
 	title: string;
 	img: string;
+	link?: string;
+	url?: string;
 	text: string;
 	buttons?: JSX.Element[];
 	squareImg?: boolean;
 }
 
 function DashboardCard(props: DashboardCardProps) {
-	const { title, img, text, buttons, squareImg } = props;
+	const { title, img, link, url, text, buttons, squareImg } = props;
 	const classes = useCardStyles();
+	const history = useHistory();
+
+	const handleClick = () => {
+		if (link) {
+			history.push(link);
+		} else if (url) {
+			window.open(url, "_blank");
+		}
+	};
+
 	return (
 		<Card className={classes.card}>
-			<CardMedia
-				className={clsx(
-					classes.cardMedia,
-					squareImg && classes.adapterCardMedia,
-				)}
-				image={img}
-				title={title}
-			/>
-			<CardContent className={classes.cardContent}>
-				<Typography gutterBottom variant="h6" component="h2">
-					{title}
-				</Typography>
-				{text.split("\n").map((t) => (
-					<Typography key={t}>{t}</Typography>
-				))}
-			</CardContent>
+			<CardActionArea onClick={handleClick}>
+				<CardMedia
+					className={clsx(
+						classes.cardMedia,
+						squareImg && classes.adapterCardMedia,
+					)}
+					image={img}
+					title={title}
+				/>
+				<CardContent className={classes.cardContent}>
+					<Typography gutterBottom variant="h6" component="h2">
+						{title}
+					</Typography>
+					{text.split("\n").map((t) => (
+						<Typography key={t}>{t}</Typography>
+					))}
+				</CardContent>
+			</CardActionArea>
 			{buttons && buttons.length > 0 && (
 				<CardActions>{buttons.map((b) => b)}</CardActions>
 			)}
@@ -176,75 +191,51 @@ interface DashboardProps {
 
 export default function Dashboard(props: DashboardProps) {
 	const { user } = props;
-	const classes = useStyles();
 	const tools = [
 		{
 			title: "Adapter Creator",
 			img: "images/adapter-creator.png",
+			link: "/create-adapter",
 			text:
 				"Create a new ioBroker adapter by answering questions. The resulting adapter can be downloaded as a zip file or directly exported to a new GitHub repository.",
-			buttons: [<CardButton text="Open" link="/create-adapter" />],
 		},
 		{
 			title: "Adapter Check",
 			img: "images/adapter-check.png",
+			link: user && "/adapter-check",
 			text:
-				"Verify an ioBroker adapter to see if it matches the requirements to be added to the repository." +
+				"Verify your ioBroker adapters to see if it matches the requirements to be added to the repository." +
 				(user ? "" : "\nYou must be logged in to use this tool."),
-			buttons: [
-				user ? (
-					<CardButton text="Open" link="/adapter-check" />
-				) : (
-					<CardButton text="Login" onClick={handleLogin} />
-				),
-			],
+			buttons: user
+				? []
+				: [<CardButton text="Login" onClick={handleLogin} />],
 		},
 		{
 			title: "Weblate",
 			img: "images/weblate.png",
+			url: "https://weblate.iobroker.net/projects/adapters/",
 			text:
 				"Manage the translations of your adapters in all available languages.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://weblate.iobroker.net/projects/adapters/"
-				/>,
-			],
 		},
 		{
 			title: "Community Initiatives",
 			img: "images/iobroker.png",
+			url: "https://github.com/ioBroker/Community/projects/1",
 			text: "Project management board for ioBroker Community Initiatives",
-			buttons: [
-				<CardButton
-					text="open"
-					url="https://github.com/ioBroker/Community/projects/1"
-				/>,
-			],
 		},
 		{
 			title: "Documentation",
 			img: "images/doc.jpg",
+			url: "https://www.iobroker.net/#en/documentation/dev/adapterdev.md",
 			text:
 				"Read all the important information about ioBroker development.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://www.iobroker.net/#en/documentation/dev/adapterdev.md"
-				/>,
-			],
 		},
 		{
 			title: "Forum",
 			img: "images/iobroker.png",
+			url: "https://forum.iobroker.net/category/8/entwicklung",
 			text:
 				"Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://forum.iobroker.net/category/8/entwicklung"
-				/>,
-			],
 		},
 	];
 	const [adapters, setAdapters] = useState<DashboardCardProps[]>([]);
