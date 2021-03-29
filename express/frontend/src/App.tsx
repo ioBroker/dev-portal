@@ -91,9 +91,9 @@ const useStyles = makeStyles((theme) => ({
 			duration: theme.transitions.duration.leavingScreen,
 		}),
 		width: theme.spacing(7),
-		[theme.breakpoints.up("sm")]: {
-			width: theme.spacing(9),
-		},
+		/*[theme.breakpoints.up("sm")]: {
+			width: theme.spacing(7),
+		},*/
 	},
 	appBarSpacer: theme.mixins.toolbar,
 	content: {
@@ -136,7 +136,7 @@ export default function App() {
 	]);
 	const [open, setOpen] = React.useState(false);
 	const [user, setUser] = React.useState<User | undefined>();
-	const [hasLogin, setHasLogin] = React.useState(false);
+	const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>();
 
 	const handleDrawerOpen = () => {
 		setOpen(true);
@@ -147,7 +147,7 @@ export default function App() {
 	};
 
 	const handleLogout = () => {
-		setHasLogin(true);
+		setIsLoggedIn(false);
 		removeCookie(gitHubTokenCookie);
 		delete cookies[gitHubTokenCookie];
 		setUser(undefined);
@@ -155,11 +155,12 @@ export default function App() {
 
 	useEffect(() => {
 		const ghToken = cookies[gitHubTokenCookie];
-		if (ghToken && !user && !hasLogin) {
+		if (ghToken && !user && isLoggedIn === undefined) {
 			const fetchUser = async () => {
 				try {
 					const gitHub = GitHubComm.forToken(ghToken as string);
 					setUser(await gitHub.getUser());
+					setIsLoggedIn(true);
 					return;
 				} catch (e) {
 					console.error(e);
@@ -167,13 +168,14 @@ export default function App() {
 				// remove the token if we didn't get the user info
 				removeCookie(gitHubTokenCookie);
 				setUser(undefined);
-				setHasLogin(true);
+				setIsLoggedIn(false);
 			};
 			fetchUser();
 		} else if (!user) {
-			setHasLogin(true);
+			setUser(undefined);
+			setIsLoggedIn(false);
 		}
-	}, [cookies, user, hasLogin, removeCookie]);
+	}, [cookies, user, isLoggedIn, removeCookie]);
 
 	const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
@@ -210,7 +212,7 @@ export default function App() {
 							ioBroker Developer Portal
 						</Link>
 					</Typography>
-					{hasLogin && !user && (
+					{isLoggedIn === false && (
 						<Button
 							color="inherit"
 							startIcon={<GitHubIcon />}
@@ -222,71 +224,83 @@ export default function App() {
 					{user && <UserMenu user={user} onLogout={handleLogout} />}
 				</Toolbar>
 			</AppBar>
-			<Drawer
-				variant="permanent"
-				classes={{
-					paper: clsx(
-						classes.drawerPaper,
-						!open && classes.drawerPaperClose,
-					),
-				}}
-				open={open}
-			>
-				<div className={classes.toolbarIcon}>
-					<IconButton onClick={handleDrawerClose}>
-						<ChevronLeftIcon />
-					</IconButton>
-				</div>
-				<Divider />
+			{isLoggedIn !== undefined && (
+				<>
+					<Drawer
+						variant="permanent"
+						classes={{
+							paper: clsx(
+								classes.drawerPaper,
+								!open && classes.drawerPaperClose,
+							),
+						}}
+						open={open}
+					>
+						<div className={classes.toolbarIcon}>
+							<IconButton onClick={handleDrawerClose}>
+								<ChevronLeftIcon />
+							</IconButton>
+						</div>
+						<Divider />
 
-				<ListItem button onClick={() => navigate("/")}>
-					<ListItemIcon>
-						<Tooltip title={open ? "" : "Dashboard"}>
-							<DashboardIcon />
-						</Tooltip>
-					</ListItemIcon>
-					<ListItemText primary="Dashboard" />
-				</ListItem>
+						<ListItem button onClick={() => navigate("/")}>
+							<ListItemIcon>
+								<Tooltip title={open ? "" : "Dashboard"}>
+									<DashboardIcon />
+								</Tooltip>
+							</ListItemIcon>
+							<ListItemText primary="Dashboard" />
+						</ListItem>
 
-				<Divider />
+						<Divider />
 
-				<ListItem button onClick={() => navigate("/create-adapter")}>
-					<ListItemIcon>
-						<Tooltip title={open ? "" : "Adapter Creator"}>
-							<CreateAdapterIcon />
-						</Tooltip>
-					</ListItemIcon>
-					<ListItemText primary="Adapter Creator" />
-				</ListItem>
-				{user && (
-					<ListItem button onClick={() => navigate("/adapter-check")}>
-						<ListItemIcon>
-							<Tooltip title={open ? "" : "Adapter Check"}>
-								<AdapterCheckIcon />
-							</Tooltip>
-						</ListItemIcon>
-						<ListItemText primary="Adapter Check" />
-					</ListItem>
-				)}
-			</Drawer>
-			<main className={classes.content}>
-				<div className={classes.appBarSpacer} />
-				<Container maxWidth="lg" className={classes.container}>
-					<Switch>
-						<Route path="/create-adapter">
-							<CreateAdapter user={user} />
-						</Route>
+						<ListItem
+							button
+							onClick={() => navigate("/create-adapter")}
+						>
+							<ListItemIcon>
+								<Tooltip title={open ? "" : "Adapter Creator"}>
+									<CreateAdapterIcon />
+								</Tooltip>
+							</ListItemIcon>
+							<ListItemText primary="Adapter Creator" />
+						</ListItem>
 						{user && (
-							<Route path="/adapter-check">
-								<AdapterCheck user={user} />
-							</Route>
+							<ListItem
+								button
+								onClick={() => navigate("/adapter-check")}
+							>
+								<ListItemIcon>
+									<Tooltip
+										title={open ? "" : "Adapter Check"}
+									>
+										<AdapterCheckIcon />
+									</Tooltip>
+								</ListItemIcon>
+								<ListItemText primary="Adapter Check" />
+							</ListItem>
 						)}
-						<Route path="/">
-							<Dashboard user={user} />
-						</Route>
-					</Switch>
-				</Container>
-			</main>
+					</Drawer>
+					<main className={classes.content}>
+						<div className={classes.appBarSpacer} />
+						<Container maxWidth="lg" className={classes.container}>
+							<Switch>
+								<Route path="/create-adapter">
+									<CreateAdapter user={user} />
+								</Route>
+								{user && (
+									<Route path="/adapter-check">
+										<AdapterCheck user={user} />
+									</Route>
+								)}
+								<Route path="/">
+									<Dashboard user={user} />
+								</Route>
+							</Switch>
+						</Container>
+					</main>
+				</>
+			)}
 		</div>
 	);
 }
