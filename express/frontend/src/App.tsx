@@ -25,7 +25,7 @@ import Dashboard from "./components/Dashboard";
 import { GitHubComm, User } from "./lib/gitHub";
 import AdapterCheck from "./tools/AdapterCheck";
 import Link from "@material-ui/core/Link";
-import CreateAdapter from "./tools/CreateAdapter";
+import CreateAdapter from "./tools/create-adapter/CreateAdapter";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import DashboardIcon from "@material-ui/icons/Dashboard";
