@@ -1,4 +1,5 @@
 import { CheckResult } from "@iobroker/create-adapter/build/src/lib/core/actionsAndTransformers";
+import { UploadedIcon } from "@iobroker/create-adapter/build/src/lib/core/questions";
 import {
 	Question,
 	QuestionMeta,
@@ -28,7 +29,7 @@ import {
 import React, { useEffect } from "react";
 import Dropzone, { FileRejection } from "react-dropzone";
 import { AdapterSettingsView } from "./AdapterSettingsView";
-import { getQuestionMessage, getQuestionName, UploadedIcon } from "./common";
+import { getQuestionMessage, getQuestionName } from "./common";
 
 export type AnswerChanged = (value: any, error: boolean) => void;
 
@@ -409,6 +410,13 @@ export const MultiSelectRenderer = (
 	);
 };
 
+const SUPPORTED_IMAGE_TYPES: Record<string, string> = {
+	"image/jpeg": "jpg",
+	"image/png": "png",
+	"image/gif": "gif",
+	"image/svg+xml": "svg",
+};
+
 export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 	const { question, onAnswerChanged } = props;
 
@@ -454,9 +462,23 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 
 				reader.readAsDataURL(file);
 			});
+			const base64 = await icon;
+			// figure out the extension, base64 is something like:
+			// "data:image/jpeg;base64,/9j/4A..." or
+			// "data:image/svg+xml;base64,PD9..."
+			const match = base64.match(/^data:([^;]+);/);
+			if (!match) {
+				throw new Error(
+					`Unknown media type in ${base64.substring(0, 25)}`,
+				);
+			}
+			const extension = SUPPORTED_IMAGE_TYPES[match[1]];
+			if (!extension) {
+				throw new Error(`Unsupported media type: ${match[1]}`);
+			}
 			const newValue = {
-				name: file.name,
-				data: await icon,
+				data: base64,
+				extension,
 			};
 			setError("");
 			setValue(newValue);
@@ -471,7 +493,7 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 		<Dropzone
 			onDrop={(files, rejected) => handleDropImage(files, rejected)}
 			maxSize={300000}
-			accept="image/jpeg, image/png"
+			accept={Object.keys(SUPPORTED_IMAGE_TYPES).join(", ")}
 		>
 			{({ getRootProps, getInputProps, isDragActive }) => {
 				return (
@@ -493,8 +515,8 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 							{value ? (
 								<img
 									key={"image-preview"}
-									src={value.data}
-									alt={"icon"}
+									src={value.data as string}
+									alt="icon"
 									style={{ width: "auto" }}
 								/>
 							) : null}
