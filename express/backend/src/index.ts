@@ -27,7 +27,7 @@ app.get("/login", function (req, res) {
 	const { redirect } = req.query;
 
 	const state = redirect || "/";
-	const url = `https://github.com/login/oauth/authorize?client_id=${env.PORTAL_GITHUB_OAUTH_CLIENT_ID}&state=${state}`;
+	const url = `https://github.com/login/oauth/authorize?client_id=${env.PORTAL_GITHUB_OAUTH_CLIENT_ID}&scope=user:email&state=${state}`;
 	res.redirect(url);
 });
 
