@@ -8,6 +8,7 @@ import Divider from "@material-ui/core/Divider";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import Step from "@material-ui/core/Step";
+import StepButton from "@material-ui/core/StepButton";
 import StepLabel from "@material-ui/core/StepLabel";
 import Stepper from "@material-ui/core/Stepper";
 import { makeStyles } from "@material-ui/core/styles";
@@ -134,14 +135,24 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 	}, [user]);
 	return (
 		<Paper className={classes.root}>
-			<Stepper activeStep={activeStep} className={classes.stepper}>
-				{questionGroups.map((group) => (
+			<Stepper
+				activeStep={activeStep}
+				className={classes.stepper}
+				alternativeLabel
+			>
+				{questionGroups.map((group, index) => (
 					<Step key={group.title}>
-						<StepLabel>{group.title}</StepLabel>
+						<StepButton onClick={() => setActiveStep(index)}>
+							{group.title}
+						</StepButton>
 					</Step>
 				))}
 				<Step>
-					<StepLabel>Generate</StepLabel>
+					<StepButton
+						onClick={() => setActiveStep(questionGroups.length)}
+					>
+						Generate
+					</StepButton>
 				</Step>
 			</Stepper>
 			<Divider className={classes.divider} />
