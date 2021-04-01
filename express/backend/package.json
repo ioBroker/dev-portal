@@ -13,8 +13,10 @@
 	"license": "MIT",
 	"dependencies": {
 		"@iobroker/create-adapter": "file:../../../create-adapter/iobroker-create-adapter-1.32.0.tgz",
+		"@octokit/request": "^5.4.14",
 		"axios": "^0.21.1",
 		"express": "^4.17.1",
+		"fs-extra": "^9.1.0",
 		"mkdirp": "^1.0.4",
 		"rimraf": "^3.0.2",
 		"universal-cookie-express": "^4.0.3",
@@ -23,6 +25,7 @@
 	},
 	"devDependencies": {
 		"@types/express": "^4.17.11",
+		"@types/fs-extra": "^9.0.9",
 		"@types/mkdirp": "^1.0.1",
 		"@types/node": "^14.14.36",
 		"@types/rimraf": "^3.0.0",

@@ -64,12 +64,13 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		"ws://localhost:8080/ws/create-adapter",
 	);
 
+	const startMessage = JSON.stringify({ answers, target });
 	useEffect(() => {
 		if (readyState === ReadyState.OPEN) {
 			setCompleted(false);
-			sendMessage(JSON.stringify({ answers }));
+			sendMessage(startMessage);
 		}
-	}, [readyState, sendMessage, answers]);
+	}, [readyState, sendMessage, startMessage]);
 
 	useEffect(() => {
 		console.log("msg", lastMessage);

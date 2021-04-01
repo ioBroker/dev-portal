@@ -5,8 +5,8 @@ import cookiesMiddleware from "universal-cookie-express";
 import { env } from "./common";
 import { decrypt, encrypt } from "./crypto";
 
-const COOKIE_NAME_PORTAL_TOKEN = "gh-token";
-const COOKIE_NAME_CREATOR_TOKEN = "gh-creator-token";
+export const COOKIE_NAME_PORTAL_TOKEN = "gh-token";
+export const COOKIE_NAME_CREATOR_TOKEN = "gh-creator-token";
 
 type LoginState = { redirect: string; scope?: string };
 
