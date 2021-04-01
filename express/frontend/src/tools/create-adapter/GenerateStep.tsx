@@ -12,7 +12,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import GitHubIcon from "@material-ui/icons/GitHub";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { User } from "../../lib/gitHub";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Dialog from "@material-ui/core/Dialog";
@@ -64,6 +64,8 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		"ws://localhost:8080/ws/create-adapter",
 	);
 
+	const logEndRef = useRef<any>();
+
 	const startMessage = JSON.stringify({ answers, target });
 	useEffect(() => {
 		if (readyState === ReadyState.OPEN) {
@@ -95,6 +97,10 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		}
 	}, [lastMessage]);
 
+	useEffect(() => {
+		logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [log]);
+
 	return (
 		<Dialog
 			open
@@ -114,6 +120,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 							{entry.text}
 						</pre>
 					))}
+					<div ref={logEndRef} />
 				</DialogContentText>
 			</DialogContent>
 			<DialogActions>

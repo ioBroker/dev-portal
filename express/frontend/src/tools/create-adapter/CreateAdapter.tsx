@@ -150,6 +150,7 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 				setAnswers(JSON.parse(loadedAnswers));
 				setStartGenerator(true);
 				setActiveStep(questionGroups.length);
+				setTimeout(() => setStartGenerator(false), 500);
 			}
 		} catch (e) {
 			console.error(e);
