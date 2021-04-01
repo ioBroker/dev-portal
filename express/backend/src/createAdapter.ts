@@ -53,7 +53,7 @@ export class CreateAdapter {
 				id,
 				msg,
 			);
-			client.send(JSON.stringify({ log: msg, isError }));
+			client.send(JSON.stringify({ log: msg, isError: !!isError }));
 		};
 		client.on("message", (data) => {
 			try {
