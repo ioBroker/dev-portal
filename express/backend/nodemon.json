@@ -7,6 +7,7 @@
 	},
 	"env": {
 		"NODE_ENV": "development",
+		"TEMP_DIR": ".temp/",
 		"HTTP_PUBLIC_PATH": "../frontend/build/"
 	},
 	"ext": "js,json,ts"

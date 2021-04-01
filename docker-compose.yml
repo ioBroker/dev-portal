@@ -1,9 +1,11 @@
-version: '3'
+version: "3"
 services:
-  express:
-    build: express
-    restart: always
-    volumes:
-      - pouch-data:/app/db
+    express:
+        build: express
+        restart: always
+        environment:
+            TEMP_DIR: /tmp
+        volumes:
+            - pouch-data:/app/db
 volumes:
-  pouch-data: {}
+    pouch-data: {}

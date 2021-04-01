@@ -2,7 +2,7 @@ import {
 	AdapterSelectOption,
 	AdapterSettings,
 	SelectAdapterSettings,
-} from "@iobroker/create-adapter/build/src/lib/core/questions";
+} from "@iobroker/create-adapter/build/core";
 import Checkbox from "@material-ui/core/Checkbox";
 import Grid from "@material-ui/core/Grid";
 import IconButton from "@material-ui/core/IconButton";
@@ -15,7 +15,6 @@ import TableCell from "@material-ui/core/TableCell";
 import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
-import Typography from "@material-ui/core/Typography";
 import AddIcon from "@material-ui/icons/Add";
 import DeleteIcon from "@material-ui/icons/Delete";
 import React from "react";

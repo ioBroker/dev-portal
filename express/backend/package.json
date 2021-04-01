@@ -12,13 +12,22 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
+		"@iobroker/create-adapter": "file:../../../create-adapter/iobroker-create-adapter-1.32.0.tgz",
 		"axios": "^0.21.1",
 		"express": "^4.17.1",
-		"universal-cookie-express": "^4.0.3"
+		"mkdirp": "^1.0.4",
+		"rimraf": "^3.0.2",
+		"universal-cookie-express": "^4.0.3",
+		"uuid": "^8.3.2",
+		"ws": "^7.4.4"
 	},
 	"devDependencies": {
 		"@types/express": "^4.17.11",
+		"@types/mkdirp": "^1.0.1",
 		"@types/node": "^14.14.36",
+		"@types/rimraf": "^3.0.0",
+		"@types/uuid": "^8.3.0",
+		"@types/ws": "^7.4.0",
 		"nodemon": "^2.0.7",
 		"ts-node": "^9.1.1",
 		"typescript": "^4.2.3"

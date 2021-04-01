@@ -117,12 +117,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export function handleLogin() {
-	const url = encodeURIComponent(window.location.pathname);
 	if (window.location.port === "3000") {
 		alert(
 			"Login is not supported in local development mode, please use docker-compose to test login",
 		);
 	} else {
+		const url = encodeURIComponent(window.location.pathname);
 		window.location.href = `/login?redirect=${url}`;
 	}
 }

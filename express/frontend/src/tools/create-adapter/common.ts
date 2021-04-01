@@ -1,4 +1,4 @@
-import { Question } from "@iobroker/create-adapter/build/src/lib/core/questions";
+import { Question } from "@iobroker/create-adapter/build/core";
 
 export function getQuestionName(question: Question): string {
 	return typeof question.name === "function"

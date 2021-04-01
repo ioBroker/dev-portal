@@ -1,9 +1,9 @@
-import { CheckResult } from "@iobroker/create-adapter/build/src/lib/core/actionsAndTransformers";
-import { UploadedIcon } from "@iobroker/create-adapter/build/src/lib/core/questions";
 import {
+	CheckResult,
+	UploadedIcon,
 	Question,
 	QuestionMeta,
-} from "@iobroker/create-adapter/build/src/lib/core/questions";
+} from "@iobroker/create-adapter/build/core";
 import Checkbox from "@material-ui/core/Checkbox";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";

@@ -1,21 +1,22 @@
 import {
+	Answers,
 	QuestionGroup,
 	questionGroups,
 	testCondition,
-} from "@iobroker/create-adapter/build/src/lib/core/questions";
+} from "@iobroker/create-adapter/build/core";
 import Button from "@material-ui/core/Button";
 import Divider from "@material-ui/core/Divider";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import Step from "@material-ui/core/Step";
 import StepButton from "@material-ui/core/StepButton";
-import StepLabel from "@material-ui/core/StepLabel";
 import Stepper from "@material-ui/core/Stepper";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import React, { useEffect } from "react";
 import { GitHubComm, User } from "../../lib/gitHub";
 import { getQuestionName } from "./common";
+import { GenerateStep } from "./GenerateStep";
 import { AnswerChanged, QuestionView } from "./QuestionView";
 
 const useStyles = makeStyles((theme) => ({
@@ -87,6 +88,8 @@ export const Group = (props: GroupProps): JSX.Element => {
 	);
 };
 
+const STORAGE_KEY_TEMP_ANSWERS = "creator-answers";
+
 export interface CreateAdapterProps {
 	user?: User;
 }
@@ -97,8 +100,8 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 
 	const [activeStep, setActiveStep] = React.useState(0);
 	const [hasError, setHasError] = React.useState(false);
-	const [processing, setProcessing] = React.useState(false);
 	const [answers, _setAnswers] = React.useState({ ...initialAnswers });
+	const [startGenerator, setStartGenerator] = React.useState<boolean>();
 
 	const setAnswers = (
 		newAnswers: React.SetStateAction<Record<string, any>>,
@@ -133,6 +136,36 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 			}
 		}
 	}, [user]);
+
+	useEffect(() => {
+		if (startGenerator) {
+			return;
+		}
+		try {
+			const loadedAnswers = window.localStorage.getItem(
+				STORAGE_KEY_TEMP_ANSWERS,
+			);
+			if (loadedAnswers) {
+				window.localStorage.removeItem(STORAGE_KEY_TEMP_ANSWERS);
+				setAnswers(JSON.parse(loadedAnswers));
+				setStartGenerator(true);
+				setActiveStep(questionGroups.length);
+			}
+		} catch (e) {
+			console.error(e);
+		}
+	}, [startGenerator]);
+
+	const handleLoginRequest = () => {
+		window.localStorage.setItem(
+			STORAGE_KEY_TEMP_ANSWERS,
+			JSON.stringify(answers),
+		);
+
+		const url = encodeURIComponent(window.location.pathname);
+		window.location.href = `/login?redirect=${url}&scope=repo`;
+	};
+
 	return (
 		<Paper className={classes.root}>
 			<Stepper
@@ -173,13 +206,18 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 					}}
 				/>
 			) : (
-				<Grid>TODO: implement</Grid>
+				<GenerateStep
+					answers={answers as Answers}
+					user={user}
+					startGenerator={startGenerator}
+					onRequestLogin={handleLoginRequest}
+				/>
 			)}
 			<Grid container spacing={1}>
 				<Grid item>
 					<Button
 						variant="contained"
-						disabled={activeStep === 0 || processing}
+						disabled={activeStep === 0}
 						onClick={() => setActiveStep(activeStep - 1)}
 					>
 						Previous
@@ -190,9 +228,7 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 						color="primary"
 						variant="contained"
 						disabled={
-							activeStep === questionGroups.length ||
-							processing ||
-							hasError
+							activeStep === questionGroups.length || hasError
 						}
 						onClick={() => setActiveStep(activeStep + 1)}
 					>
