@@ -11,14 +11,14 @@ To install the application you can run `npm install` in these directories:
 -   `./express/frontend`
 -   `./express/backend`
 
-# Build
+### Build
 
 To build the application you can run `npm build` in these directories:
 
 -   `./express/frontend`
 -   `./express/backend`
 
-# Hot-reload on code changes
+### Hot-reload on code changes
 
 You may also use hot-reload of both the backend and frontend code.
 For this, you can start each applications with the respective command:
