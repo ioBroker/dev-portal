@@ -1,6 +1,6 @@
 # ioBroker Developer Portal
 
-This repository contains all code used in the ioBroker Developer Portal at https://iobroker.dev
+This repository contains all code used in the ioBroker Developer Portal at https://www.iobroker.dev
 
 ## Development
 
