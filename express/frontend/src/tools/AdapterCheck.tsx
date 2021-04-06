@@ -1,27 +1,26 @@
-import Typography from "@material-ui/core/Typography";
-import React, { useEffect, useState } from "react";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import { getMyAdapterRepos } from "../lib/ioBroker";
-import { User } from "../lib/gitHub";
-import TextField from "@material-ui/core/TextField";
-import { makeStyles } from "@material-ui/core/styles";
+import { TableCell } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import axios from "axios";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Divider from "@material-ui/core/Divider";
-import TableContainer from "@material-ui/core/TableContainer";
-import { TableCell } from "@material-ui/core";
+import Grid from "@material-ui/core/Grid";
+import { OverridableComponent } from "@material-ui/core/OverridableComponent";
+import Paper from "@material-ui/core/Paper";
+import { makeStyles } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
+import TableContainer from "@material-ui/core/TableContainer";
 import TableRow from "@material-ui/core/TableRow";
-import Paper from "@material-ui/core/Paper";
-
-import CheckIcon from "@material-ui/icons/DoneOutlined";
-import ErrorIcon from "@material-ui/icons/Cancel";
+import TextField from "@material-ui/core/TextField";
+import Typography from "@material-ui/core/Typography";
 import WarningIcon from "@material-ui/icons/Announcement";
-import { OverridableComponent } from "@material-ui/core/OverridableComponent";
+import ErrorIcon from "@material-ui/icons/Cancel";
+import CheckIcon from "@material-ui/icons/DoneOutlined";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import Chart from "react-google-charts";
+import { User } from "../lib/gitHub";
+import { getMyAdapterRepos } from "../lib/ioBroker";
 
 const URL =
 	"https://3jjxddo33l.execute-api.eu-west-1.amazonaws.com/default/checkAdapter";
@@ -79,12 +78,12 @@ class Message {
 	}
 }
 
-export interface MessageIconParams {
+export interface MessageIconProps {
 	type: MessageType;
 }
 
-export function MessageIcon(params: MessageIconParams) {
-	const { type } = params;
+export function MessageIcon(props: MessageIconProps) {
+	const { type } = props;
 	const classes = useStyles();
 	let Icon: OverridableComponent<any>;
 	switch (type) {
@@ -105,12 +104,12 @@ export function MessageIcon(params: MessageIconParams) {
 	return <Icon className={classes[type]} />;
 }
 
-export interface AdapterCheckParams {
+export interface AdapterCheckProps {
 	user: User;
 }
 
-export default function AdapterCheck(params: AdapterCheckParams) {
-	const { user } = params;
+export default function AdapterCheck(props: AdapterCheckProps) {
+	const { user } = props;
 	const classes = useStyles();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");

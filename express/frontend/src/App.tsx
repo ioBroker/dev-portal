@@ -25,7 +25,7 @@ import Dashboard from "./components/Dashboard";
 import { GitHubComm, User } from "./lib/gitHub";
 import AdapterCheck from "./tools/AdapterCheck";
 import Link from "@material-ui/core/Link";
-import CreateAdapter from "./tools/CreateAdapter";
+import CreateAdapter from "./tools/create-adapter/CreateAdapter";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import DashboardIcon from "@material-ui/icons/Dashboard";
@@ -117,12 +117,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export function handleLogin() {
-	const url = encodeURIComponent(window.location.pathname);
 	if (window.location.port === "3000") {
 		alert(
 			"Login is not supported in local development mode, please use docker-compose to test login",
 		);
 	} else {
+		const url = encodeURIComponent(window.location.pathname);
 		window.location.href = `/login?redirect=${url}`;
 	}
 }

@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
+import Badge from "@material-ui/core/Badge";
 import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
+import CardActionArea from "@material-ui/core/CardActionArea";
 import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 import CardMedia from "@material-ui/core/CardMedia";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import Grid from "@material-ui/core/Grid";
+import IconButton from "@material-ui/core/IconButton";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import { Link, useHistory } from "react-router-dom";
-import IconButton from "@material-ui/core/IconButton";
-import { handleLogin } from "../App";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import { GitHubComm, User } from "../lib/gitHub";
-import { getMyAdapterRepos, Repository } from "../lib/ioBroker";
+import GitHubIcon from "@material-ui/icons/GitHub";
 import axios from "axios";
 import clsx from "clsx";
-import GitHubIcon from "@material-ui/icons/GitHub";
-import Badge from "@material-ui/core/Badge";
-import CardActionArea from "@material-ui/core/CardActionArea";
+import React, { useEffect, useState } from "react";
+import { Link, useHistory } from "react-router-dom";
+import { handleLogin } from "../App";
+import { User } from "../lib/gitHub";
+import { getMyAdapterRepos, Repository } from "../lib/ioBroker";
 
 interface CardButtonProps {
 	text?: string;

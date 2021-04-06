@@ -1,6 +1,9 @@
 # Docker Compose
 /docker-compose.override.yml
 
+# local temporary directory
+.temp/
+
 # Logs
 logs
 *.log

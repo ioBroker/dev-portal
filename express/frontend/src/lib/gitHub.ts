@@ -34,6 +34,11 @@ export class GitHubComm {
 		return { ...user.data, token: this.token };
 	});
 
+	public readonly getEmails = AsyncCache.of(async () => {
+		const emails = await this.request("GET /user/emails");
+		return emails.data;
+	});
+
 	public readonly getUserRepos = AsyncCache.of(async () => {
 		const user = await this.getUser();
 		const result = [];
