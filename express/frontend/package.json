@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@iobroker/create-adapter": "file:../../../create-adapter/iobroker-create-adapter-1.32.0.tgz",
+    "@iobroker/create-adapter": "^1.33.0",
     "@material-ui/core": "^4.11.3",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.57",

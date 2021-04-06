@@ -12,7 +12,7 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
-		"@iobroker/create-adapter": "file:../../../create-adapter/iobroker-create-adapter-1.32.0.tgz",
+		"@iobroker/create-adapter": "^1.33.0",
 		"@octokit/request": "^5.4.14",
 		"axios": "^0.21.1",
 		"express": "^4.17.1",
