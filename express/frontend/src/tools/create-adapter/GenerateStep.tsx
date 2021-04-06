@@ -20,6 +20,7 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogActions from "@material-ui/core/DialogActions";
+import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 
 const useStyles = makeStyles((theme) => ({
 	configPreview: {
@@ -47,55 +48,52 @@ function isLogMessage(obj: unknown): obj is LogMessage {
 }
 
 export interface GeneratorDialogProps {
+	webSocket: WebSocketHook;
 	target: GeneratorTarget;
 	answers: Answers;
 	onClose: () => void;
 }
 
 export function GeneratorDialog(props: GeneratorDialogProps) {
-	const { target, answers, onClose } = props;
+	const { webSocket, target, answers, onClose } = props;
 
 	type LogItem = { color: string; text: string };
 
 	const [log, setLog] = React.useState<LogItem[]>([]);
 	const [completed, setCompleted] = React.useState(false);
 
-	const { sendMessage, lastMessage, readyState } = useWebSocket(
-		"ws://localhost:8080/ws/create-adapter",
-	);
+	const { lastJsonMessage } = webSocket;
 
 	const logEndRef = useRef<any>();
 
 	const startMessage = JSON.stringify({ answers, target });
 	useEffect(() => {
-		if (readyState === ReadyState.OPEN) {
+		if (!!target) {
 			setCompleted(false);
-			sendMessage(startMessage);
+			webSocket.sendMessage(startMessage);
 		}
-	}, [readyState, sendMessage, startMessage]);
+	}, [target, webSocket, startMessage]);
 
 	useEffect(() => {
-		console.log("msg", lastMessage);
-		if (typeof lastMessage?.data === "string") {
-			const appendLog = (text: string, color: string) =>
-				setLog((old) => [...old, { text, color }]);
-			try {
-				const obj = JSON.parse(lastMessage.data) as LogMessage | Result;
-				if (isLogMessage(obj)) {
-					const msg = obj;
-					appendLog(msg.log, msg.isError ? "red" : "black");
-				} else if (obj.result) {
-					appendLog("Completed sucessfully", "green");
-					setCompleted(true);
-				} else {
-					appendLog("Failed", "red");
-					setCompleted(true);
-				}
-			} catch (error) {
-				console.error(error);
+		console.log("msg", lastJsonMessage);
+		const appendLog = (text: string, color: string) =>
+			setLog((old) => [...old, { text, color }]);
+		try {
+			const obj = lastJsonMessage as LogMessage | Result;
+			if (isLogMessage(obj)) {
+				const msg = obj;
+				appendLog(msg.log, msg.isError ? "red" : "black");
+			} else if (obj.result) {
+				appendLog("Completed sucessfully", "green");
+				setCompleted(true);
+			} else {
+				appendLog("Failed", "red");
+				setCompleted(true);
 			}
+		} catch (error) {
+			console.error(error);
 		}
-	}, [lastMessage]);
+	}, [lastJsonMessage]);
 
 	useEffect(() => {
 		logEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -136,6 +134,12 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 	);
 }
 
+function getWebSocketUrl(): string {
+	const loc = window.location;
+	const host = loc.port === "3000" ? `${loc.hostname}:8080` : loc.host;
+	return `${loc.protocol.replace(/^http/, "ws")}//${host}/ws/create-adapter`;
+}
+
 export interface GenerateStepProps {
 	answers: Answers;
 	user?: User;
@@ -146,6 +150,8 @@ export interface GenerateStepProps {
 export function GenerateStep(props: GenerateStepProps) {
 	const { answers, user, startGenerator, onRequestLogin } = props;
 	const classes = useStyles();
+
+	const webSocket = useWebSocket(getWebSocketUrl);
 
 	const [generator, setGenerator] = React.useState<GeneratorTarget>();
 
@@ -159,6 +165,7 @@ export function GenerateStep(props: GenerateStepProps) {
 		<>
 			{!!generator && (
 				<GeneratorDialog
+					webSocket={webSocket}
 					target={generator}
 					answers={answers}
 					onClose={() => setGenerator(undefined)}
