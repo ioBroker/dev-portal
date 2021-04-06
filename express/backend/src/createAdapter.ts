@@ -15,7 +15,7 @@ import { promisify } from "util";
 import { v4 } from "uuid";
 import WebSocket from "ws";
 import { COOKIE_NAME_CREATOR_TOKEN } from "./auth";
-import { env } from "./common";
+import { delay, env } from "./common";
 
 const rimrafAsync = promisify(rimraf);
 
@@ -92,10 +92,7 @@ export class CreateAdapter {
 						return;
 					}
 					started = true;
-					createAdapter(
-						message.answers as Answers,
-						message.target || ("zip" as GeneratorTarget),
-					)
+					createAdapter(message.answers, message.target || "zip")
 						.catch((e) => {
 							log(`${e}`, true);
 							client.send(JSON.stringify({ result: false }));
@@ -164,6 +161,7 @@ export class CreateAdapter {
 					authorization: `token ${token}`,
 				},
 			});
+
 			log(`Connecting to GitHub...`);
 			const user = await requestWithAuth("GET /user");
 			log(`Connected to GitHub as ${user.data.login}`);
@@ -186,7 +184,8 @@ export class CreateAdapter {
 			};
 
 			let lastCommit;
-			for (let i = 0; i < 5; i++) {
+			for (let i = 4; ; i--) {
+				//         ^-- exit condition is below in catch block
 				try {
 					lastCommit = await requestWithAuth(
 						"GET /repos/{owner}/{repo}/branches/{branch}",
@@ -194,12 +193,17 @@ export class CreateAdapter {
 					);
 					break;
 				} catch (error) {
+					if (i === 0) {
+						throw error;
+					}
 					log(`${error} - retrying...`);
+					await delay(500);
 				}
 			}
-			if (!lastCommit) {
-				throw "Failed connecting to Git repository";
-			}
+
+			// delay a bit because GH sometimes takes forever to create the Git repo
+			log("Waiting for GitHub to be ready...");
+			await delay(1000);
 
 			/**
 			 * Recursively uploads all files and creates trees for each directory (depth-first).
