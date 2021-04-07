@@ -75,6 +75,9 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 	}, [target, webSocket, startMessage]);
 
 	useEffect(() => {
+		if (!lastJsonMessage) {
+			return;
+		}
 		console.log("msg", lastJsonMessage);
 		const appendLog = (text: string, color: string) =>
 			setLog((old) => [...old, { text, color }]);
