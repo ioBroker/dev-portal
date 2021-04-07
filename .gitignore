@@ -1,6 +1,9 @@
 # Docker Compose
 /docker-compose.override.yml
 
+# Credentials
+google-translate-credentials.json
+
 # local temporary directory
 .temp/
 

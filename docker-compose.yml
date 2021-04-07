@@ -5,6 +5,7 @@ services:
         restart: always
         environment:
             TEMP_DIR: /tmp
+            GOOGLE_APPLICATION_CREDENTIALS: /app/google-translate-credentials.json
         volumes:
             - pouch-data:/app/db
 volumes:
