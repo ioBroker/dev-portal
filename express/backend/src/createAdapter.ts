@@ -47,6 +47,9 @@ export class CreateAdapter {
 		this.wss.on("connection", (client, request) =>
 			this.handleConnection(client, request),
 		);
+
+		console.log(`Clearing ${tempDir}`);
+		rimraf(tempDir, (e) => e && console.error(e));
 	}
 
 	public handleUpgrade(
