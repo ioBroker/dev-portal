@@ -66,6 +66,11 @@ router.get("/auth", cookiesMiddleware(), async function (req, res) {
 			login.scope ? COOKIE_NAME_CREATOR_TOKEN : COOKIE_NAME_PORTAL_TOKEN,
 			result.data.access_token,
 		);
+	} else {
+		console.error("Didn't receive access token:", {
+			data: result.data,
+			headers: result.headers,
+		});
 	}
 
 	res.redirect(
