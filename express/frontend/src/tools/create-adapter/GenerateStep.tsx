@@ -6,21 +6,26 @@ import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
-import CircularProgress from "@material-ui/core/CircularProgress";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogTitle from "@material-ui/core/DialogTitle";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import GitHubIcon from "@material-ui/icons/GitHub";
+import DownloadIcon from "@material-ui/icons/CloudDownloadOutlined";
 import React, { useEffect, useRef } from "react";
-import { User } from "../../lib/gitHub";
-import useWebSocket, { ReadyState } from "react-use-websocket";
-import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogActions from "@material-ui/core/DialogActions";
+import useWebSocket from "react-use-websocket";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
+import {
+	GeneratorTarget,
+	LogMessage,
+	ServerClientMessage,
+} from "../../../../backend/src/create-adapter-ws";
+import { User } from "../../lib/gitHub";
 
 const useStyles = makeStyles((theme) => ({
 	configPreview: {
@@ -33,19 +38,11 @@ const useStyles = makeStyles((theme) => ({
 		overflowX: "auto",
 	},
 }));
-
-export type GeneratorTarget = "github" | "zip";
-
-interface LogMessage {
-	log: string;
-	isError: boolean;
-}
-interface Result {
-	result: boolean;
-}
 function isLogMessage(obj: unknown): obj is LogMessage {
 	return Object.prototype.hasOwnProperty.call(obj, "log");
 }
+
+type GeneratorState = "idle" | "generating" | "success" | "failed";
 
 export interface GeneratorDialogProps {
 	webSocket: WebSocketHook;
@@ -60,7 +57,8 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 	type LogItem = { color: string; text: string };
 
 	const [log, setLog] = React.useState<LogItem[]>([]);
-	const [completed, setCompleted] = React.useState(false);
+	const [state, setState] = React.useState<GeneratorState>("idle");
+	const [resultLink, setResultLink] = React.useState<string>();
 
 	const { lastJsonMessage } = webSocket;
 
@@ -68,11 +66,12 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 
 	const startMessage = JSON.stringify({ answers, target });
 	useEffect(() => {
-		if (!!target) {
-			setCompleted(false);
+		if (state === "idle" && target) {
+			console.log(state, target, "--> sendMessage", startMessage);
 			webSocket.sendMessage(startMessage);
 		}
-	}, [target, webSocket, startMessage]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [target, state]);
 
 	useEffect(() => {
 		if (!lastJsonMessage) {
@@ -82,16 +81,17 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		const appendLog = (text: string, color: string) =>
 			setLog((old) => [...old, { text, color }]);
 		try {
-			const obj = lastJsonMessage as LogMessage | Result;
-			if (isLogMessage(obj)) {
-				const msg = obj;
-				appendLog(msg.log, msg.isError ? "red" : "black");
-			} else if (obj.result) {
+			const msg = lastJsonMessage as ServerClientMessage;
+			if (isLogMessage(msg)) {
+				const logMsg = msg;
+				appendLog(logMsg.log, logMsg.isError ? "red" : "black");
+			} else if (msg.result) {
 				appendLog("Completed sucessfully", "green");
-				setCompleted(true);
+				setResultLink(msg.resultLink);
+				setState("success");
 			} else {
 				appendLog("Failed", "red");
-				setCompleted(true);
+				setState("failed");
 			}
 		} catch (error) {
 			console.error(error);
@@ -125,9 +125,31 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 				</DialogContentText>
 			</DialogContent>
 			<DialogActions>
+				{target === "zip" && (
+					<Button
+						href={resultLink || ""}
+						target="_blank"
+						disabled={state !== "success" || !resultLink}
+						color="primary"
+						startIcon={<DownloadIcon />}
+					>
+						Download
+					</Button>
+				)}
+				{target === "github" && (
+					<Button
+						href={resultLink || ""}
+						target="_blank"
+						disabled={state !== "success" || !resultLink}
+						color="primary"
+						startIcon={<GitHubIcon />}
+					>
+						Open Repository
+					</Button>
+				)}
 				<Button
 					onClick={() => onClose()}
-					disabled={!completed}
+					disabled={state !== "success" && state !== "failed"}
 					color="primary"
 				>
 					Close
@@ -163,6 +185,10 @@ export function GenerateStep(props: GenerateStepProps) {
 			setGenerator("github");
 		}
 	}, [startGenerator]);
+
+	const onRequestZip = () => {
+		setGenerator("zip");
+	};
 
 	return (
 		<>
@@ -211,6 +237,32 @@ export function GenerateStep(props: GenerateStepProps) {
 								disabled={!user || !!generator}
 							>
 								Create Repository
+							</Button>
+						</CardActions>
+					</Card>
+				</Grid>
+				<Grid item xs={12} sm={6} md={4} lg={3}>
+					<Card>
+						<CardContent>
+							<Typography variant="h5" component="h2">
+								Download Zip File
+							</Typography>
+							<Typography variant="body2" component="p">
+								You will get a link to download a zip file.
+							</Typography>
+							<Typography color="textSecondary">
+								The generated zip file contains all files to
+								start writing your own adapter code.
+							</Typography>
+						</CardContent>
+						<CardActions>
+							<Button
+								size="small"
+								onClick={() => onRequestZip()}
+								startIcon={<DownloadIcon />}
+								disabled={!user || !!generator}
+							>
+								Create Zip File
 							</Button>
 						</CardActions>
 					</Card>

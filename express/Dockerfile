@@ -3,7 +3,10 @@ FROM node:14-buster AS build-frontend
 RUN mkdir -p /app
 WORKDIR /app
 
-COPY frontend/ ./
+COPY frontend/ ./frontend/
+COPY backend/src/*.d.ts ./backend/src/
+
+WORKDIR /app/frontend
 
 RUN npm ci \
     && npm run build
@@ -29,6 +32,6 @@ COPY --from=build-backend /app/package.json /app/package-lock.json ./
 RUN npm ci --production
 
 COPY --from=build-backend /app/build/ ./
-COPY --from=build-frontend /app/build/ ./public/
+COPY --from=build-frontend /app/frontend/build/ ./public/
 
 CMD [ "node", "/app/index.js" ]

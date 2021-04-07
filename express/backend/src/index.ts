@@ -4,7 +4,7 @@ import { Socket } from "net";
 import path from "path";
 import auth from "./auth";
 import { env } from "./common";
-import { CreateAdapter } from "./createAdapter";
+import { handleUpgrade, router as createAdapterRouter } from "./createAdapter";
 
 const app = express();
 const port = 8080;
@@ -17,6 +17,8 @@ app.use(express.static(publicPath));
 
 app.use(auth);
 
+app.use(createAdapterRouter);
+
 app.get("/*", function (_req, res) {
 	res.sendFile(path.join(publicPath, "index.html"));
 });
@@ -25,12 +27,11 @@ const server = app.listen(port, () => {
 	console.log(`Express app listening at http://localhost:${port}`);
 });
 
-const createAdapter = new CreateAdapter();
 server.on(
 	"upgrade",
-	function upgrade(request: IncomingMessage, socket: Socket, head: Buffer) {
+	(request: IncomingMessage, socket: Socket, head: Buffer) => {
 		if (request.url === "/ws/create-adapter") {
-			createAdapter.handleUpgrade(request, socket, head);
+			handleUpgrade(request, socket, head);
 		} else {
 			socket.destroy();
 		}
