@@ -23,6 +23,10 @@ import { Link, useHistory } from "react-router-dom";
 import { handleLogin } from "../App";
 import { User } from "../lib/gitHub";
 import { getMyAdapterRepos, Repository } from "../lib/ioBroker";
+import Tooltip from "@material-ui/core/Tooltip";
+import SettingsInputAntennaIcon from "@material-ui/icons/SettingsInputAntenna";
+
+const uc = encodeURIComponent;
 
 interface CardButtonProps {
 	text?: string;
@@ -269,24 +273,41 @@ export default function Dashboard(props: DashboardProps) {
 			setAdapters([]); // clear the list (and show the spinner)
 			const adapters: DashboardCardProps[] = [];
 
-			const repos = await getMyAdapterRepos(user.token);
-			const latest = await Repository.getLatest();
-			//console.log(repos);
-			for (const repo of repos) {
+			const [repos, latest] = await Promise.all([
+				getMyAdapterRepos(user.token),
+				Repository.getLatest(),
+			]);
+			await Promise.all(
+				repos.map(async (repo) => {
 				try {
-					let info = latest[repo.name.split(".")[1]];
+						const adapterName = repo.name.split(".")[1];
+						let info = latest[adapterName];
 					const defaultBranch = repo.default_branch || "master";
 					if (!info) {
 						try {
 							const ioPackage = await axios.get(
-								`https://raw.githubusercontent.com/${repo.full_name}/${defaultBranch}/io-package.json`,
+									`https://raw.githubusercontent.com/` +
+										`${uc(repo.full_name)}/` +
+										`${uc(defaultBranch)}/io-package.json`,
 							);
 							info = ioPackage.data.common;
 						} catch (error) {
 							console.error(error);
-							continue;
+								return;
 						}
 					}
+						let discoveryLink: string = "";
+						try {
+							await axios.get(
+								`https://cdn.jsdelivr.net/npm/iobroker.discovery/lib/adapters/` +
+									`${uc(adapterName)}.js`,
+							);
+							discoveryLink =
+								`https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
+								`${uc(adapterName)}.js`;
+						} catch {
+							// ignore and leave "discoveryLink" empty
+						}
 					//console.log(repo);
 					adapters.push({
 						title: repo.name,
@@ -299,21 +320,39 @@ export default function Dashboard(props: DashboardProps) {
 						buttons: [
 							<CardButton
 								icon={
+										<Tooltip
+											title={`GitHub Repository (${repo.open_issues} open issues)`}
+										>
 									<Badge
 										badgeContent={repo.open_issues}
 										color="secondary"
 									>
 										<GitHubIcon />
 									</Badge>
+										</Tooltip>
 								}
 								url={repo.html_url}
 							/>,
+								<Tooltip
+									title={`${
+										discoveryLink ? "S" : "Not s"
+									}upported by ioBroker.discovery`}
+								>
+									<span>
+										<CardButton
+											disabled={!discoveryLink}
+											icon={<SettingsInputAntennaIcon />}
+											url={discoveryLink}
+										/>
+									</span>
+								</Tooltip>,
 						],
 					});
 				} catch (error) {
 					console.error(error);
 				}
-			}
+				}),
+			);
 
 			if (adapters.length === 0) {
 				adapters.push({
