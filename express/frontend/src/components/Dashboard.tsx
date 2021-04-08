@@ -186,6 +186,18 @@ export default function Dashboard(props: DashboardProps) {
 	const { user } = props;
 	const tools = [
 		{
+			title: "Documentation",
+			img: "images/doc.jpg",
+			text:
+				"Read all the important information about ioBroker development.",
+			buttons: [
+				<CardButton
+					text="Open"
+					url="https://www.iobroker.net/#en/documentation/dev/adapterdev.md"
+				/>,
+			],
+		},
+		{
 			title: "Adapter Creator",
 			img: "images/adapter-creator.png",
 			text:
@@ -226,18 +238,6 @@ export default function Dashboard(props: DashboardProps) {
 				<CardButton
 					text="open"
 					url="https://github.com/ioBroker/Community/projects/1"
-				/>,
-			],
-		},
-		{
-			title: "Documentation",
-			img: "images/doc.jpg",
-			text:
-				"Read all the important information about ioBroker development.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://www.iobroker.net/#en/documentation/dev/adapterdev.md"
 				/>,
 			],
 		},
