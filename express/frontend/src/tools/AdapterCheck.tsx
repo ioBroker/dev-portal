@@ -19,7 +19,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Chart from "react-google-charts";
-import { useHistory } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { User } from "../lib/gitHub";
 import { getMyAdapterRepos } from "../lib/ioBroker";
 
@@ -116,7 +116,7 @@ export interface AdapterCheckProps {
 export default function AdapterCheck(props: AdapterCheckProps) {
 	const { user } = props;
 	const classes = useStyles();
-	const history = useHistory();
+	let location = useLocation();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
 	const [busy, setBusy] = useState(false);
@@ -129,7 +129,7 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 		loadData().catch(console.error);
 	}, [user]);
 
-	const incomingState = history.location.state as
+	const incomingState = location.state as
 		| AdapterCheckLocationState
 		| undefined;
 	useEffect(() => {

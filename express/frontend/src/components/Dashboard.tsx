@@ -428,7 +428,7 @@ export default function Dashboard(props: DashboardProps) {
 		};
 
 		if (user) {
-			loadAdapters(user).catch((e) => console.log(e));
+			loadAdapters(user).catch(console.error);
 		} else {
 			const loginCard = (type: string) => ({
 				title: "Login Required",

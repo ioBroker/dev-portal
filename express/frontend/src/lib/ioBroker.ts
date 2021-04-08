@@ -50,7 +50,6 @@ export const getMyAdapterRepos = async (ghToken: string) => {
 	const gitHub = GitHubComm.forToken(ghToken);
 	const repos = await gitHub.getUserRepos();
 	const latest = await getLatest();
-	//console.log(repos);
 	return repos.filter((repo) => {
 		if (!repo.name.startsWith("ioBroker.")) {
 			return false;

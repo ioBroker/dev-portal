@@ -452,11 +452,9 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 					resolve(reader.result as string);
 				};
 				reader.onabort = () => {
-					console.error("file reading was aborted");
 					reject("file reading was aborted");
 				};
 				reader.onerror = (e) => {
-					console.error("file reading has failed");
 					reject("file reading has failed: " + e);
 				};
 

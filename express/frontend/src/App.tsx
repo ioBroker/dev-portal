@@ -16,6 +16,7 @@ import {
 	Route,
 	Switch,
 	useHistory,
+	useLocation,
 } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import UserMenu from "./components/UserMenu";
@@ -119,6 +120,32 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
+interface NaviListItemProps {
+	link: string;
+	title: string;
+	icon: JSX.Element;
+	open: boolean;
+}
+
+function NaviListItem(props: NaviListItemProps) {
+	const { link, title, icon, open } = props;
+	const history = useHistory();
+	const location = useLocation();
+	const navigate = (link: string) => history.push(link);
+	return (
+		<ListItem
+			button
+			onClick={() => navigate(link)}
+			selected={location.pathname === link}
+		>
+			<ListItemIcon>
+				<Tooltip title={open ? "" : title}>{icon}</Tooltip>
+			</ListItemIcon>
+			<ListItemText primary={title} />
+		</ListItem>
+	);
+}
+
 export function handleLogin() {
 	if (window.location.port === "3000") {
 		alert(
@@ -132,7 +159,6 @@ export function handleLogin() {
 
 export default function App() {
 	const classes = useStyles();
-	const history = useHistory();
 
 	const [cookies /*setCookie*/, , removeCookie] = useCookies([
 		gitHubTokenCookie,
@@ -179,10 +205,6 @@ export default function App() {
 			setIsLoggedIn(false);
 		}
 	}, [cookies, user, isLoggedIn, removeCookie]);
-
-	const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
-
-	const navigate = (link: string) => history.push(link);
 
 	return (
 		<div className={classes.root}>
@@ -249,44 +271,28 @@ export default function App() {
 							</div>
 							<Divider />
 
-							<ListItem button onClick={() => navigate("/")}>
-								<ListItemIcon>
-									<Tooltip title={open ? "" : "Dashboard"}>
-										<DashboardIcon />
-									</Tooltip>
-								</ListItemIcon>
-								<ListItemText primary="Dashboard" />
-							</ListItem>
+							<NaviListItem
+								link="/"
+								title="Dashboard"
+								icon={<DashboardIcon />}
+								open={open}
+							/>
 
 							<Divider />
 
-							<ListItem
-								button
-								onClick={() => navigate("/create-adapter")}
-							>
-								<ListItemIcon>
-									<Tooltip
-										title={open ? "" : "Adapter Creator"}
-									>
-										<CreateAdapterIcon />
-									</Tooltip>
-								</ListItemIcon>
-								<ListItemText primary="Adapter Creator" />
-							</ListItem>
+							<NaviListItem
+								link="/create-adapter"
+								title="Adapter Creator"
+								icon={<CreateAdapterIcon />}
+								open={open}
+							/>
 							{user && (
-								<ListItem
-									button
-									onClick={() => navigate("/adapter-check")}
-								>
-									<ListItemIcon>
-										<Tooltip
-											title={open ? "" : "Adapter Check"}
-										>
-											<AdapterCheckIcon />
-										</Tooltip>
-									</ListItemIcon>
-									<ListItemText primary="Adapter Check" />
-								</ListItem>
+								<NaviListItem
+									link="/adapter-check"
+									title="Adapter Check"
+									icon={<AdapterCheckIcon />}
+									open={open}
+								/>
 							)}
 						</Drawer>
 					</Hidden>

@@ -66,7 +66,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 	const startMessage = JSON.stringify({ answers, target });
 	useEffect(() => {
 		if (state === "idle" && target) {
-			console.log(state, target, "--> sendMessage", startMessage);
+			//console.log(state, target, "--> sendMessage", startMessage);
 			webSocket.sendMessage(startMessage);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
