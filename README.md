@@ -2,6 +2,8 @@
 
 This repository contains all code used in the ioBroker Developer Portal at https://www.iobroker.dev
 
+![Screenshot](screenshot.png)
+
 ## Development
 
 ### Setup
