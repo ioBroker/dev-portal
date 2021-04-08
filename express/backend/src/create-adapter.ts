@@ -6,6 +6,7 @@ import {
 } from "@iobroker/create-adapter";
 import { request as GitHubRequest } from "@octokit/request";
 import archiver from "archiver";
+import { execSync } from "child_process";
 import { createHash } from "crypto";
 import { Router } from "express";
 import { existsSync, readFile } from "fs-extra";
@@ -257,9 +258,28 @@ function handleConnection(client: WebSocket, request: IncomingMessage) {
 			}
 		}
 
+		const treeRoot = buildTree(files);
+
 		// delay a bit because GH sometimes takes forever to create the Git repo
-		log("Waiting for GitHub to be ready...");
-		await delay(1000);
+		// this is a good moment to generate the package-lock.json file
+		log(`Generating package-lock.json`);
+		try {
+			execSync("npm install --package-lock-only", {
+				cwd: outputDir,
+				stdio: "inherit",
+			});
+			treeRoot.children.push({
+				name: "package-lock.json",
+				children: [],
+				file: {
+					name: "package-lock.json",
+					content: "",
+					noReformat: true,
+				},
+			});
+		} catch (error) {
+			log(`Couldn't generate package-lock: ${error}`, true);
+		}
 
 		/**
 		 * Recursively uploads all files and creates trees for each directory (depth-first).
@@ -323,7 +343,6 @@ function handleConnection(client: WebSocket, request: IncomingMessage) {
 			return tree.data.sha;
 		};
 
-		const treeRoot = buildTree(files);
 		const sha = await uploadTree(treeRoot, lastCommit.data.commit.sha);
 
 		const commit = await requestWithAuth(
