@@ -33,6 +33,7 @@ import CreateAdapterIcon from "@material-ui/icons/LibraryAdd";
 import AdapterCheckIcon from "@material-ui/icons/Spellcheck";
 import ListItemText from "@material-ui/core/ListItemText";
 import Tooltip from "@material-ui/core/Tooltip";
+import Hidden from "@material-ui/core/Hidden";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";
@@ -190,18 +191,20 @@ export default function App() {
 				className={clsx(classes.appBar, open && classes.appBarShift)}
 			>
 				<Toolbar className={classes.toolbar}>
-					<IconButton
-						edge="start"
-						color="inherit"
-						aria-label="open drawer"
-						onClick={handleDrawerOpen}
-						className={clsx(
-							classes.menuButton,
-							open && classes.menuButtonHidden,
-						)}
-					>
-						<MenuIcon />
-					</IconButton>
+					<Hidden xsDown>
+						<IconButton
+							edge="start"
+							color="inherit"
+							aria-label="open drawer"
+							onClick={handleDrawerOpen}
+							className={clsx(
+								classes.menuButton,
+								open && classes.menuButtonHidden,
+							)}
+						>
+							<MenuIcon />
+						</IconButton>
+					</Hidden>
 					<Typography
 						variant="h6"
 						color="inherit"
@@ -226,61 +229,65 @@ export default function App() {
 			</AppBar>
 			{isLoggedIn !== undefined && (
 				<>
-					<Drawer
-						variant="permanent"
-						classes={{
-							paper: clsx(
-								classes.drawerPaper,
-								!open && classes.drawerPaperClose,
-							),
-						}}
-						open={open}
-					>
-						<div className={classes.toolbarIcon}>
-							<IconButton onClick={handleDrawerClose}>
-								<ChevronLeftIcon />
-							</IconButton>
-						</div>
-						<Divider />
-
-						<ListItem button onClick={() => navigate("/")}>
-							<ListItemIcon>
-								<Tooltip title={open ? "" : "Dashboard"}>
-									<DashboardIcon />
-								</Tooltip>
-							</ListItemIcon>
-							<ListItemText primary="Dashboard" />
-						</ListItem>
-
-						<Divider />
-
-						<ListItem
-							button
-							onClick={() => navigate("/create-adapter")}
+					<Hidden xsDown>
+						<Drawer
+							variant="permanent"
+							classes={{
+								paper: clsx(
+									classes.drawerPaper,
+									!open && classes.drawerPaperClose,
+								),
+							}}
+							open={open}
 						>
-							<ListItemIcon>
-								<Tooltip title={open ? "" : "Adapter Creator"}>
-									<CreateAdapterIcon />
-								</Tooltip>
-							</ListItemIcon>
-							<ListItemText primary="Adapter Creator" />
-						</ListItem>
-						{user && (
+							<div className={classes.toolbarIcon}>
+								<IconButton onClick={handleDrawerClose}>
+									<ChevronLeftIcon />
+								</IconButton>
+							</div>
+							<Divider />
+
+							<ListItem button onClick={() => navigate("/")}>
+								<ListItemIcon>
+									<Tooltip title={open ? "" : "Dashboard"}>
+										<DashboardIcon />
+									</Tooltip>
+								</ListItemIcon>
+								<ListItemText primary="Dashboard" />
+							</ListItem>
+
+							<Divider />
+
 							<ListItem
 								button
-								onClick={() => navigate("/adapter-check")}
+								onClick={() => navigate("/create-adapter")}
 							>
 								<ListItemIcon>
 									<Tooltip
-										title={open ? "" : "Adapter Check"}
+										title={open ? "" : "Adapter Creator"}
 									>
-										<AdapterCheckIcon />
+										<CreateAdapterIcon />
 									</Tooltip>
 								</ListItemIcon>
-								<ListItemText primary="Adapter Check" />
+								<ListItemText primary="Adapter Creator" />
 							</ListItem>
-						)}
-					</Drawer>
+							{user && (
+								<ListItem
+									button
+									onClick={() => navigate("/adapter-check")}
+								>
+									<ListItemIcon>
+										<Tooltip
+											title={open ? "" : "Adapter Check"}
+										>
+											<AdapterCheckIcon />
+										</Tooltip>
+									</ListItemIcon>
+									<ListItemText primary="Adapter Check" />
+								</ListItem>
+							)}
+						</Drawer>
+					</Hidden>
 					<main className={classes.content}>
 						<div className={classes.appBarSpacer} />
 						<Container maxWidth="lg" className={classes.container}>
