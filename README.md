@@ -47,6 +47,7 @@ services:
             PORTAL_GITHUB_OAUTH_CLIENT_SECRET: 123456e0a66c140657890abcdefghij7236c1406
             CREATOR_GITHUB_OAUTH_CLIENT_ID: abcdefghij1234567890
             CREATOR_GITHUB_OAUTH_CLIENT_SECRET: abcdefghij7236c1406123456e0a66c140657890
+            WEBLATE_ACCESS_TOKEN: AbCdEfGhIjKlMnOpQrStUvWxYz0123456789aBcD
 ```
 
 2. In this root directory call `docker-compose up --build`
@@ -59,6 +60,7 @@ The following environment variables can be configured:
 -   `PORTAL_GITHUB_OAUTH_CLIENT_SECRET`: Client secret belonging to the above OAuth App
 -   `CREATOR_GITHUB_OAUTH_CLIENT_ID`: GitHub Client ID of your OAuth App that is used to create and modify repositories (see below)
 -   `CREATOR_GITHUB_OAUTH_CLIENT_SECRET`: Client secret belonging to the above OAuth App
+-   `WEBLATE_ACCESS_TOKEN`: Access token for a read-only Weblate user
 
 ### GitHub OAuth Apps
 

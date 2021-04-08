@@ -4,7 +4,8 @@ import { Socket } from "net";
 import path from "path";
 import auth from "./auth";
 import { env } from "./common";
-import { handleUpgrade, router as createAdapterRouter } from "./createAdapter";
+import { handleUpgrade, router as createAdapterRouter } from "./create-adapter";
+import weblateProxy from "./weblate-proxy";
 
 const app = express();
 const port = 8080;
@@ -16,6 +17,8 @@ const publicPath = env.HTTP_PUBLIC_PATH
 app.use(express.static(publicPath));
 
 app.use(auth);
+
+app.use(weblateProxy);
 
 app.use(createAdapterRouter);
 

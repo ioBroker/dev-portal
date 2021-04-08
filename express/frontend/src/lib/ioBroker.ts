@@ -39,19 +39,17 @@ export interface LatestAdapter {
 
 export type LatestAdapters = Record<string, LatestAdapter>;
 
-export class Repository {
-	public static readonly getLatest = AsyncCache.of(async () => {
-		const result = await axios.get<LatestAdapters>(
-			"https://repo.iobroker.live/sources-dist-latest.json",
-		);
-		return result.data;
-	});
-}
+export const getLatest = AsyncCache.of(async () => {
+	const result = await axios.get<LatestAdapters>(
+		"https://repo.iobroker.live/sources-dist-latest.json",
+	);
+	return result.data;
+});
 
 export const getMyAdapterRepos = async (ghToken: string) => {
 	const gitHub = GitHubComm.forToken(ghToken);
 	const repos = await gitHub.getUserRepos();
-	const latest = await Repository.getLatest();
+	const latest = await getLatest();
 	//console.log(repos);
 	return repos.filter((repo) => {
 		if (!repo.name.startsWith("ioBroker.")) {
@@ -74,3 +72,10 @@ export const getMyAdapterRepos = async (ghToken: string) => {
 		return true;
 	});
 };
+
+export const getWeblateAdapterComponents = AsyncCache.of(async () => {
+	const result = await axios.get(
+		"/api/weblate/projects/adapters/components/",
+	);
+	return result.data;
+});
