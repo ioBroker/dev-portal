@@ -1,3 +1,6 @@
+import Accordion from "@material-ui/core/Accordion";
+import AccordionDetails from "@material-ui/core/AccordionDetails";
+import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Badge from "@material-ui/core/Badge";
 import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
@@ -7,10 +10,12 @@ import CardContent from "@material-ui/core/CardContent";
 import CardMedia from "@material-ui/core/CardMedia";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Grid from "@material-ui/core/Grid";
+import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import GitHubIcon from "@material-ui/icons/GitHub";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import axios from "axios";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
@@ -98,29 +103,17 @@ const useCardStyles = makeStyles((theme) => ({
 interface DashboardCardProps {
 	title: string;
 	img: string;
-	link?: string;
-	url?: string;
 	text: string;
 	buttons?: JSX.Element[];
 	squareImg?: boolean;
 }
 
 function DashboardCard(props: DashboardCardProps) {
-	const { title, img, link, url, text, buttons, squareImg } = props;
+	const { title, img, text, buttons, squareImg } = props;
 	const classes = useCardStyles();
-	const history = useHistory();
-
-	const handleClick = () => {
-		if (link) {
-			history.push(link);
-		} else if (url) {
-			window.open(url, "_blank");
-		}
-	};
-
 	return (
 		<Card className={classes.card}>
-			<CardActionArea onClick={handleClick}>
+			<Hidden xsDown>
 				<CardMedia
 					className={clsx(
 						classes.cardMedia,
@@ -129,15 +122,15 @@ function DashboardCard(props: DashboardCardProps) {
 					image={img}
 					title={title}
 				/>
-				<CardContent className={classes.cardContent}>
-					<Typography gutterBottom variant="h6" component="h2">
-						{title}
-					</Typography>
-					{text.split("\n").map((t) => (
-						<Typography key={t}>{t}</Typography>
-					))}
-				</CardContent>
-			</CardActionArea>
+			</Hidden>
+			<CardContent className={classes.cardContent}>
+				<Typography gutterBottom variant="h6" component="h2">
+					{title}
+				</Typography>
+				{text.split("\n").map((t) => (
+					<Typography key={t}>{t}</Typography>
+				))}
+			</CardContent>
 			{buttons && buttons.length > 0 && (
 				<CardActions>{buttons.map((b) => b)}</CardActions>
 			)}
@@ -195,50 +188,81 @@ export default function Dashboard(props: DashboardProps) {
 		{
 			title: "Adapter Creator",
 			img: "images/adapter-creator.png",
-			link: "/create-adapter",
 			text:
 				"Create a new ioBroker adapter by answering questions. The resulting adapter can be downloaded as a zip file or directly exported to a new GitHub repository.",
+			buttons: [<CardButton text="Open" link="/create-adapter" />],
 		},
 		{
 			title: "Adapter Check",
 			img: "images/adapter-check.png",
-			link: user && "/adapter-check",
 			text:
 				"Verify your ioBroker adapters to see if it matches the requirements to be added to the repository." +
 				(user ? "" : "\nYou must be logged in to use this tool."),
-			buttons: user
-				? []
-				: [<CardButton text="Login" onClick={handleLogin} />],
+			buttons: [
+				user ? (
+					<CardButton text="Open" link="/adapter-check" />
+				) : (
+					<CardButton text="Login" onClick={handleLogin} />
+				),
+			],
 		},
 		{
 			title: "Weblate",
 			img: "images/weblate.png",
-			url: "https://weblate.iobroker.net/projects/adapters/",
 			text:
 				"Manage the translations of your adapters in all available languages.",
+			buttons: [
+				<CardButton
+					text="Open"
+					url="https://weblate.iobroker.net/projects/adapters/"
+				/>,
+			],
 		},
 		{
 			title: "Community Initiatives",
 			img: "images/iobroker.png",
-			url: "https://github.com/ioBroker/Community/projects/1",
 			text: "Project management board for ioBroker Community Initiatives",
+			buttons: [
+				<CardButton
+					text="open"
+					url="https://github.com/ioBroker/Community/projects/1"
+				/>,
+			],
 		},
 		{
 			title: "Documentation",
 			img: "images/doc.jpg",
-			url: "https://www.iobroker.net/#en/documentation/dev/adapterdev.md",
 			text:
 				"Read all the important information about ioBroker development.",
+			buttons: [
+				<CardButton
+					text="Open"
+					url="https://www.iobroker.net/#en/documentation/dev/adapterdev.md"
+				/>,
+			],
 		},
 		{
 			title: "Forum",
 			img: "images/iobroker.png",
-			url: "https://forum.iobroker.net/category/8/entwicklung",
 			text:
 				"Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
+			buttons: [
+				<CardButton
+					text="Open"
+					url="https://forum.iobroker.net/category/8/entwicklung"
+				/>,
+			],
 		},
 	];
 	const [adapters, setAdapters] = useState<DashboardCardProps[]>([]);
+	const [expanded, setExpanded] = useState({
+		0: true,
+		1: true,
+	});
+
+	const handleAccordion = (index: 0 | 1) => {
+		setExpanded((old) => ({ ...old, [index]: !old[index] }));
+	};
 
 	useEffect(() => {
 		const loadAdapters = async (user: User) => {
@@ -323,11 +347,36 @@ export default function Dashboard(props: DashboardProps) {
 
 	return (
 		<>
-			<Typography variant="h5">Tools</Typography>
-			<CardGrid cards={tools} />
-
-			<Typography variant="h5">My Adapters</Typography>
-			<CardGrid cards={adapters} />
+			<Accordion
+				expanded={expanded[0]}
+				onChange={() => handleAccordion(0)}
+			>
+				<AccordionSummary
+					expandIcon={<ExpandMoreIcon />}
+					aria-controls="panel1a-content"
+					id="panel1a-header"
+				>
+					<Typography variant="h5">Tools</Typography>
+				</AccordionSummary>
+				<AccordionDetails>
+					<CardGrid cards={tools} />
+				</AccordionDetails>
+			</Accordion>
+			<Accordion
+				expanded={expanded[1]}
+				onChange={() => handleAccordion(1)}
+			>
+				<AccordionSummary
+					expandIcon={<ExpandMoreIcon />}
+					aria-controls="panel1a-content"
+					id="panel1a-header"
+				>
+					<Typography variant="h5">My Adapters</Typography>
+				</AccordionSummary>
+				<AccordionDetails>
+					<CardGrid cards={adapters} />
+				</AccordionDetails>
+			</Accordion>
 		</>
 	);
 }
