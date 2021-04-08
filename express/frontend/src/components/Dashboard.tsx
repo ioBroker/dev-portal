@@ -340,7 +340,7 @@ export default function Dashboard(props: DashboardProps) {
 								<CardButton
 									icon={
 										<Tooltip
-											title={`GitHub Repository (${repo.open_issues} open issues)`}
+											title={`GitHub Repository (${repo.open_issues} open issues/PRs)`}
 										>
 											<Badge
 												badgeContent={repo.open_issues}
