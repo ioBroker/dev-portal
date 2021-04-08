@@ -15,8 +15,6 @@ import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import GitHubIcon from "@material-ui/icons/GitHub";
-import DownloadIcon from "@material-ui/icons/CloudDownloadOutlined";
 import React, { useEffect, useRef } from "react";
 import useWebSocket from "react-use-websocket";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
@@ -25,6 +23,7 @@ import {
 	LogMessage,
 	ServerClientMessage,
 } from "../../../../backend/src/create-adapter-ws";
+import { DownloadIcon, GitHubIcon } from "../../components/Icons";
 import { User } from "../../lib/gitHub";
 
 const useStyles = makeStyles((theme) => ({

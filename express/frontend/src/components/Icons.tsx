@@ -1,11 +1,19 @@
 import SvgIcon from "@material-ui/core/SvgIcon";
 import React from "react";
 
+export { default as DownloadIcon } from "@material-ui/icons/CloudDownloadOutlined";
+export { default as DashboardIcon } from "@material-ui/icons/Dashboard";
+export { default as LogoutIcon } from "@material-ui/icons/ExitToApp";
+export { default as GitHubIcon } from "@material-ui/icons/GitHub";
+export { default as CreateAdapterIcon } from "@material-ui/icons/LibraryAdd";
+export { default as DiscoveryIcon } from "@material-ui/icons/SettingsInputAntenna";
+export { default as AdapterCheckIcon } from "@material-ui/icons/Spellcheck";
+
 /**
  * Icon based on Nijel at English Wikipedia, CC BY-SA 3.0 <https://creativecommons.org/licenses/by-sa/3.0>, via Wikimedia Commons
  * https://commons.wikimedia.org/wiki/File:Weblate_logo.svg
  */
-export default function WeblateIcon(props: any) {
+export function WeblateIcon(props: any) {
 	return (
 		<SvgIcon {...props} viewBox="50 50 200 200">
 			<g

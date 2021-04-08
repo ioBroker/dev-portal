@@ -9,9 +9,9 @@ import Popper from "@material-ui/core/Popper";
 import { makeStyles } from "@material-ui/core/styles";
 import Tooltip from "@material-ui/core/Tooltip";
 import React from "react";
-import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import Typography from "@material-ui/core/Typography";
 import { User } from "../lib/gitHub";
+import { LogoutIcon } from "./Icons";
 
 const useStyles = makeStyles((theme) => ({
 	avatar: {
@@ -108,7 +108,7 @@ export default function UserMenu(props: UserMenuProps) {
 								>
 									<MenuItem onClick={handleLogout}>
 										<ListItemIcon>
-											<ExitToAppIcon fontSize="small" />
+											<LogoutIcon fontSize="small" />
 										</ListItemIcon>
 										<Typography variant="inherit">
 											Logout

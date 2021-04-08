@@ -79,3 +79,22 @@ export const getWeblateAdapterComponents = AsyncCache.of(async () => {
 	);
 	return result.data;
 });
+
+const discoverySupports = new Map<string, Promise<boolean>>();
+export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
+	if (!discoverySupports.has(adapterName)) {
+		const checkDiscoverySupport = async () => {
+			try {
+				await axios.get(
+					`https://cdn.jsdelivr.net/npm/iobroker.discovery/lib/adapters/` +
+						`${encodeURIComponent(adapterName)}.js`,
+				);
+				return true;
+			} catch (error) {
+				return false;
+			}
+		};
+		discoverySupports.set(adapterName, checkDiscoverySupport());
+	}
+	return discoverySupports.get(adapterName) as Promise<boolean>;
+}

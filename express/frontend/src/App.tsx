@@ -9,7 +9,6 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import MenuIcon from "@material-ui/icons/Menu";
-import GitHubIcon from "@material-ui/icons/GitHub";
 import clsx from "clsx";
 import React, { useEffect } from "react";
 import {
@@ -28,12 +27,15 @@ import Link from "@material-ui/core/Link";
 import CreateAdapter from "./tools/create-adapter/CreateAdapter";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
-import DashboardIcon from "@material-ui/icons/Dashboard";
-import CreateAdapterIcon from "@material-ui/icons/LibraryAdd";
-import AdapterCheckIcon from "@material-ui/icons/Spellcheck";
 import ListItemText from "@material-ui/core/ListItemText";
 import Tooltip from "@material-ui/core/Tooltip";
 import Hidden from "@material-ui/core/Hidden";
+import {
+	AdapterCheckIcon,
+	CreateAdapterIcon,
+	DashboardIcon,
+	GitHubIcon,
+} from "./components/Icons";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";

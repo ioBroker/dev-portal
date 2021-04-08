@@ -19,6 +19,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Chart from "react-google-charts";
+import { useHistory } from "react-router-dom";
 import { User } from "../lib/gitHub";
 import { getMyAdapterRepos } from "../lib/ioBroker";
 
@@ -104,6 +105,10 @@ export function MessageIcon(props: MessageIconProps) {
 	return <Icon className={classes[type]} />;
 }
 
+export interface AdapterCheckLocationState {
+	repoFullName?: string;
+}
+
 export interface AdapterCheckProps {
 	user: User;
 }
@@ -111,6 +116,7 @@ export interface AdapterCheckProps {
 export default function AdapterCheck(props: AdapterCheckProps) {
 	const { user } = props;
 	const classes = useStyles();
+	const history = useHistory();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
 	const [busy, setBusy] = useState(false);
@@ -122,6 +128,15 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 		};
 		loadData().catch(console.error);
 	}, [user]);
+
+	const incomingState = history.location.state as
+		| AdapterCheckLocationState
+		| undefined;
+	useEffect(() => {
+		if (incomingState?.repoFullName) {
+			setRepoName(incomingState.repoFullName);
+		}
+	}, [incomingState]);
 
 	const handleStartClick = async () => {
 		setMessages([]);

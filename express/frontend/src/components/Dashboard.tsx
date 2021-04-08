@@ -15,20 +15,26 @@ import { makeStyles } from "@material-ui/core/styles";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import GitHubIcon from "@material-ui/icons/GitHub";
-import SettingsInputAntennaIcon from "@material-ui/icons/SettingsInputAntenna";
 import axios from "axios";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { handleLogin } from "../App";
-import { User } from "../lib/gitHub";
+import { User, UserRepo } from "../lib/gitHub";
 import {
 	getLatest,
 	getMyAdapterRepos,
 	getWeblateAdapterComponents,
+	hasDiscoverySupport,
+	LatestAdapters,
 } from "../lib/ioBroker";
-import WeblateIcon from "./WeblateIcon";
+import { AdapterCheckLocationState } from "../tools/AdapterCheck";
+import {
+	AdapterCheckIcon,
+	DiscoveryIcon,
+	GitHubIcon,
+	WeblateIcon,
+} from "./Icons";
 
 const uc = encodeURIComponent;
 
@@ -192,6 +198,9 @@ interface DashboardProps {
 
 export default function Dashboard(props: DashboardProps) {
 	const { user } = props;
+
+	const history = useHistory<AdapterCheckLocationState>();
+
 	const tools = [
 		{
 			title: "Documentation",
@@ -273,119 +282,134 @@ export default function Dashboard(props: DashboardProps) {
 	};
 
 	useEffect(() => {
+		const getAdapterCard = async (
+			repo: UserRepo,
+			latest: LatestAdapters,
+		) => {
+			const adapterName = repo.name.split(".")[1];
+			let info = latest[adapterName];
+			const defaultBranch = repo.default_branch || "master";
+			if (!info) {
+				try {
+					const ioPackage = await axios.get(
+						`https://raw.githubusercontent.com/` +
+							`${uc(repo.full_name)}/` +
+							`${uc(defaultBranch)}/io-package.json`,
+					);
+					info = ioPackage.data.common;
+				} catch (error) {
+					console.error(error);
+					return;
+				}
+			}
+			const discoveryLink = (await hasDiscoverySupport(adapterName))
+				? `https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
+				  `${uc(adapterName)}.js`
+				: "";
+
+			let weblateLink = "";
+			try {
+				const components = await getWeblateAdapterComponents();
+				const component = components.results.find(
+					(c: any) => c.name === adapterName,
+				);
+				if (component) {
+					weblateLink =
+						`https://weblate.iobroker.net/projects/adapters/` +
+						`${uc(component.slug)}/`;
+				}
+			} catch {
+				// ignore and leave "weblateLink" empty
+			}
+
+			const openAdapterCheck = () => {
+				history.push("/adapter-check", {
+					repoFullName: repo.full_name,
+				});
+			};
+
+			return {
+				title: repo.name,
+				img: info?.extIcon,
+				text:
+					info?.desc?.en ||
+					repo.description ||
+					"No description available",
+				squareImg: true,
+				buttons: [
+					<CardButton
+						icon={
+							<Tooltip
+								title={`GitHub Repository (${repo.open_issues} open issues/PRs)`}
+							>
+								<Badge
+									badgeContent={repo.open_issues}
+									color="secondary"
+								>
+									<GitHubIcon />
+								</Badge>
+							</Tooltip>
+						}
+						url={repo.html_url}
+					/>,
+					<CardButton
+						icon={
+							<Tooltip title="Start Adapter Check">
+								<AdapterCheckIcon />
+							</Tooltip>
+						}
+						onClick={openAdapterCheck}
+					/>,
+					<Tooltip
+						title={`${
+							discoveryLink ? "S" : "Not s"
+						}upported by ioBroker.discovery`}
+					>
+						<span>
+							<CardButton
+								disabled={!discoveryLink}
+								icon={<DiscoveryIcon />}
+								url={discoveryLink}
+							/>
+						</span>
+					</Tooltip>,
+					<Tooltip
+						title={`Translations ${
+							weblateLink ? "" : "not "
+						}available on Weblate`}
+					>
+						<span>
+							<CardButton
+								disabled={!weblateLink}
+								icon={<WeblateIcon />}
+								url={weblateLink}
+							/>
+						</span>
+					</Tooltip>,
+				],
+			};
+		};
+
 		const loadAdapters = async (user: User) => {
 			setAdapters([]); // clear the list (and show the spinner)
-			const adapters: DashboardCardProps[] = [];
 
 			const [repos, latest] = await Promise.all([
 				getMyAdapterRepos(user.token),
 				getLatest(),
 			]);
-			await Promise.all(
+			const cards = await Promise.all(
 				repos.map(async (repo) => {
 					try {
-						const adapterName = repo.name.split(".")[1];
-						let info = latest[adapterName];
-						const defaultBranch = repo.default_branch || "master";
-						if (!info) {
-							try {
-								const ioPackage = await axios.get(
-									`https://raw.githubusercontent.com/` +
-										`${uc(repo.full_name)}/` +
-										`${uc(defaultBranch)}/io-package.json`,
-								);
-								info = ioPackage.data.common;
-							} catch (error) {
-								console.error(error);
-								return;
-							}
-						}
-						let discoveryLink = "";
-						try {
-							await axios.get(
-								`https://cdn.jsdelivr.net/npm/iobroker.discovery/lib/adapters/` +
-									`${uc(adapterName)}.js`,
-							);
-							discoveryLink =
-								`https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
-								`${uc(adapterName)}.js`;
-						} catch {
-							// ignore and leave "discoveryLink" empty
-						}
-
-						let weblateLink = "";
-						try {
-							const components = await getWeblateAdapterComponents();
-							const component = components.results.find(
-								(c: any) => c.name === adapterName,
-							);
-							if (component) {
-								weblateLink =
-									`https://weblate.iobroker.net/projects/adapters/` +
-									`${uc(component.slug)}/`;
-							}
-						} catch {
-							// ignore and leave "weblateLink" empty
-						}
-
-						adapters.push({
-							title: repo.name,
-							img: info?.extIcon,
-							text:
-								info?.desc?.en ||
-								repo.description ||
-								"No description available",
-							squareImg: true,
-							buttons: [
-								<CardButton
-									icon={
-										<Tooltip
-											title={`GitHub Repository (${repo.open_issues} open issues/PRs)`}
-										>
-											<Badge
-												badgeContent={repo.open_issues}
-												color="secondary"
-											>
-												<GitHubIcon />
-											</Badge>
-										</Tooltip>
-									}
-									url={repo.html_url}
-								/>,
-								<Tooltip
-									title={`${
-										discoveryLink ? "S" : "Not s"
-									}upported by ioBroker.discovery`}
-								>
-									<span>
-										<CardButton
-											disabled={!discoveryLink}
-											icon={<SettingsInputAntennaIcon />}
-											url={discoveryLink}
-										/>
-									</span>
-								</Tooltip>,
-								<Tooltip
-									title={`Translations ${
-										weblateLink ? "" : "not "
-									}available on Weblate`}
-								>
-									<span>
-										<CardButton
-											disabled={!weblateLink}
-											icon={<WeblateIcon />}
-											url={weblateLink}
-										/>
-									</span>
-								</Tooltip>,
-							],
-						});
+						return await getAdapterCard(repo, latest);
 					} catch (error) {
 						console.error(error);
 					}
 				}),
 			);
 
+			const adapters = cards
+				.filter((c) => !!c)
+				.map((c) => c as DashboardCardProps);
 			if (adapters.length === 0) {
 				adapters.push({
 					title: "No adapters found",
