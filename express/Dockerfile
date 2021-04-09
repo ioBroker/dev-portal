@@ -26,7 +26,7 @@ FROM node:14-slim
 RUN mkdir -p /app/public
 WORKDIR /app
 
-COPY backend/*.json /app
+COPY backend/*.json /app/
 COPY --from=build-backend /app/package.json /app/package-lock.json ./
 
 RUN npm ci --production
