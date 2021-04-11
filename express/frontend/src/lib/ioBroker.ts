@@ -1,43 +1,9 @@
 import axios from "axios";
+import { LatestAdapters } from "../../../backend/src/iobroker";
 import { GitHubComm } from "./gitHub";
 import { AsyncCache } from "./utils";
 
 export type TranslatedText = Record<string, string>;
-
-export interface LatestAdapter {
-	meta: string;
-	icon: string;
-	type: string;
-	stars: number;
-	weekDownloads: number;
-	stat: number;
-	name: string;
-	version: string;
-	news: TranslatedText;
-	title: string;
-	titleLang: TranslatedText;
-	desc: TranslatedText;
-	authors: string[];
-	keywords: string[];
-	license: string;
-	platform: string;
-	main: string;
-	enabled: boolean;
-	extIcon: string;
-	readme: string;
-	loglevel: string;
-	mode: string;
-	compact: boolean;
-	connectionType: string;
-	dataSource: string;
-	materialize: boolean;
-	dependencies: Record<string, string>[];
-	published: Date;
-	versionDate: Date;
-	stable: string;
-}
-
-export type LatestAdapters = Record<string, LatestAdapter>;
 
 export const getLatest = AsyncCache.of(async () => {
 	const result = await axios.get<LatestAdapters>(

@@ -5,6 +5,7 @@ import path from "path";
 import auth from "./auth";
 import { env } from "./common";
 import { handleUpgrade, router as createAdapterRouter } from "./create-adapter";
+import { startCronJobs } from "./cron";
 import weblateProxy from "./weblate-proxy";
 
 const app = express();
@@ -40,3 +41,5 @@ server.on(
 		}
 	},
 );
+
+startCronJobs();

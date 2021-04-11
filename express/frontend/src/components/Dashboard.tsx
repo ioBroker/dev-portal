@@ -19,6 +19,7 @@ import axios from "axios";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
+import { LatestAdapters } from "../../../backend/src/iobroker";
 import { handleLogin } from "../App";
 import { User, UserRepo } from "../lib/gitHub";
 import {
@@ -26,7 +27,6 @@ import {
 	getMyAdapterRepos,
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
-	LatestAdapters,
 } from "../lib/ioBroker";
 import { AdapterCheckLocationState } from "../tools/AdapterCheck";
 import {
