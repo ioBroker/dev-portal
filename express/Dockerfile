@@ -1,34 +1,42 @@
 FROM node:14-buster AS build-frontend
 
-RUN mkdir -p /app
-WORKDIR /app
-
-COPY frontend/ ./frontend/
-COPY backend/src/*.d.ts ./backend/src/
-
+RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
 
-RUN npm ci \
-    && npm run build
+# copy package(-lock).json first and install (so it's only done when dependencies change)
+COPY frontend/*.json ./
+RUN npm ci
+
+# copy all source files and build
+COPY frontend/public/ ./public/
+COPY frontend/src/ ./src/
+COPY backend/src/*.d.ts ../backend/src/
+RUN npm run build
+
+
 
 FROM node:14-buster AS build-backend
 
 RUN mkdir -p /app
 WORKDIR /app
 
-COPY backend/ ./
+# copy package(-lock).json first and install (so it's only done when dependencies change)
+COPY backend/*.json ./
+RUN npm ci
 
-RUN npm ci \
-    && npm run build
+# copy all source files and build
+COPY backend/src/ ./src/
+RUN npm run build
+
+
 
 FROM node:14-slim
 
 RUN mkdir -p /app/public
 WORKDIR /app
 
-COPY backend/*.json /app/
-COPY --from=build-backend /app/package.json /app/package-lock.json ./
-
+# copy package(-lock).json first and install (so it's only done when dependencies change)
+COPY --from=build-backend /app/*.json ./
 RUN npm ci --production
 
 COPY --from=build-backend /app/build/ ./
