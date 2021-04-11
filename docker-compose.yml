@@ -3,10 +3,15 @@ services:
     express:
         build: express
         restart: always
+        depends_on:
+            - mongo
         environment:
             TEMP_DIR: /tmp
             GOOGLE_APPLICATION_CREDENTIALS: /app/google-translate-credentials.json
+    mongo:
+        image: "mongo:4.4"
+        restart: always
         volumes:
-            - pouch-data:/app/db
+            - mongo-data:/data/db
 volumes:
-    pouch-data: {}
+    mongo-data: {}
