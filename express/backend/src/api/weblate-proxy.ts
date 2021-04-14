@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Router } from "express";
-import { env } from "./common";
+import { env } from "../common";
 
 const router = Router();
 

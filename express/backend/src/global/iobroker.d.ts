@@ -1,4 +1,8 @@
-export interface LatestAdapter {
+export type AdapterName = string;
+
+export type DateString = string;
+
+export interface AdapterInfo {
 	meta: string;
 	icon: string;
 	type: string;
@@ -26,17 +30,33 @@ export interface LatestAdapter {
 	dataSource: string;
 	materialize: boolean;
 	dependencies: Record<string, string>[];
-	published: Date;
-	versionDate: Date;
+	published: DateString;
+	versionDate: DateString;
+}
+
+export interface StableAdapter extends AdapterInfo {
 	stable: string;
 }
 
-export type LatestAdapters = Record<string, LatestAdapter>;
+/**
+ * Result of https://repo.iobroker.live/sources-dist.json
+ */
+export type StableAdapters = Record<AdapterName, StableAdapter>;
 
-export type AdapterName = string;
+export interface LatestAdapter extends AdapterInfo {
+	latestVersion: string;
+}
+
+/**
+ * Result of https://repo.iobroker.live/sources-dist-latest.json
+ */
+export type LatestAdapters = Record<AdapterName, LatestAdapter>;
 
 export type Version = string;
 
+/**
+ * Result of http://iobroker.live/statistics.json
+ */
 export interface Statistics {
 	total: number;
 	adapters: Record<AdapterName, number>;

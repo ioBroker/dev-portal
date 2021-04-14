@@ -22,7 +22,7 @@ import {
 	GeneratorTarget,
 	LogMessage,
 	ServerClientMessage,
-} from "../../../../backend/src/create-adapter-ws";
+} from "../../../../backend/src/global/create-adapter-ws";
 import { DownloadIcon, GitHubIcon } from "../../components/Icons";
 import { User } from "../../lib/gitHub";
 

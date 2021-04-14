@@ -2,11 +2,15 @@ import express from "express";
 import { IncomingMessage } from "http";
 import { Socket } from "net";
 import path from "path";
+import adapterApi from "./api/adapter";
+import weblateProxy from "./api/weblate-proxy";
+import {
+	handleUpgrade,
+	router as createAdapterRouter,
+} from "./apps/create-adapter";
 import auth from "./auth";
 import { env } from "./common";
-import { handleUpgrade, router as createAdapterRouter } from "./create-adapter";
 import { startCronJobs } from "./cron";
-import weblateProxy from "./weblate-proxy";
 
 const app = express();
 const port = 8080;
@@ -19,8 +23,11 @@ app.use(express.static(publicPath));
 
 app.use(auth);
 
+// api
 app.use(weblateProxy);
+app.use(adapterApi);
 
+// apps
 app.use(createAdapterRouter);
 
 app.get("/*", function (_req, res) {

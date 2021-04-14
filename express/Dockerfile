@@ -10,7 +10,7 @@ RUN npm ci
 # copy all source files and build
 COPY frontend/public/ ./public/
 COPY frontend/src/ ./src/
-COPY backend/src/*.d.ts ../backend/src/
+COPY backend/src/global/*.d.ts ../backend/src/global/
 RUN npm run build
 
 

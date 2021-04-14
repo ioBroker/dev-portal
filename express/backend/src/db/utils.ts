@@ -1,7 +1,19 @@
 import { MongoClient } from "mongodb";
+import { RepoAdapter, Statistics } from "./schemas";
 
 export function createClient() {
 	return new MongoClient("mongodb://mongo/dev-portal");
+}
+
+export async function dbConnect() {
+	const client = createClient();
+	await client.connect();
+	const db = client.db();
+
+	return {
+		rawStatistics: () => db.collection<Statistics>("raw-statistics"),
+		repoAdapters: () => db.collection<RepoAdapter>("repo-adapters"),
+	};
 }
 
 function escapeKey(key: string) {
@@ -13,7 +25,7 @@ function unescapeKey(key: string) {
 }
 
 function transformObjectKeys<T>(obj: T, transform: (key: string) => string): T {
-	if (typeof obj !== "object") {
+	if (!obj || typeof obj !== "object") {
 		return obj;
 	}
 	const keys = Object.keys(obj);

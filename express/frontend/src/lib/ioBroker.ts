@@ -1,7 +1,12 @@
 import axios from "axios";
-import { LatestAdapters } from "../../../backend/src/iobroker";
-import { GitHubComm } from "./gitHub";
+import {
+	LatestAdapter,
+	LatestAdapters,
+} from "../../../backend/src/global/iobroker";
+import { GitHubComm, UserRepo } from "./gitHub";
 import { AsyncCache } from "./utils";
+
+const uc = encodeURIComponent;
 
 export type TranslatedText = Record<string, string>;
 
@@ -36,6 +41,48 @@ export const getMyAdapterRepos = async (ghToken: string) => {
 
 		return true;
 	});
+};
+
+export interface AdapterInfos {
+	repo: UserRepo;
+	info?: LatestAdapter;
+}
+
+const myAdapterInfos = new Map<string, Promise<AdapterInfos[]>>();
+export const getMyAdapterInfos = async (ghToken: string) => {
+	if (!myAdapterInfos.has(ghToken)) {
+		const getInfos = async () => {
+			const [repos, latest] = await Promise.all([
+				getMyAdapterRepos(ghToken),
+				getLatest(),
+			]);
+			const infos = await Promise.all(
+				repos.map(async (repo) => {
+					const adapterName = repo.name.split(".")[1];
+					let info = latest[adapterName];
+					const defaultBranch = repo.default_branch || "master";
+					if (!info) {
+						try {
+							const ioPackage = await axios.get(
+								`https://raw.githubusercontent.com/` +
+									`${uc(repo.full_name)}/` +
+									`${uc(defaultBranch)}/io-package.json`,
+							);
+							info = ioPackage.data.common;
+						} catch (error) {
+							console.error(error);
+						}
+					}
+
+					return { repo, info };
+				}),
+			);
+			return infos.filter((i) => i) as AdapterInfos[];
+		};
+		myAdapterInfos.set(ghToken, getInfos());
+	}
+
+	return myAdapterInfos.get(ghToken) as Promise<AdapterInfos[]>;
 };
 
 export const getWeblateAdapterComponents = AsyncCache.of(async () => {

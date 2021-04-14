@@ -37,6 +37,15 @@ import {
 	DashboardIcon,
 	GitHubIcon,
 } from "./components/Icons";
+import AdapterDetails from "./tools/AdapterDetails";
+import {
+	getLatest,
+	getMyAdapterInfos,
+	getMyAdapterRepos,
+} from "./lib/ioBroker";
+import axios from "axios";
+
+const uc = encodeURIComponent;
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";
@@ -98,6 +107,9 @@ const useStyles = makeStyles((theme) => ({
 		/*[theme.breakpoints.up("sm")]: {
 			width: theme.spacing(7),
 		},*/
+	},
+	navIcon: {
+		height: "2em",
 	},
 	appBarSpacer: theme.mixins.toolbar,
 	content: {
@@ -164,8 +176,11 @@ export default function App() {
 		gitHubTokenCookie,
 	]);
 	const [open, setOpen] = React.useState(false);
-	const [user, setUser] = React.useState<User | undefined>();
+	const [user, setUser] = React.useState<User>();
 	const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>();
+	const [adapters, setAdapters] = React.useState<
+		{ name: string; icon?: string }[]
+	>();
 
 	const handleDrawerOpen = () => {
 		setOpen(true);
@@ -199,12 +214,31 @@ export default function App() {
 				setUser(undefined);
 				setIsLoggedIn(false);
 			};
-			fetchUser();
+			fetchUser().catch(console.error);
 		} else if (!user) {
 			setUser(undefined);
 			setIsLoggedIn(false);
+			setAdapters(undefined);
 		}
 	}, [cookies, user, isLoggedIn, removeCookie]);
+
+	useEffect(() => {
+		if (!user) {
+			return;
+		}
+		const loadAdapters = async () => {
+			const infos = await getMyAdapterInfos(user.token);
+			const adapters = await Promise.all(
+				infos
+					.filter((i) => i)
+					.map(async ({ info }) => {
+						return { name: info?.name, icon: info?.extIcon };
+					}),
+			);
+			setAdapters(adapters.filter((a) => a) as any);
+		};
+		loadAdapters().catch(console.error);
+	}, [user]);
 
 	return (
 		<div className={classes.root}>
@@ -294,6 +328,27 @@ export default function App() {
 									open={open}
 								/>
 							)}
+
+							<Divider />
+
+							{adapters &&
+								adapters.map((a) => (
+									<NaviListItem
+										key={a.name}
+										link={`/adapter/${a.name}`}
+										title={`ioBroker.${a.name}`}
+										icon={
+											<img
+												src={a.icon}
+												className={classes.navIcon}
+												alt={a.name}
+											/>
+										}
+										open={open}
+									/>
+								))}
+
+							{adapters && <Divider />}
 						</Drawer>
 					</Hidden>
 					<main className={classes.content}>
@@ -306,6 +361,11 @@ export default function App() {
 								{user && (
 									<Route path="/adapter-check">
 										<AdapterCheck user={user} />
+									</Route>
+								)}
+								{user && (
+									<Route path="/adapter/:name">
+										<AdapterDetails />
 									</Route>
 								)}
 								<Route path="/">

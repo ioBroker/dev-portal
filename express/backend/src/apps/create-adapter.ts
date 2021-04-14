@@ -18,13 +18,13 @@ import rimraf from "rimraf";
 import { promisify } from "util";
 import { v4 } from "uuid";
 import WebSocket from "ws";
-import { COOKIE_NAME_CREATOR_TOKEN } from "./auth";
-import { delay, env } from "./common";
+import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
+import { delay, env } from "../common";
 import {
 	ClientServerMessage,
 	ServerClientMessage,
 	StartMessage,
-} from "./create-adapter-ws";
+} from "../global/create-adapter-ws";
 
 const rimrafAsync = promisify(rimraf);
 

@@ -19,11 +19,13 @@ import axios from "axios";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
-import { LatestAdapters } from "../../../backend/src/iobroker";
+import { LatestAdapters } from "../../../backend/src/global/iobroker";
 import { handleLogin } from "../App";
 import { User, UserRepo } from "../lib/gitHub";
 import {
+	AdapterInfos,
 	getLatest,
+	getMyAdapterInfos,
 	getMyAdapterRepos,
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
@@ -282,36 +284,21 @@ export default function Dashboard(props: DashboardProps) {
 	};
 
 	useEffect(() => {
-		const getAdapterCard = async (
-			repo: UserRepo,
-			latest: LatestAdapters,
-		) => {
-			const adapterName = repo.name.split(".")[1];
-			let info = latest[adapterName];
-			const defaultBranch = repo.default_branch || "master";
+		const getAdapterCard = async (infos: AdapterInfos) => {
+			const { repo, info } = infos;
 			if (!info) {
-				try {
-					const ioPackage = await axios.get(
-						`https://raw.githubusercontent.com/` +
-							`${uc(repo.full_name)}/` +
-							`${uc(defaultBranch)}/io-package.json`,
-					);
-					info = ioPackage.data.common;
-				} catch (error) {
-					console.error(error);
-					return;
-				}
+				return;
 			}
-			const discoveryLink = (await hasDiscoverySupport(adapterName))
+			const discoveryLink = (await hasDiscoverySupport(info.name))
 				? `https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
-				  `${uc(adapterName)}.js`
+				  `${uc(info.name)}.js`
 				: "";
 
 			let weblateLink = "";
 			try {
 				const components = await getWeblateAdapterComponents();
 				const component = components.results.find(
-					(c: any) => c.name === adapterName,
+					(c: any) => c.name === info.name,
 				);
 				if (component) {
 					weblateLink =
@@ -393,14 +380,11 @@ export default function Dashboard(props: DashboardProps) {
 		const loadAdapters = async (user: User) => {
 			setAdapters([]); // clear the list (and show the spinner)
 
-			const [repos, latest] = await Promise.all([
-				getMyAdapterRepos(user.token),
-				getLatest(),
-			]);
+			const infos = await getMyAdapterInfos(user.token);
 			const cards = await Promise.all(
-				repos.map(async (repo) => {
+				infos.map(async (info) => {
 					try {
-						return await getAdapterCard(repo, latest);
+						return await getAdapterCard(info);
 					} catch (error) {
 						console.error(error);
 					}
