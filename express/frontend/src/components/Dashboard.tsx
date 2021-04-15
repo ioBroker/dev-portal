@@ -109,6 +109,9 @@ const useCardStyles = makeStyles((theme) => ({
 	cardContent: {
 		flexGrow: 1,
 	},
+	clickableCard: {
+		cursor: "pointer",
+	},
 	loadingProgress: {
 		marginTop: "40%",
 		marginBottom: "40%",
@@ -122,11 +125,14 @@ interface DashboardCardProps {
 	text: string;
 	buttons?: JSX.Element[];
 	squareImg?: boolean;
+	to?: string;
 }
 
 function DashboardCard(props: DashboardCardProps) {
-	const { title, img, text, buttons, squareImg } = props;
+	const { title, img, text, buttons, squareImg, to } = props;
 	const classes = useCardStyles();
+	const history = useHistory();
+	const handleCardClick = !to ? undefined : () => history.push(to);
 	return (
 		<Card className={classes.card}>
 			<Hidden xsDown>
@@ -134,12 +140,20 @@ function DashboardCard(props: DashboardCardProps) {
 					className={clsx(
 						classes.cardMedia,
 						squareImg && classes.adapterCardMedia,
+						to && classes.clickableCard,
 					)}
 					image={img}
 					title={title}
+					onClick={handleCardClick}
 				/>
 			</Hidden>
-			<CardContent className={classes.cardContent}>
+			<CardContent
+				className={clsx(
+					classes.cardContent,
+					to && classes.clickableCard,
+				)}
+				onClick={handleCardClick}
+			>
 				<Typography gutterBottom variant="h6" component="h2">
 					{title}
 				</Typography>
@@ -323,6 +337,7 @@ export default function Dashboard(props: DashboardProps) {
 					repo.description ||
 					"No description available",
 				squareImg: true,
+				to: `/adapter/${info.name}`,
 				buttons: [
 					<CardButton
 						icon={
