@@ -94,3 +94,7 @@ The file can be generated on the Google Cloud Platform by creating a Service Acc
 	"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-app-name%40your-project-id-123456.iam.gserviceaccount.com"
 }
 ```
+
+# Attributions
+
+-   Best Practices image: https://www.flickr.com/photos/barrydahl/6675297699 by Barry Dahl (CC BY 2.0)
