@@ -82,7 +82,7 @@ export default function AdapterDetails(props: AdapterDetailsProps) {
 		setOption(undefined);
 		setShowLoading(true);
 		const loadStatistics = async () => {
-			const url = `http://localhost:8080/api/adapter/${uc(name)}/stats`;
+			const url = `/api/adapter/${uc(name)}/stats`;
 			const { data: stats } = await axios.get<AdapterStatistics>(url);
 
 			const versions = new Set<string>();
