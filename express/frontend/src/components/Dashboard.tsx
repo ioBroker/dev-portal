@@ -238,16 +238,16 @@ export default function Dashboard(props: DashboardProps) {
 				/>,
 			],
 		},
-		// TODO: add review guidelines
 		{
-			title: "Forum",
-			img: "images/iobroker.png",
+			title: "Review Checklist",
+			img: "images/code-review.svg",
+			squareImg: true,
 			text:
-				"Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
+				"When you complete this checklist, your adapter should meet all requirements to be added to the repository.",
 			buttons: [
 				<CardButton
 					text="Open"
-					url="https://forum.iobroker.net/category/8/entwicklung"
+					url="https://github.com/ioBroker/ioBroker.repositories/blob/master/REVIEW_CHECKLIST.md#adapter-review-checklist"
 				/>,
 			],
 		},
@@ -260,6 +260,44 @@ export default function Dashboard(props: DashboardProps) {
 					text="open"
 					url="https://github.com/ioBroker/Community/projects/1"
 				/>,
+			],
+		},
+	];
+
+	const social = [
+		{
+			title: "Developer Forum",
+			img: "images/iobroker.png",
+			text:
+				"Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
+			buttons: [
+				<CardButton
+					text="Open"
+					url="https://forum.iobroker.net/category/8/entwicklung"
+				/>,
+			],
+		},
+		{
+			title: "Telegram",
+			img: "images/telegram.svg",
+			squareImg: true,
+			text:
+				"In the telegram channel for ioBroker development (German) you can exchange ideas and ask questions.",
+			buttons: [
+				<CardButton
+					text="Join"
+					url="https://t.me/ioBroker_development"
+				/>,
+			],
+		},
+		{
+			title: "Discord",
+			img: "images/discord.png",
+			squareImg: true,
+			text:
+				"Get in touch with other developers and discuss features on our Discord server.",
+			buttons: [
+				<CardButton text="Join" url="https://discord.gg/Ne3y6fUac3" />,
 			],
 		},
 	];
@@ -303,6 +341,7 @@ export default function Dashboard(props: DashboardProps) {
 		Record<string, DashboardCardProps[]>
 	>({
 		Resources: resources,
+		Social: social,
 		Tools: tools,
 		"My Adapters": [],
 	});

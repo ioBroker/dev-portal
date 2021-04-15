@@ -98,3 +98,5 @@ The file can be generated on the Google Cloud Platform by creating a Service Acc
 # Attributions
 
 -   Best Practices image: https://www.flickr.com/photos/barrydahl/6675297699 by Barry Dahl (CC BY 2.0)
+-   Code Review image: https://thenounproject.com/term/code-review/104097/ by Richard Slater (CC)
+-   Discord logo: By Source (WP:NFCC#4), Fair use, https://en.wikipedia.org/w/index.php?curid=50559581
