@@ -28,10 +28,12 @@ router.get("/api/adapter/:name/stats", async function (req, res) {
 			.sort({ date: 1 })
 			.forEach((s) => {
 				const stat = unescapeObjectKeys(s);
-				result.counts[stat.date] = {
-					total: stat.adapters[name],
-					versions: stat.versions[name],
-				};
+				if (stat.adapters[name]) {
+					result.counts[stat.date] = {
+						total: stat.adapters[name],
+						versions: stat.versions[name],
+					};
+				}
 			});
 
 		await repoAdapters
@@ -47,6 +49,10 @@ router.get("/api/adapter/:name/stats", async function (req, res) {
 			});
 
 		console.log(result);
+		if (Object.keys(result.counts).length === 0) {
+			res.status(404).send(`Adapter ${name} not found`);
+			return;
+		}
 
 		res.send(result);
 	} catch (error) {
