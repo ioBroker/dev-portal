@@ -25,6 +25,7 @@ import {
 } from "../../../../backend/src/global/create-adapter-ws";
 import { DownloadIcon, GitHubIcon } from "../../components/Icons";
 import { User } from "../../lib/gitHub";
+import { getWebSocketUrl } from "../../lib/utils";
 
 const useStyles = makeStyles((theme) => ({
 	configPreview: {
@@ -158,12 +159,6 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 	);
 }
 
-function getWebSocketUrl(): string {
-	const loc = window.location;
-	const host = loc.port === "3000" ? `${loc.hostname}:8080` : loc.host;
-	return `${loc.protocol.replace(/^http/, "ws")}//${host}/ws/create-adapter`;
-}
-
 export interface GenerateStepProps {
 	answers: Answers;
 	user?: User;
@@ -175,7 +170,7 @@ export function GenerateStep(props: GenerateStepProps) {
 	const { answers, user, startGenerator, onRequestLogin } = props;
 	const classes = useStyles();
 
-	const webSocket = useWebSocket(getWebSocketUrl);
+	const webSocket = useWebSocket(() => getWebSocketUrl("create-adapter"));
 
 	const [generator, setGenerator] = React.useState<GeneratorTarget>();
 

@@ -4,7 +4,7 @@ import {
 	LatestAdapters,
 } from "../../../backend/src/global/iobroker";
 import { GitHubComm, UserRepo } from "./gitHub";
-import { AsyncCache } from "./utils";
+import { AsyncCache, getApiUrl } from "./utils";
 
 const uc = encodeURIComponent;
 
@@ -87,7 +87,7 @@ export const getMyAdapterInfos = async (ghToken: string) => {
 
 export const getWeblateAdapterComponents = AsyncCache.of(async () => {
 	const result = await axios.get(
-		"/api/weblate/projects/adapters/components/",
+		getApiUrl("weblate/projects/adapters/components/"),
 	);
 	return result.data;
 });

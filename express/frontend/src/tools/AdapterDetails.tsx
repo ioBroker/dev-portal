@@ -8,6 +8,7 @@ import ReactECharts from "echarts-for-react";
 import axios from "axios";
 import { AdapterStatistics } from "../../../backend/src/global/adapter-stats";
 import sort from "semver/functions/sort";
+import { getApiUrl } from "../lib/utils";
 
 const uc = encodeURIComponent;
 
@@ -82,7 +83,7 @@ export default function AdapterDetails(props: AdapterDetailsProps) {
 		setOption(undefined);
 		setShowLoading(true);
 		const loadStatistics = async () => {
-			const url = `/api/adapter/${uc(name)}/stats`;
+			const url = getApiUrl(`adapter/${uc(name)}/stats`);
 			const { data: stats } = await axios.get<AdapterStatistics>(url);
 
 			const versions = new Set<string>();

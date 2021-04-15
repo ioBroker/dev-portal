@@ -1,5 +1,6 @@
 // specified environment variables
 export const env: Readonly<{
+	ALLOW_CORS?: string;
 	HTTP_PUBLIC_PATH?: string;
 	TEMP_DIR?: string;
 	PORTAL_GITHUB_OAUTH_CLIENT_ID: string;

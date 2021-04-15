@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import { IncomingMessage } from "http";
 import { Socket } from "net";
@@ -15,10 +16,13 @@ import { startCronJobs } from "./cron";
 const app = express();
 const port = 8080;
 
+if (env.ALLOW_CORS) {
+	app.use(cors());
+}
+
 const publicPath = env.HTTP_PUBLIC_PATH
 	? path.resolve(env.HTTP_PUBLIC_PATH)
 	: path.join(__dirname, "public");
-
 app.use(express.static(publicPath));
 
 app.use(auth);

@@ -58,6 +58,7 @@ services:
 
 The following environment variables can be configured:
 
+-   `ALLOW_CORS`: Allows the server to be accessed from another host (should only be used for development)
 -   `PORTAL_GITHUB_OAUTH_CLIENT_ID`: GitHub Client ID of your OAuth App that is used for general portal login (see below)
 -   `PORTAL_GITHUB_OAUTH_CLIENT_SECRET`: Client secret belonging to the above OAuth App
 -   `CREATOR_GITHUB_OAUTH_CLIENT_ID`: GitHub Client ID of your OAuth App that is used to create and modify repositories (see below)
