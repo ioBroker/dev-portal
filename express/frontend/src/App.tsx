@@ -38,7 +38,7 @@ import {
 	GitHubIcon,
 } from "./components/Icons";
 import AdapterDetails from "./tools/AdapterDetails";
-import { getMyAdapterInfos } from "./lib/ioBroker";
+import { getMyAdapterInfos, getWatchedAdapterInfos } from "./lib/ioBroker";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";
@@ -162,6 +162,11 @@ export function handleLogin() {
 	}
 }
 
+interface AdapterLink {
+	name: string;
+	icon?: string;
+}
+
 export default function App() {
 	const classes = useStyles();
 
@@ -171,8 +176,9 @@ export default function App() {
 	const [open, setOpen] = React.useState(false);
 	const [user, setUser] = React.useState<User>();
 	const [isLoggedIn, setIsLoggedIn] = React.useState<boolean>();
-	const [adapters, setAdapters] = React.useState<
-		{ name: string; icon?: string }[]
+	const [myAdapters, setMyAdapters] = React.useState<AdapterLink[]>();
+	const [watchedAdapters, setWatchedAdapters] = React.useState<
+		AdapterLink[]
 	>();
 
 	const handleDrawerOpen = () => {
@@ -211,7 +217,8 @@ export default function App() {
 		} else if (!user) {
 			setUser(undefined);
 			setIsLoggedIn(false);
-			setAdapters(undefined);
+			setMyAdapters(undefined);
+			setWatchedAdapters(undefined);
 		}
 	}, [cookies, user, isLoggedIn, removeCookie]);
 
@@ -219,20 +226,33 @@ export default function App() {
 		if (!user) {
 			return;
 		}
-		const loadAdapters = async () => {
-			const infos = await getMyAdapterInfos(user.token);
-			const adapters = await Promise.all(
-				infos
-					.filter((i) => i)
-					.map(async ({ info }) => {
-						return { name: info?.name, icon: info?.extIcon };
-					}),
-			);
-			setAdapters(adapters.filter((a) => a) as any);
-		};
-		loadAdapters().catch(console.error);
+		loadAdapters(user).catch(console.error);
 	}, [user]);
 
+	const loadAdapters = async (user: User) => {
+		const [myAdapterInfos, watchedAdapterInfos] = await Promise.all([
+			getMyAdapterInfos(user.token),
+			getWatchedAdapterInfos(user.token),
+		]);
+		const myAdapters = myAdapterInfos
+			.filter((i) => i)
+			.map(({ info }) => {
+				return { name: info?.name!, icon: info?.extIcon };
+			});
+		const watchedAdapters = watchedAdapterInfos
+			.filter((i) => i)
+			.map(({ info }) => {
+				return { name: info?.name!, icon: info?.extIcon };
+			});
+		setMyAdapters(myAdapters);
+		setWatchedAdapters(watchedAdapters);
+	};
+
+	const handleAdapterListChanged = () => {
+		if (user) {
+			loadAdapters(user).catch(console.error);
+		}
+	};
 	return (
 		<div className={classes.root}>
 			<CssBaseline />
@@ -324,8 +344,8 @@ export default function App() {
 
 							<Divider />
 
-							{adapters &&
-								adapters.map((a) => (
+							{myAdapters &&
+								myAdapters.map((a) => (
 									<NaviListItem
 										key={a.name}
 										link={`/adapter/${a.name}`}
@@ -341,7 +361,28 @@ export default function App() {
 									/>
 								))}
 
-							{adapters && <Divider />}
+							{myAdapters && <Divider />}
+
+							{watchedAdapters &&
+								watchedAdapters.map((a) => (
+									<NaviListItem
+										key={a.name}
+										link={`/adapter/${a.name}`}
+										title={`ioBroker.${a.name}`}
+										icon={
+											<img
+												src={a.icon}
+												className={classes.navIcon}
+												alt={a.name}
+											/>
+										}
+										open={open}
+									/>
+								))}
+
+							{watchedAdapters && watchedAdapters.length > 0 && (
+								<Divider />
+							)}
 						</Drawer>
 					</Hidden>
 					<main className={classes.content}>
@@ -362,7 +403,12 @@ export default function App() {
 									</Route>
 								)}
 								<Route path="/">
-									<Dashboard user={user} />
+									<Dashboard
+										user={user}
+										onAdapterListChanged={
+											handleAdapterListChanged
+										}
+									/>
 								</Route>
 							</Switch>
 						</Container>

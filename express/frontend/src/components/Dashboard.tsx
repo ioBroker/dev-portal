@@ -480,10 +480,11 @@ async function getAdapterCard(
 
 interface DashboardProps {
 	user?: User;
+	onAdapterListChanged: () => void;
 }
 
 export default function Dashboard(props: DashboardProps) {
-	const { user } = props;
+	const { user, onAdapterListChanged } = props;
 
 	const history = useHistory<AdapterCheckLocationState>();
 	const [categories, setCategories] = useState<Record<string, CardGridProps>>(
@@ -622,6 +623,7 @@ export default function Dashboard(props: DashboardProps) {
 			const { data: dbUser } = await axios.get<DbUser>(url);
 			dbUser.watches.push(repo);
 			await axios.put(url, dbUser);
+			onAdapterListChanged();
 			await loadWatchedAdapters(user!);
 		} catch (error) {
 			console.error(error);
