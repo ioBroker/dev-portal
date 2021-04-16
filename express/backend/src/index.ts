@@ -4,6 +4,7 @@ import { IncomingMessage } from "http";
 import { Socket } from "net";
 import path from "path";
 import adapterApi from "./api/adapter";
+import userApi from "./api/user";
 import weblateProxy from "./api/weblate-proxy";
 import {
 	handleUpgrade,
@@ -30,6 +31,7 @@ app.use(auth);
 // api
 app.use(weblateProxy);
 app.use(adapterApi);
+app.use(userApi);
 
 // apps
 app.use(createAdapterRouter);

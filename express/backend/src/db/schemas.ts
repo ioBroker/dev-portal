@@ -1,5 +1,6 @@
 import { LatestAdapter, StableAdapter } from "../global/iobroker";
 export { Statistics } from "../global/iobroker";
+export { User } from "../global/user";
 
 export type RepoAdapter = LatestAdapter | StableAdapter;
 

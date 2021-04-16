@@ -7,7 +7,9 @@ export type User = components["schemas"]["public-user"] & {
 	token: string;
 };
 
-export type UserRepo = components["schemas"]["minimal-repository"];
+export type MinimalRepository = components["schemas"]["minimal-repository"];
+export type FullRepository = components["schemas"]["full-repository"];
+export type Repository = MinimalRepository | FullRepository;
 
 const PAGE_SIZE = 100; // max 100
 
@@ -42,7 +44,7 @@ export class GitHubComm {
 	});
 
 	public readonly getUserRepos = AsyncCache.of(
-		async (): Promise<UserRepo[]> => {
+		async (): Promise<MinimalRepository[]> => {
 			const user = await this.getUser();
 			const result = [];
 			let page = 0;
@@ -59,4 +61,12 @@ export class GitHubComm {
 			return result;
 		},
 	);
+
+	public async getRepo(owner: string, repo: string): Promise<FullRepository> {
+		const result = await this.request("GET /repos/{owner}/{repo}", {
+			owner,
+			repo,
+		});
+		return result.data;
+	}
 }

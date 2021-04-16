@@ -19,23 +19,41 @@ import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
 import { handleLogin } from "../App";
-import { User } from "../lib/gitHub";
+import { GitHubComm, User } from "../lib/gitHub";
+import * as H from "history";
 import {
 	AdapterInfos,
+	getAdapterInfos,
+	getLatest,
 	getMyAdapterInfos,
+	getWatchedAdapterInfos,
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
 } from "../lib/ioBroker";
+import { User as DbUser } from "../../../backend/src/global/user";
 import { AdapterCheckLocationState } from "../tools/AdapterCheck";
 import { getToolsCards, resourcesCards, socialCards } from "./dashboard-static";
 import {
 	AdapterCheckIcon,
+	AddCardIcon,
 	DiscoveryIcon,
 	GitHubIcon,
 	WeblateIcon,
 } from "./Icons";
+import CardActionArea from "@material-ui/core/CardActionArea";
+import axios from "axios";
+import { getApiUrl } from "../lib/utils";
+import Dialog from "@material-ui/core/Dialog";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import TextField from "@material-ui/core/TextField";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import DialogActions from "@material-ui/core/DialogActions";
 
 const MY_ADAPTERS_CATEGORY = "My Adapters";
+const WATCHED_ADAPTERS_CATEGORY = "Watched Adapters";
 const COLLAPSED_CATEGORIES_KEY = "DASH_COLLAPSED_CATEGORIES";
 
 const uc = encodeURIComponent;
@@ -117,6 +135,12 @@ const useCardStyles = makeStyles((theme) => ({
 		marginBottom: "40%",
 		marginLeft: "25%",
 	},
+	centerIcon: {
+		width: "100%",
+		marginTop: "50%",
+		marginBottom: "50%",
+		transform: "scale(4)",
+	},
 }));
 
 export interface DashboardCardProps {
@@ -182,8 +206,24 @@ export function DashboardCard(props: DashboardCardProps) {
 function LoadingCard() {
 	const classes = useCardStyles();
 	return (
-		<Card className={classes.card}>
+		<Card className={classes.card} raised={true}>
 			<CircularProgress size="50%" className={classes.loadingProgress} />
+		</Card>
+	);
+}
+
+function AddCard(props: { onClick: () => void }) {
+	const { onClick } = props;
+	const classes = useCardStyles();
+	return (
+		<Card className={classes.card} raised={true}>
+			<CardActionArea onClick={onClick}>
+				<AddCardIcon
+					fontSize="large"
+					color="primary"
+					className={classes.centerIcon}
+				/>
+			</CardActionArea>
 		</Card>
 	);
 }
@@ -196,10 +236,11 @@ const useStyles = makeStyles((theme) => ({
 
 interface CardGridProps {
 	cards: DashboardCardProps[];
+	onAdd?: () => void;
 }
 
 function CardGrid(props: CardGridProps) {
-	const { cards } = props;
+	const { cards, onAdd } = props;
 	const classes = useStyles();
 	return (
 		<Grid container spacing={4} className={classes.cardGrid}>
@@ -209,13 +250,232 @@ function CardGrid(props: CardGridProps) {
 						<DashboardCard {...card} />
 					</Grid>
 				))}
-			{cards.length === 0 && (
+			{onAdd && (
+				<Grid item xs={12} sm={6} md={4} lg={3}>
+					<AddCard onClick={onAdd} />
+				</Grid>
+			)}
+			{cards.length === 0 && !onAdd && (
 				<Grid item xs={12} sm={6} md={4} lg={3}>
 					<LoadingCard />
 				</Grid>
 			)}
 		</Grid>
 	);
+}
+
+interface AddWatchDialogProps {
+	user: User;
+	open?: boolean;
+	onClose: (repo?: string) => void;
+}
+
+function AddWatchDialog(props: AddWatchDialogProps) {
+	const { user, open, onClose } = props;
+
+	const [repoNames, setRepoNames] = useState<string[]>([]);
+	const [repoName, setRepoName] = useState("");
+	const [error, setError] = useState("");
+	const [validating, setValidating] = useState(false);
+
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
+		const loadData = async () => {
+			const latest = await getLatest();
+			const names = Object.keys(latest).map((adapterName) =>
+				latest[adapterName].meta.replace(
+					/^\w+:\/\/[^/]+\/([^/]+\/[^/]+)\/.+$/,
+					"$1",
+				),
+			);
+			console.log("Found repo names:", names);
+			setRepoNames(names);
+		};
+		loadData().catch(console.error);
+	}, [open]);
+
+	const validate = async () => {
+		setValidating(true);
+		try {
+			const gitHub = GitHubComm.forToken(user.token);
+			const [owner, repo] = repoName.split("/", 2);
+			const latest = await getLatest();
+			const infos = await getAdapterInfos(
+				await gitHub.getRepo(owner, repo),
+				latest,
+			);
+			if (!infos.info) {
+				throw new Error("This is not an ioBroker adapter");
+			}
+			onClose(repoName);
+		} catch (error) {
+			setError(error.message || error);
+		} finally {
+			setValidating(false);
+		}
+	};
+
+	return (
+		<Dialog
+			open={!!open}
+			onClose={() => onClose()}
+			aria-labelledby="add-watch-dialog-title"
+		>
+			<DialogTitle id="add-watch-dialog-title">
+				Add an adapter
+			</DialogTitle>
+			<DialogContent>
+				<DialogContentText>
+					Please choose a GitHub repository of an ioBroker adapter to
+					add to your list of watched adapters.
+				</DialogContentText>
+				<Autocomplete
+					freeSolo
+					options={repoNames}
+					getOptionLabel={(option) => option}
+					inputValue={repoName}
+					onInputChange={(_e, value) => {
+						setRepoName(value);
+						setError("");
+					}}
+					renderInput={(params) => (
+						<TextField
+							{...params}
+							disabled={validating}
+							error={!!error}
+							helperText={error}
+							label="Adapter Repository"
+							variant="outlined"
+							InputProps={{
+								...params.InputProps,
+								startAdornment: (
+									<InputAdornment position="start">
+										https://github.com/
+									</InputAdornment>
+								),
+							}}
+						/>
+					)}
+				/>
+			</DialogContent>
+			<DialogActions>
+				<Button
+					onClick={() => onClose()}
+					disabled={validating}
+					color="primary"
+				>
+					Cancel
+				</Button>
+				<Button
+					onClick={validate}
+					disabled={validating}
+					color="primary"
+				>
+					Add
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
+
+async function getAdapterCard(
+	infos: AdapterInfos,
+	history: H.History<AdapterCheckLocationState>,
+): Promise<DashboardCardProps | undefined> {
+	const { repo, info } = infos;
+	if (!info) {
+		return;
+	}
+	const discoveryLink = (await hasDiscoverySupport(info.name))
+		? `https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
+		  `${uc(info.name)}.js`
+		: "";
+
+	let weblateLink = "";
+	try {
+		const components = await getWeblateAdapterComponents();
+		const component = components.results.find(
+			(c: any) => c.name === info.name,
+		);
+		if (component) {
+			weblateLink =
+				`https://weblate.iobroker.net/projects/adapters/` +
+				`${uc(component.slug)}/`;
+		}
+	} catch {
+		// ignore and leave "weblateLink" empty
+	}
+
+	const openAdapterCheck = () => {
+		history.push("/adapter-check", {
+			repoFullName: repo.full_name,
+		});
+	};
+
+	return {
+		title: repo.name,
+		img: info?.extIcon,
+		badges: {
+			"npm version": `http://img.shields.io/npm/v/iobroker.${info.name}.svg`,
+			"Stable version": `http://iobroker.live/badges/${info.name}-stable.svg`,
+		},
+		text: info?.desc?.en || repo.description || "No description available",
+		squareImg: true,
+		to: `/adapter/${info.name}`,
+		buttons: [
+			<CardButton
+				icon={
+					<Tooltip
+						title={`GitHub Repository (${repo.open_issues} open issues/PRs)`}
+					>
+						<Badge
+							badgeContent={repo.open_issues}
+							color="secondary"
+						>
+							<GitHubIcon />
+						</Badge>
+					</Tooltip>
+				}
+				url={repo.html_url}
+			/>,
+			<CardButton
+				icon={
+					<Tooltip title="Start Adapter Check">
+						<AdapterCheckIcon />
+					</Tooltip>
+				}
+				onClick={openAdapterCheck}
+			/>,
+			<Tooltip
+				title={`${
+					discoveryLink ? "S" : "Not s"
+				}upported by ioBroker.discovery`}
+			>
+				<span>
+					<CardButton
+						disabled={!discoveryLink}
+						icon={<DiscoveryIcon />}
+						url={discoveryLink}
+					/>
+				</span>
+			</Tooltip>,
+			<Tooltip
+				title={`Translations ${
+					weblateLink ? "" : "not "
+				}available on Weblate`}
+			>
+				<span>
+					<CardButton
+						disabled={!weblateLink}
+						icon={<WeblateIcon />}
+						url={weblateLink}
+					/>
+				</span>
+			</Tooltip>,
+		],
+	};
 }
 
 interface DashboardProps {
@@ -226,14 +486,14 @@ export default function Dashboard(props: DashboardProps) {
 	const { user } = props;
 
 	const history = useHistory<AdapterCheckLocationState>();
-	const [categories, setCategories] = useState<
-		Record<string, DashboardCardProps[]>
-	>({
-		Resources: resourcesCards,
-		Social: socialCards,
-		Tools: getToolsCards(!!user),
-		[MY_ADAPTERS_CATEGORY]: [],
-	});
+	const [categories, setCategories] = useState<Record<string, CardGridProps>>(
+		{
+			Resources: { cards: resourcesCards },
+			Social: { cards: socialCards },
+			Tools: { cards: getToolsCards(!!user) },
+			[MY_ADAPTERS_CATEGORY]: { cards: [] },
+		},
+	);
 	let storedCollapsed;
 	try {
 		storedCollapsed = JSON.parse(
@@ -243,6 +503,7 @@ export default function Dashboard(props: DashboardProps) {
 		storedCollapsed = [];
 	}
 	const [collapsed, setCollapsed] = useState<boolean[]>(storedCollapsed);
+	const [showAddWatch, setShowAddWatch] = useState(false);
 
 	const handleAccordion = (index: number) => {
 		setCollapsed((old) => {
@@ -256,117 +517,49 @@ export default function Dashboard(props: DashboardProps) {
 		});
 	};
 
+	const loadWatchedAdapters = async (user: User) => {
+		setCategories((old) => ({
+			...old,
+			[WATCHED_ADAPTERS_CATEGORY]: { cards: [] },
+		})); // clear the list (and show the spinner)
+
+		let adapters: DashboardCardProps[] = [];
+		try {
+			const infos = await getWatchedAdapterInfos(user.token);
+			const cards = await Promise.all(
+				infos.map((info) =>
+					getAdapterCard(info, history).catch(console.error),
+				),
+			);
+
+			adapters = cards
+				.filter((c) => !!c)
+				.map((c) => c as DashboardCardProps);
+		} catch (error) {
+			console.error(error);
+		}
+
+		setCategories((old) => ({
+			...old,
+			[WATCHED_ADAPTERS_CATEGORY]: {
+				cards: [...adapters],
+				onAdd: () => setShowAddWatch(true),
+			},
+		}));
+	};
+
 	useEffect(() => {
-		const getAdapterCard = async (infos: AdapterInfos) => {
-			const { repo, info } = infos;
-			if (!info) {
-				return;
-			}
-			const discoveryLink = (await hasDiscoverySupport(info.name))
-				? `https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
-				  `${uc(info.name)}.js`
-				: "";
-
-			let weblateLink = "";
-			try {
-				const components = await getWeblateAdapterComponents();
-				const component = components.results.find(
-					(c: any) => c.name === info.name,
-				);
-				if (component) {
-					weblateLink =
-						`https://weblate.iobroker.net/projects/adapters/` +
-						`${uc(component.slug)}/`;
-				}
-			} catch {
-				// ignore and leave "weblateLink" empty
-			}
-
-			const openAdapterCheck = () => {
-				history.push("/adapter-check", {
-					repoFullName: repo.full_name,
-				});
-			};
-
-			return {
-				title: repo.name,
-				img: info?.extIcon,
-				badges: {
-					"npm version": `http://img.shields.io/npm/v/iobroker.${info.name}.svg`,
-					"Stable version": `http://iobroker.live/badges/${info.name}-stable.svg`,
-				},
-				text:
-					info?.desc?.en ||
-					repo.description ||
-					"No description available",
-				squareImg: true,
-				to: `/adapter/${info.name}`,
-				buttons: [
-					<CardButton
-						icon={
-							<Tooltip
-								title={`GitHub Repository (${repo.open_issues} open issues/PRs)`}
-							>
-								<Badge
-									badgeContent={repo.open_issues}
-									color="secondary"
-								>
-									<GitHubIcon />
-								</Badge>
-							</Tooltip>
-						}
-						url={repo.html_url}
-					/>,
-					<CardButton
-						icon={
-							<Tooltip title="Start Adapter Check">
-								<AdapterCheckIcon />
-							</Tooltip>
-						}
-						onClick={openAdapterCheck}
-					/>,
-					<Tooltip
-						title={`${
-							discoveryLink ? "S" : "Not s"
-						}upported by ioBroker.discovery`}
-					>
-						<span>
-							<CardButton
-								disabled={!discoveryLink}
-								icon={<DiscoveryIcon />}
-								url={discoveryLink}
-							/>
-						</span>
-					</Tooltip>,
-					<Tooltip
-						title={`Translations ${
-							weblateLink ? "" : "not "
-						}available on Weblate`}
-					>
-						<span>
-							<CardButton
-								disabled={!weblateLink}
-								icon={<WeblateIcon />}
-								url={weblateLink}
-							/>
-						</span>
-					</Tooltip>,
-				],
-			};
-		};
-
-		const loadAdapters = async (user: User) => {
-			setCategories((old) => ({ ...old, [MY_ADAPTERS_CATEGORY]: [] })); // clear the list (and show the spinner)
+		const loadMyAdapters = async (user: User) => {
+			setCategories((old) => ({
+				...old,
+				[MY_ADAPTERS_CATEGORY]: { cards: [] },
+			})); // clear the list (and show the spinner)
 
 			const infos = await getMyAdapterInfos(user.token);
 			const cards = await Promise.all(
-				infos.map(async (info) => {
-					try {
-						return await getAdapterCard(info);
-					} catch (error) {
-						console.error(error);
-					}
-				}),
+				infos.map((info) =>
+					getAdapterCard(info, history).catch(console.error),
+				),
 			);
 
 			const adapters = cards
@@ -388,14 +581,14 @@ export default function Dashboard(props: DashboardProps) {
 			}
 			setCategories((old) => ({
 				...old,
-
-				Tools: getToolsCards(true),
-				[MY_ADAPTERS_CATEGORY]: [...adapters],
+				Tools: { cards: getToolsCards(true) },
+				[MY_ADAPTERS_CATEGORY]: { cards: [...adapters] },
 			}));
 		};
 
 		if (user) {
-			loadAdapters(user).catch(console.error);
+			loadMyAdapters(user).catch(console.error);
+			loadWatchedAdapters(user).catch(console.error);
 		} else {
 			const loginCard = (type: string) => ({
 				title: "Login Required",
@@ -403,18 +596,49 @@ export default function Dashboard(props: DashboardProps) {
 				text: `You must be logged in to see your ${type}.`,
 				buttons: [<CardButton text="Login" onClick={handleLogin} />],
 			});
-			setCategories((old) => ({
-				...old,
-				Tools: getToolsCards(false),
-				[MY_ADAPTERS_CATEGORY]: [loginCard("adapters")],
-			}));
+			setCategories((old) => {
+				const result = { ...old };
+				result.Tools = { cards: getToolsCards(false) };
+				result[MY_ADAPTERS_CATEGORY] = {
+					cards: [loginCard("adapters")],
+				};
+				delete result[WATCHED_ADAPTERS_CATEGORY];
+				return result;
+			});
 		}
 	}, [user]);
 
+	const handleAddWatch = async (repo?: string) => {
+		setShowAddWatch(false);
+		if (!repo) {
+			return;
+		}
+		try {
+			setCategories((old) => ({
+				...old,
+				[WATCHED_ADAPTERS_CATEGORY]: { cards: [] },
+			})); // show spinner
+			const url = getApiUrl("user");
+			const { data: dbUser } = await axios.get<DbUser>(url);
+			dbUser.watches.push(repo);
+			await axios.put(url, dbUser);
+			await loadWatchedAdapters(user!);
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
 	return (
 		<>
+			{user && (
+				<AddWatchDialog
+					user={user}
+					open={showAddWatch}
+					onClose={handleAddWatch}
+				/>
+			)}
 			{Object.keys(categories).map((title, index) => {
-				const cards = categories[title];
+				const grid = categories[title];
 				return (
 					<Accordion
 						key={index}
@@ -429,7 +653,7 @@ export default function Dashboard(props: DashboardProps) {
 							<Typography variant="h5">{title}</Typography>
 						</AccordionSummary>
 						<AccordionDetails>
-							<CardGrid cards={cards} />
+							<CardGrid {...grid} />
 						</AccordionDetails>
 					</Accordion>
 				);
