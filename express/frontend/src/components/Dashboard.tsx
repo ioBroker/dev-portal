@@ -118,6 +118,7 @@ const useCardStyles = makeStyles((theme) => ({
 interface DashboardCardProps {
 	title: string;
 	img: string;
+	badges?: Record<string, string>;
 	text: string;
 	buttons?: JSX.Element[];
 	squareImg?: boolean;
@@ -125,7 +126,7 @@ interface DashboardCardProps {
 }
 
 function DashboardCard(props: DashboardCardProps) {
-	const { title, img, text, buttons, squareImg, to } = props;
+	const { title, img, badges, text, buttons, squareImg, to } = props;
 	const classes = useCardStyles();
 	const history = useHistory();
 	const handleCardClick = !to ? undefined : () => history.push(to);
@@ -153,6 +154,16 @@ function DashboardCard(props: DashboardCardProps) {
 				<Typography gutterBottom variant="h6" component="h2">
 					{title}
 				</Typography>
+				{badges && (
+					<Typography>
+						{Object.keys(badges).map((name) => (
+							<>
+								<img src={badges[name]} alt={name} />
+								&nbsp;
+							</>
+						))}
+					</Typography>
+				)}
 				{text.split("\n").map((t) => (
 					<Typography key={t}>{t}</Typography>
 				))}
@@ -390,6 +401,10 @@ export default function Dashboard(props: DashboardProps) {
 			return {
 				title: repo.name,
 				img: info?.extIcon,
+				badges: {
+					"npm version": `http://img.shields.io/npm/v/iobroker.${info.name}.svg`,
+					"Stable version": `http://iobroker.live/badges/${info.name}-stable.svg`,
+				},
 				text:
 					info?.desc?.en ||
 					repo.description ||
