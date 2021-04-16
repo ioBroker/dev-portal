@@ -38,14 +38,7 @@ import {
 	GitHubIcon,
 } from "./components/Icons";
 import AdapterDetails from "./tools/AdapterDetails";
-import {
-	getLatest,
-	getMyAdapterInfos,
-	getMyAdapterRepos,
-} from "./lib/ioBroker";
-import axios from "axios";
-
-const uc = encodeURIComponent;
+import { getMyAdapterInfos } from "./lib/ioBroker";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";

@@ -17,7 +17,7 @@ import React, { useEffect } from "react";
 import { GitHubComm, User } from "../../lib/gitHub";
 import { getQuestionName } from "./common";
 import { GenerateStep } from "./GenerateStep";
-import { AnswerChanged, QuestionView } from "./QuestionView";
+import { QuestionView } from "./QuestionView";
 
 const useStyles = makeStyles((theme) => ({
 	root: {

@@ -27,6 +27,7 @@ import {
 	hasDiscoverySupport,
 } from "../lib/ioBroker";
 import { AdapterCheckLocationState } from "../tools/AdapterCheck";
+import { getToolsCards, resourcesCards, socialCards } from "./dashboard-static";
 import {
 	AdapterCheckIcon,
 	DiscoveryIcon,
@@ -34,9 +35,12 @@ import {
 	WeblateIcon,
 } from "./Icons";
 
+const MY_ADAPTERS_CATEGORY = "My Adapters";
+const COLLAPSED_CATEGORIES_KEY = "DASH_COLLAPSED_CATEGORIES";
+
 const uc = encodeURIComponent;
 
-interface CardButtonProps {
+export interface CardButtonProps {
 	text?: string;
 	icon?: JSX.Element;
 	link?: string;
@@ -45,7 +49,7 @@ interface CardButtonProps {
 	disabled?: boolean;
 }
 
-function CardButton(props: CardButtonProps) {
+export function CardButton(props: CardButtonProps) {
 	const { text, icon, link, url, onClick, disabled } = props;
 	const buttonProps: {
 		component?: any;
@@ -115,7 +119,7 @@ const useCardStyles = makeStyles((theme) => ({
 	},
 }));
 
-interface DashboardCardProps {
+export interface DashboardCardProps {
 	title: string;
 	img: string;
 	badges?: Record<string, string>;
@@ -125,13 +129,13 @@ interface DashboardCardProps {
 	to?: string;
 }
 
-function DashboardCard(props: DashboardCardProps) {
+export function DashboardCard(props: DashboardCardProps) {
 	const { title, img, badges, text, buttons, squareImg, to } = props;
 	const classes = useCardStyles();
 	const history = useHistory();
 	const handleCardClick = !to ? undefined : () => history.push(to);
 	return (
-		<Card className={classes.card}>
+		<Card className={classes.card} raised={true}>
 			<Hidden xsDown>
 				<CardMedia
 					className={clsx(
@@ -186,7 +190,6 @@ function LoadingCard() {
 
 const useStyles = makeStyles((theme) => ({
 	cardGrid: {
-		marginTop: theme.spacing(1),
 		marginBottom: theme.spacing(1),
 	},
 }));
@@ -223,145 +226,32 @@ export default function Dashboard(props: DashboardProps) {
 	const { user } = props;
 
 	const history = useHistory<AdapterCheckLocationState>();
-
-	const resources = [
-		{
-			title: "Documentation",
-			img: "images/doc.jpg",
-			text:
-				"Read all the important information about ioBroker development.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://www.iobroker.net/#en/documentation/dev/adapterdev.md"
-				/>,
-			],
-		},
-		{
-			title: "Best Practices",
-			img: "images/best-practices.jpg",
-			text:
-				"Development and coding best practices help you to create a great adapter.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://github.com/ioBroker/ioBroker.repositories#development-and-coding-best-practices"
-				/>,
-			],
-		},
-		{
-			title: "Review Checklist",
-			img: "images/code-review.svg",
-			squareImg: true,
-			text:
-				"When you complete this checklist, your adapter should meet all requirements to be added to the repository.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://github.com/ioBroker/ioBroker.repositories/blob/master/REVIEW_CHECKLIST.md#adapter-review-checklist"
-				/>,
-			],
-		},
-		{
-			title: "Community Initiatives",
-			img: "images/iobroker.png",
-			text: "Project management board for ioBroker Community Initiatives",
-			buttons: [
-				<CardButton
-					text="open"
-					url="https://github.com/ioBroker/Community/projects/1"
-				/>,
-			],
-		},
-	];
-
-	const social = [
-		{
-			title: "Developer Forum",
-			img: "images/iobroker.png",
-			text:
-				"Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://forum.iobroker.net/category/8/entwicklung"
-				/>,
-			],
-		},
-		{
-			title: "Telegram",
-			img: "images/telegram.svg",
-			squareImg: true,
-			text:
-				"In the telegram channel for ioBroker development (German) you can exchange ideas and ask questions.",
-			buttons: [
-				<CardButton
-					text="Join"
-					url="https://t.me/ioBroker_development"
-				/>,
-			],
-		},
-		{
-			title: "Discord",
-			img: "images/discord.png",
-			squareImg: true,
-			text:
-				"Get in touch with other developers and discuss features on our Discord server.",
-			buttons: [
-				<CardButton text="Join" url="https://discord.gg/Ne3y6fUac3" />,
-			],
-		},
-	];
-
-	const tools = [
-		{
-			title: "Adapter Creator",
-			img: "images/adapter-creator.png",
-			text:
-				"Create a new ioBroker adapter by answering questions. The resulting adapter can be downloaded as a zip file or directly exported to a new GitHub repository.",
-			buttons: [<CardButton text="Open" link="/create-adapter" />],
-		},
-		{
-			title: "Adapter Check",
-			img: "images/adapter-check.png",
-			text:
-				"Verify your ioBroker adapter to see if it matches the requirements to be added to the repository." +
-				(user ? "" : "\nYou must be logged in to use this tool."),
-			buttons: [
-				user ? (
-					<CardButton text="Open" link="/adapter-check" />
-				) : (
-					<CardButton text="Login" onClick={handleLogin} />
-				),
-			],
-		},
-		{
-			title: "Weblate",
-			img: "images/weblate.png",
-			text:
-				"Manage the translations of your adapters in all available languages.",
-			buttons: [
-				<CardButton
-					text="Open"
-					url="https://weblate.iobroker.net/projects/adapters/"
-				/>,
-			],
-		},
-	];
 	const [categories, setCategories] = useState<
 		Record<string, DashboardCardProps[]>
 	>({
-		Resources: resources,
-		Social: social,
-		Tools: tools,
-		"My Adapters": [],
+		Resources: resourcesCards,
+		Social: socialCards,
+		Tools: getToolsCards(!!user),
+		[MY_ADAPTERS_CATEGORY]: [],
 	});
-	const [collapsed, setCollapsed] = useState<boolean[]>([]);
+	let storedCollapsed;
+	try {
+		storedCollapsed = JSON.parse(
+			localStorage.getItem(COLLAPSED_CATEGORIES_KEY) || "[]",
+		);
+	} catch (error) {
+		storedCollapsed = [];
+	}
+	const [collapsed, setCollapsed] = useState<boolean[]>(storedCollapsed);
 
 	const handleAccordion = (index: number) => {
 		setCollapsed((old) => {
 			const result = [...old];
 			result[index] = !result[index];
+			localStorage.setItem(
+				COLLAPSED_CATEGORIES_KEY,
+				JSON.stringify(result),
+			);
 			return result;
 		});
 	};
@@ -466,7 +356,7 @@ export default function Dashboard(props: DashboardProps) {
 		};
 
 		const loadAdapters = async (user: User) => {
-			setCategories((old) => ({ ...old, "My Adapters": [] })); // clear the list (and show the spinner)
+			setCategories((old) => ({ ...old, [MY_ADAPTERS_CATEGORY]: [] })); // clear the list (and show the spinner)
 
 			const infos = await getMyAdapterInfos(user.token);
 			const cards = await Promise.all(
@@ -496,7 +386,12 @@ export default function Dashboard(props: DashboardProps) {
 					],
 				});
 			}
-			setCategories((old) => ({ ...old, "My Adapters": [...adapters] }));
+			setCategories((old) => ({
+				...old,
+
+				Tools: getToolsCards(true),
+				[MY_ADAPTERS_CATEGORY]: [...adapters],
+			}));
 		};
 
 		if (user) {
@@ -510,7 +405,8 @@ export default function Dashboard(props: DashboardProps) {
 			});
 			setCategories((old) => ({
 				...old,
-				"My Adapters": [loginCard("adapters")],
+				Tools: getToolsCards(false),
+				[MY_ADAPTERS_CATEGORY]: [loginCard("adapters")],
 			}));
 		}
 	}, [user]);
