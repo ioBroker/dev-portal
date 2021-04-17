@@ -117,6 +117,9 @@ const useCardStyles = makeStyles((theme) => ({
 		display: "flex",
 		flexDirection: "column",
 	},
+	cardActionArea: {
+		height: "100%",
+	},
 	cardMedia: {
 		paddingTop: "56.25%", // 16:9
 	},
@@ -131,15 +134,19 @@ const useCardStyles = makeStyles((theme) => ({
 		cursor: "pointer",
 	},
 	loadingProgress: {
-		marginTop: "40%",
-		marginBottom: "40%",
 		marginLeft: "25%",
+		[theme.breakpoints.up("sm")]: {
+			marginTop: "40%",
+			marginBottom: "40%",
+		},
 	},
 	centerIcon: {
 		width: "100%",
-		marginTop: "50%",
-		marginBottom: "50%",
-		transform: "scale(4)",
+		minHeight: "4em",
+		[theme.breakpoints.up("sm")]: {
+			marginTop: "40%",
+			marginBottom: "40%",
+		},
 	},
 }));
 
@@ -217,7 +224,10 @@ function AddCard(props: { onClick: () => void }) {
 	const classes = useCardStyles();
 	return (
 		<Card className={classes.card} raised={true}>
-			<CardActionArea onClick={onClick}>
+			<CardActionArea
+				className={classes.cardActionArea}
+				onClick={onClick}
+			>
 				<AddCardIcon
 					fontSize="large"
 					color="primary"
