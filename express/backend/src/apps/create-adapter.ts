@@ -81,13 +81,6 @@ router.get("/create-adapter/:id/:hash/:filename", async (req, res) => {
 
 	archive.directory(baseDir, false);
 
-	/*
-  const files = [__dirname + '/files/上午.png', __dirname + '/files/中午.json'];
-
-  for(const i in files) {
-    archive.file(files[i], { name: path.basename(files[i]) });
-  }*/
-
 	archive.finalize();
 });
 
