@@ -1,11 +1,19 @@
 import { request } from "@octokit/request";
 import { json, Request, Router } from "express";
+import NodeCache from "node-cache";
 import Cookies from "universal-cookie";
 import cookiesMiddleware from "universal-cookie-express";
 import { COOKIE_NAME_PORTAL_TOKEN } from "../auth";
 import { dbConnect } from "../db/utils";
 
 const router = Router();
+
+const cache = new NodeCache({
+	stdTTL: 3600,
+	checkperiod: 3600,
+	useClones: false,
+});
+const TOKEN_TO_LOGIN_KEY = "token-to-login";
 
 async function getGitHubLogin(req: Request) {
 	const cookies = (req as any)["universalCookies"] as Cookies;
@@ -14,14 +22,20 @@ async function getGitHubLogin(req: Request) {
 		return undefined;
 	}
 
-	const requestWithAuth = request.defaults({
-		headers: {
-			authorization: `token ${ghToken}`,
-		},
-	});
+	let login = cache.get<string>(TOKEN_TO_LOGIN_KEY);
+	if (!login) {
+		const requestWithAuth = request.defaults({
+			headers: {
+				authorization: `token ${ghToken}`,
+			},
+		});
 
-	const user = await requestWithAuth("GET /user");
-	return user.data.login;
+		const user = await requestWithAuth("GET /user");
+		login = user.data.login;
+	}
+
+	cache.set(TOKEN_TO_LOGIN_KEY, login);
+	return login;
 }
 
 router.get("/api/user/", cookiesMiddleware(), async function (req, res) {
