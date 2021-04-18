@@ -26,11 +26,14 @@ import {
 	getAdapterInfos,
 	getLatest,
 	getMyAdapterInfos,
+	getSentryProjectInfos,
+	getSentryStats,
 	getWatchedAdapterInfos,
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
 } from "../lib/ioBroker";
 import { User as DbUser } from "../../../backend/src/global/user";
+import { ProjectInfo } from "../../../backend/src/global/sentry";
 import { AdapterCheckLocationState } from "../tools/AdapterCheck";
 import { getToolsCards, resourcesCards, socialCards } from "./dashboard-static";
 import {
@@ -38,6 +41,7 @@ import {
 	AddCardIcon,
 	DiscoveryIcon,
 	GitHubIcon,
+	SentryIcon,
 	WeblateIcon,
 } from "./Icons";
 import CardActionArea from "@material-ui/core/CardActionArea";
@@ -51,6 +55,18 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import TextField from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import DialogActions from "@material-ui/core/DialogActions";
+import Popper from "@material-ui/core/Popper";
+import Grow from "@material-ui/core/Grow";
+import Paper from "@material-ui/core/Paper";
+import MenuList from "@material-ui/core/MenuList";
+import MenuItem from "@material-ui/core/MenuItem";
+import ClickAwayListener from "@material-ui/core/ClickAwayListener";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemAvatar from "@material-ui/core/ListItemAvatar";
+import Avatar from "@material-ui/core/Avatar";
+import ListItemText from "@material-ui/core/ListItemText";
 
 const MY_ADAPTERS_CATEGORY = "My Adapters";
 const WATCHED_ADAPTERS_CATEGORY = "Watched Adapters";
@@ -109,6 +125,154 @@ export function CardButton(props: CardButtonProps) {
 			)}
 		</>
 	);
+}
+
+const SentryErrorBadge = React.forwardRef(
+	(props: { errors: number[]; children: any }, ref: any) => {
+		const { errors, children } = props;
+		const errorCount = errors[0] || errors[1];
+		const color = errors[0] ? "secondary" : "primary";
+		return (
+			<Badge badgeContent={errorCount} color={color} {...props} ref={ref}>
+				{children}
+			</Badge>
+		);
+	},
+);
+
+function AdapterSentryButton(props: { projects: ProjectInfo[] }) {
+	const { projects } = props;
+
+	const [tooltip, setTooltip] = useState("Sentry available for this adapter");
+	const [errorCount, setErrorCount] = useState<number[]>();
+	const [errorCounts, setErrorCounts] = useState<number[][]>([]);
+	const [open, setOpen] = useState(false);
+
+	useEffect(() => {
+		if (projects.length === 0) {
+			return;
+		}
+
+		const loadProjectInfos = async () => {
+			const stats24h = await getSentryStats(
+				projects.map((p) => p.id),
+				"24h",
+			);
+			const stats30d = await getSentryStats(
+				projects.map((p) => p.id),
+				"30d",
+			);
+			const errors = [
+				stats24h.map(
+					(stat) => stat.stats.reduce((old, num) => old + num[1], 0),
+					0,
+				),
+				stats30d.map(
+					(stat) => stat.stats.reduce((old, num) => old + num[1], 0),
+					0,
+				),
+			];
+			setErrorCounts(errors);
+
+			const totalErrors = errors.map((e) =>
+				e.reduce((old, err) => old + err, 0),
+			);
+			setErrorCount(totalErrors);
+
+			if (totalErrors[0]) {
+				setTooltip(
+					`Sentry (${totalErrors[0]} errors in the last 24 hours)`,
+				);
+			} else {
+				setTooltip(
+					`Sentry (${totalErrors[1]} errors in the last 30 days)`,
+				);
+			}
+		};
+		loadProjectInfos().catch(console.error);
+	}, [projects]);
+
+	if (projects.length === 0) {
+		return (
+			<Tooltip title="Sentry not used by this adapter">
+				<span>
+					<CardButton disabled icon={<SentryIcon />} />
+				</span>
+			</Tooltip>
+		);
+	} else if (projects.length === 1) {
+		return (
+			<CardButton
+				icon={
+					<Tooltip title={tooltip}>
+						<SentryErrorBadge errors={errorCount || []}>
+							<SentryIcon />
+						</SentryErrorBadge>
+					</Tooltip>
+				}
+				url={`https://sentry.iobroker.net/organizations/iobroker/issues/?project=${projects[0].id}`}
+			/>
+		);
+	} else {
+		const openProject = (project: ProjectInfo) => {
+			window.open(
+				`https://sentry.iobroker.net/organizations/iobroker/issues/?project=${project.id}`,
+				"_blank",
+			);
+		};
+
+		return (
+			<>
+				<IconButton
+					size="small"
+					color="primary"
+					onClick={() => setOpen(true)}
+				>
+					<Tooltip title={tooltip}>
+						<SentryErrorBadge errors={errorCount || []}>
+							<SentryIcon />
+						</SentryErrorBadge>
+					</Tooltip>
+				</IconButton>
+				<Dialog
+					onClose={() => setOpen(false)}
+					aria-labelledby="sentry-dialog-title"
+					open={open}
+				>
+					<DialogTitle id="sentry-dialog-title">
+						Choose Sentry project
+					</DialogTitle>
+					<List>
+						{projects.map((project, index) => (
+							<ListItem
+								button
+								onClick={() => openProject(project)}
+								key={index}
+							>
+								<ListItemAvatar>
+									<SentryErrorBadge
+										errors={
+											errorCounts.length > 0
+												? [
+														errorCounts[0][index],
+														errorCounts[1][index],
+												  ]
+												: []
+										}
+									>
+										<Avatar>
+											<SentryIcon />
+										</Avatar>
+									</SentryErrorBadge>
+								</ListItemAvatar>
+								<ListItemText primary={project.slug} />
+							</ListItem>
+						))}
+					</List>
+				</Dialog>
+			</>
+		);
+	}
 }
 
 const useCardStyles = makeStyles((theme) => ({
@@ -300,7 +464,6 @@ function AddWatchDialog(props: AddWatchDialogProps) {
 					"$1",
 				),
 			);
-			console.log("Found repo names:", names);
 			setRepoNames(names);
 		};
 		loadData().catch(console.error);
@@ -390,6 +553,37 @@ function AddWatchDialog(props: AddWatchDialogProps) {
 	);
 }
 
+async function getDiscoveryLink(adapterName: string) {
+	return (await hasDiscoverySupport(adapterName))
+		? `https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
+				`${uc(adapterName)}.js`
+		: "";
+}
+
+async function getWeblateLink(adapterName: string) {
+	try {
+		const components = await getWeblateAdapterComponents();
+		const component = components.results.find(
+			(c: any) => c.name === adapterName,
+		);
+		if (component) {
+			return (
+				`https://weblate.iobroker.net/projects/adapters/` +
+				`${uc(component.slug)}/`
+			);
+		}
+	} catch {
+		// ignore and leave "weblateLink" empty
+	}
+
+	return "";
+}
+
+async function getSentryProjects(adapterName: string) {
+	const allProjects = await getSentryProjectInfos();
+	return allProjects.filter((p) => p.adapterName === adapterName);
+}
+
 async function getAdapterCard(
 	infos: AdapterInfos,
 	history: H.History<AdapterCheckLocationState>,
@@ -398,26 +592,11 @@ async function getAdapterCard(
 	if (!info) {
 		return;
 	}
-	const discoveryLink = (await hasDiscoverySupport(info.name))
-		? `https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
-		  `${uc(info.name)}.js`
-		: "";
-
-	let weblateLink = "";
-	try {
-		const components = await getWeblateAdapterComponents();
-		const component = components.results.find(
-			(c: any) => c.name === info.name,
-		);
-		if (component) {
-			weblateLink =
-				`https://weblate.iobroker.net/projects/adapters/` +
-				`${uc(component.slug)}/`;
-		}
-	} catch {
-		// ignore and leave "weblateLink" empty
-	}
-
+	const [discoveryLink, weblateLink, sentryProjects] = await Promise.all([
+		getDiscoveryLink(info.name),
+		getWeblateLink(info.name),
+		getSentryProjects(info.name),
+	]);
 	const openAdapterCheck = () => {
 		history.push("/adapter-check", {
 			repoFullName: repo.full_name,
@@ -471,6 +650,7 @@ async function getAdapterCard(
 					/>
 				</span>
 			</Tooltip>,
+			<AdapterSentryButton projects={sentryProjects} />,
 			<Tooltip
 				title={`Translations ${
 					weblateLink ? "" : "not "

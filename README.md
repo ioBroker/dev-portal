@@ -50,6 +50,7 @@ services:
             CREATOR_GITHUB_OAUTH_CLIENT_ID: abcdefghij1234567890
             CREATOR_GITHUB_OAUTH_CLIENT_SECRET: abcdefghij7236c1406123456e0a66c140657890
             WEBLATE_ACCESS_TOKEN: AbCdEfGhIjKlMnOpQrStUvWxYz0123456789aBcD
+			SENTRY_AUTH_TOKEN: 01234567890abcdefghij7236c1406123456e0a66c140657890abcef01234567
 ```
 
 2. In this root directory call `docker-compose up --build`
@@ -64,6 +65,7 @@ The following environment variables can be configured:
 -   `CREATOR_GITHUB_OAUTH_CLIENT_ID`: GitHub Client ID of your OAuth App that is used to create and modify repositories (see below)
 -   `CREATOR_GITHUB_OAUTH_CLIENT_SECRET`: Client secret belonging to the above OAuth App
 -   `WEBLATE_ACCESS_TOKEN`: Access token for a read-only Weblate user
+-   `SENTRY_AUTH_TOKEN`: Auth token for Sentry (requires `org:read` and `project:read` scopes)
 
 ### GitHub OAuth Apps
 

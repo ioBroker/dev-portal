@@ -4,6 +4,7 @@ import { IncomingMessage } from "http";
 import { Socket } from "net";
 import path from "path";
 import adapterApi from "./api/adapter";
+import sentryApi from "./api/sentry";
 import userApi from "./api/user";
 import weblateProxy from "./api/weblate-proxy";
 import {
@@ -32,6 +33,7 @@ app.use(auth);
 app.use(weblateProxy);
 app.use(adapterApi);
 app.use(userApi);
+app.use(sentryApi);
 app.get("/api/*", function (_req, res) {
 	// ensure that unknown API calls don't end up serving the HTML below
 	res.status(404).send("API endpoint not found");

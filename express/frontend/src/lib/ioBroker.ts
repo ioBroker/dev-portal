@@ -3,6 +3,10 @@ import {
 	LatestAdapter,
 	LatestAdapters,
 } from "../../../backend/src/global/iobroker";
+import {
+	ProjectInfo,
+	ProjectStatistics,
+} from "../../../backend/src/global/sentry";
 import { User as RestUser } from "../../../backend/src/global/user";
 import { GitHubComm, Repository } from "./gitHub";
 import { AsyncCache, getApiUrl } from "./utils";
@@ -136,4 +140,20 @@ export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 		discoverySupports.set(adapterName, checkDiscoverySupport());
 	}
 	return discoverySupports.get(adapterName) as Promise<boolean>;
+}
+
+export const getSentryProjectInfos = AsyncCache.of(async () => {
+	const result = await axios.get<ProjectInfo[]>(
+		getApiUrl("sentry/projects/"),
+	);
+	return result.data;
+});
+
+export async function getSentryStats(ids: string[], statsPeriod?: string) {
+	const period = uc(statsPeriod || "24h");
+	const query = ids.map((id) => `id:${id}`).join(" ");
+	const result = await axios.get<ProjectStatistics[]>(
+		getApiUrl(`sentry/stats/?query=${uc(query)}&statsPeriod=${period}`),
+	);
+	return result.data;
 }
