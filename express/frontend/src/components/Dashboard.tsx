@@ -39,6 +39,7 @@ import { getToolsCards, resourcesCards, socialCards } from "./dashboard-static";
 import {
 	AdapterCheckIcon,
 	AddCardIcon,
+	CloseIcon,
 	DiscoveryIcon,
 	GitHubIcon,
 	SentryIcon,
@@ -281,6 +282,11 @@ const useCardStyles = makeStyles((theme) => ({
 		display: "flex",
 		flexDirection: "column",
 	},
+	closeButton: {
+		height: "0px",
+		overflowY: "visible",
+		textAlign: "right",
+	},
 	cardActionArea: {
 		height: "100%",
 	},
@@ -322,15 +328,23 @@ export interface DashboardCardProps {
 	buttons?: JSX.Element[];
 	squareImg?: boolean;
 	to?: string;
+	onClose?: () => void;
 }
 
 export function DashboardCard(props: DashboardCardProps) {
-	const { title, img, badges, text, buttons, squareImg, to } = props;
+	const { title, img, badges, text, buttons, squareImg, to, onClose } = props;
 	const classes = useCardStyles();
 	const history = useHistory();
 	const handleCardClick = !to ? undefined : () => history.push(to);
 	return (
 		<Card className={classes.card} raised={true}>
+			{onClose && (
+				<div className={classes.closeButton}>
+					<IconButton onClick={onClose} size="small">
+						<CloseIcon />
+					</IconButton>
+				</div>
+			)}
 			<Hidden xsDown>
 				<CardMedia
 					className={clsx(
@@ -587,6 +601,7 @@ async function getSentryProjects(adapterName: string) {
 async function getAdapterCard(
 	infos: AdapterInfos,
 	history: H.History<AdapterCheckLocationState>,
+	onClose?: () => void,
 ): Promise<DashboardCardProps | undefined> {
 	const { repo, info } = infos;
 	if (!info) {
@@ -605,6 +620,7 @@ async function getAdapterCard(
 
 	return {
 		title: repo.name,
+		onClose,
 		img: info?.extIcon,
 		badges: {
 			"npm version": `http://img.shields.io/npm/v/iobroker.${info.name}.svg`,
@@ -719,7 +735,9 @@ export default function Dashboard(props: DashboardProps) {
 			const infos = await getWatchedAdapterInfos(user.token);
 			const cards = await Promise.all(
 				infos.map((info) =>
-					getAdapterCard(info, history).catch(console.error),
+					getAdapterCard(info, history, () =>
+						handleRemoveWatch(info).catch(console.error),
+					).catch(console.error),
 				),
 			);
 
@@ -818,6 +836,21 @@ export default function Dashboard(props: DashboardProps) {
 		} catch (error) {
 			console.error(error);
 		}
+	};
+
+	const handleRemoveWatch = async (info: AdapterInfos) => {
+		setCategories((old) => ({
+			...old,
+			[WATCHED_ADAPTERS_CATEGORY]: { cards: [] },
+		})); // show spinner
+		const url = getApiUrl("user");
+		const { data: dbUser } = await axios.get<DbUser>(url);
+		dbUser.watches = dbUser.watches.filter(
+			(w) => w !== info.repo.full_name,
+		);
+		await axios.put(url, dbUser);
+		onAdapterListChanged();
+		await loadWatchedAdapters(user!);
 	};
 
 	return (

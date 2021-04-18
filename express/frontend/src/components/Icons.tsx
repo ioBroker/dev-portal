@@ -2,6 +2,7 @@ import SvgIcon from "@material-ui/core/SvgIcon";
 import React from "react";
 
 export { default as AddCardIcon } from "@material-ui/icons/AddCircleOutline";
+export { default as CloseIcon } from "@material-ui/icons/Close";
 export { default as DownloadIcon } from "@material-ui/icons/CloudDownloadOutlined";
 export { default as DashboardIcon } from "@material-ui/icons/Dashboard";
 export { default as LogoutIcon } from "@material-ui/icons/ExitToApp";
