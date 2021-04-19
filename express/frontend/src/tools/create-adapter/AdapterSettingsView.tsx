@@ -87,7 +87,7 @@ export const AdapterSettingOptions = (props: {
 	};
 
 	return (
-		<Grid container spacing={0}>
+		<Grid container spacing={0} style={{ width: "30vw" }}>
 			<Grid item xs={5}>
 				Text
 			</Grid>
@@ -178,14 +178,14 @@ export const AdapterSetting = (props: {
 		<TableRow>
 			<TableCell scope="row">
 				<Input
-					value={setting.key}
+					value={key}
 					onChange={(e) => setKey(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
 			</TableCell>
 			<TableCell>
 				<Input
-					value={setting.label}
+					value={label}
 					onChange={(e) => setLabel(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
@@ -328,7 +328,7 @@ export const AdapterSettingsView = (props: QuestionViewProps): JSX.Element => {
 				<TableBody>
 					{value.map((setting, i) => (
 						<AdapterSetting
-							key={i}
+							key={setting.key}
 							setting={setting}
 							onChange={(setting) => handleChange(i, setting)}
 						/>
