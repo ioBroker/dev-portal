@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
 
 export interface DashboardCardProps {
 	title: string;
-	img: string;
+	img?: string;
 	badges?: Record<string, string>;
 	text: string;
 	buttons?: JSX.Element[];
@@ -97,18 +97,20 @@ export function DashboardCard(props: DashboardCardProps) {
 					</IconButton>
 				</div>
 			)}
-			<Hidden xsDown>
-				<CardMedia
-					className={clsx(
-						classes.cardMedia,
-						squareImg && classes.adapterCardMedia,
-						handleCardClick && classes.clickableCard,
-					)}
-					image={img}
-					title={title}
-					onClick={handleCardClick}
-				/>
-			</Hidden>
+			{img && (
+				<Hidden xsDown>
+					<CardMedia
+						className={clsx(
+							classes.cardMedia,
+							squareImg && classes.adapterCardMedia,
+							handleCardClick && classes.clickableCard,
+						)}
+						image={img}
+						title={title}
+						onClick={handleCardClick}
+					/>
+				</Hidden>
+			)}
 			<CardContent
 				className={clsx(
 					classes.cardContent,

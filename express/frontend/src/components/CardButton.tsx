@@ -9,11 +9,10 @@ export interface CardButtonProps {
 	to?: string;
 	url?: string;
 	onClick?: () => void;
-	disabled?: boolean;
 }
 
-export function CardButton(props: CardButtonProps) {
-	const { text, icon, to, url, onClick, disabled } = props;
+export function CardButton<T extends CardButtonProps>(props: T) {
+	const { text, icon, to, url, onClick, ...additionalProps } = props;
 	const buttonProps: {
 		component?: any;
 		to?: string;
@@ -36,8 +35,8 @@ export function CardButton(props: CardButtonProps) {
 				<Button
 					size="small"
 					color="primary"
-					disabled={disabled}
 					{...buttonProps}
+					{...additionalProps}
 				>
 					{text}
 				</Button>
@@ -46,8 +45,8 @@ export function CardButton(props: CardButtonProps) {
 				<IconButton
 					size="small"
 					color="primary"
-					disabled={disabled}
 					{...buttonProps}
+					{...additionalProps}
 				>
 					{icon}
 				</IconButton>

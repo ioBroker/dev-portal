@@ -3,15 +3,11 @@ import Accordion from "@material-ui/core/Accordion";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Button from "@material-ui/core/Button";
-import Card from "@material-ui/core/Card";
-import CardActions from "@material-ui/core/CardActions";
-import CardContent from "@material-ui/core/CardContent";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
-import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
@@ -23,6 +19,9 @@ import {
 	LogMessage,
 	ServerClientMessage,
 } from "../../../../backend/src/global/create-adapter-ws";
+import { CardButton } from "../../components/CardButton";
+import { CardGrid } from "../../components/CardGrid";
+import { DashboardCardProps } from "../../components/DashboardCard";
 import { DownloadIcon, GitHubIcon } from "../../components/Icons";
 import { User } from "../../lib/gitHub";
 import { getWebSocketUrl } from "../../lib/utils";
@@ -36,6 +35,9 @@ const useStyles = makeStyles((theme) => ({
 		maxHeight: "400px",
 		overflowY: "scroll",
 		overflowX: "auto",
+	},
+	accordion: {
+		margin: `${theme.spacing(2)}px 0 !important`,
 	},
 }));
 function isLogMessage(obj: unknown): obj is LogMessage {
@@ -184,6 +186,37 @@ export function GenerateStep(props: GenerateStepProps) {
 		setGenerator("zip");
 	};
 
+	const cards: DashboardCardProps[] = [
+		{
+			title: "Create GitHub Repository",
+			text:
+				"Your code will be uploaded to a newly created GitHub Repository for the user or organisation you choose.\n" +
+				"You will be asked by GitHub to authorize this application. The generated authentication token is never transmitted to anybody but GitHub and will not be stored by this website. Nobody but you will be able to modify the generated repository.",
+			buttons: [
+				<CardButton
+					text="Create Repository"
+					startIcon={<GitHubIcon />}
+					onClick={() => onRequestLogin()}
+					disabled={!user || !!generator}
+				/>,
+			],
+		},
+		{
+			title: "Download Zip File",
+			text:
+				"You will get a link to download a zip file.\n" +
+				"The generated zip file contains all files to start writing your own adapter code.",
+			buttons: [
+				<CardButton
+					text="Create Zip File"
+					startIcon={<DownloadIcon />}
+					onClick={() => onRequestZip()}
+					disabled={!user || !!generator}
+				/>,
+			],
+		},
+	];
+
 	return (
 		<>
 			{!!generator && (
@@ -194,7 +227,7 @@ export function GenerateStep(props: GenerateStepProps) {
 					onClose={() => setGenerator(undefined)}
 				/>
 			)}
-			<Accordion>
+			<Accordion className={classes.accordion}>
 				<AccordionSummary expandIcon={<ExpandMoreIcon />}>
 					<Typography>Your adapter configuration</Typography>
 				</AccordionSummary>
@@ -202,66 +235,7 @@ export function GenerateStep(props: GenerateStepProps) {
 					<pre>{JSON.stringify(answers, null, 2)}</pre>
 				</AccordionDetails>
 			</Accordion>
-			<Grid container spacing={4}>
-				<Grid item xs={12} sm={6} md={4} lg={3}>
-					<Card>
-						<CardContent>
-							<Typography variant="h5" component="h2">
-								Create GitHub Repository
-							</Typography>
-							<Typography variant="body2" component="p">
-								Your code will be uploaded to a newly created
-								GitHub Repository for the user or organisation
-								you choose.
-							</Typography>
-							<Typography color="textSecondary">
-								You will be asked by GitHub to authorize this
-								application. The generated authentication token
-								is never transmitted to anybody but GitHub and
-								will not be stored by this website. Nobody but
-								you will be able to modify the generated
-								repository.
-							</Typography>
-						</CardContent>
-						<CardActions>
-							<Button
-								size="small"
-								onClick={() => onRequestLogin()}
-								startIcon={<GitHubIcon />}
-								disabled={!user || !!generator}
-							>
-								Create Repository
-							</Button>
-						</CardActions>
-					</Card>
-				</Grid>
-				<Grid item xs={12} sm={6} md={4} lg={3}>
-					<Card>
-						<CardContent>
-							<Typography variant="h5" component="h2">
-								Download Zip File
-							</Typography>
-							<Typography variant="body2" component="p">
-								You will get a link to download a zip file.
-							</Typography>
-							<Typography color="textSecondary">
-								The generated zip file contains all files to
-								start writing your own adapter code.
-							</Typography>
-						</CardContent>
-						<CardActions>
-							<Button
-								size="small"
-								onClick={() => onRequestZip()}
-								startIcon={<DownloadIcon />}
-								disabled={!user || !!generator}
-							>
-								Create Zip File
-							</Button>
-						</CardActions>
-					</Card>
-				</Grid>
-			</Grid>
+			<CardGrid cards={cards} />
 		</>
 	);
 }
