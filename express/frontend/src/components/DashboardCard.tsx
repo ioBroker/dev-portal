@@ -65,14 +65,29 @@ export interface DashboardCardProps {
 	buttons?: JSX.Element[];
 	squareImg?: boolean;
 	to?: string;
+	url?: string;
 	onClose?: () => void;
 }
 
 export function DashboardCard(props: DashboardCardProps) {
-	const { title, img, badges, text, buttons, squareImg, to, onClose } = props;
+	const {
+		title,
+		img,
+		badges,
+		text,
+		buttons,
+		squareImg,
+		to,
+		url,
+		onClose,
+	} = props;
 	const classes = useStyles();
 	const history = useHistory();
-	const handleCardClick = !to ? undefined : () => history.push(to);
+	const handleCardClick = to
+		? () => history.push(to)
+		: url
+		? () => window.open(url, "_blank")
+		: undefined;
 	return (
 		<Card className={classes.card} raised={true}>
 			{onClose && (
@@ -87,7 +102,7 @@ export function DashboardCard(props: DashboardCardProps) {
 					className={clsx(
 						classes.cardMedia,
 						squareImg && classes.adapterCardMedia,
-						to && classes.clickableCard,
+						handleCardClick && classes.clickableCard,
 					)}
 					image={img}
 					title={title}
@@ -97,7 +112,7 @@ export function DashboardCard(props: DashboardCardProps) {
 			<CardContent
 				className={clsx(
 					classes.cardContent,
-					to && classes.clickableCard,
+					handleCardClick && classes.clickableCard,
 				)}
 				onClick={handleCardClick}
 			>

@@ -5,9 +5,6 @@ import {
 	testCondition,
 } from "@iobroker/create-adapter/build/core";
 import Button from "@material-ui/core/Button";
-import Card from "@material-ui/core/Card";
-import CardActionArea from "@material-ui/core/CardActionArea";
-import CardContent from "@material-ui/core/CardContent";
 import Divider from "@material-ui/core/Divider";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
@@ -19,7 +16,7 @@ import Typography from "@material-ui/core/Typography";
 import React, { useEffect } from "react";
 import { Route, Switch, useRouteMatch } from "react-router-dom";
 import { CardGrid } from "../../components/CardGrid";
-import { CardButton } from "../../components/Dashboard";
+import { CardButton } from "../../components/CardButton";
 import { DashboardCardProps } from "../../components/DashboardCard";
 import { GitHubComm, User } from "../../lib/gitHub";
 import { getQuestionName } from "./common";
@@ -263,8 +260,9 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 			img: "images/adapter-creator.png",
 			text:
 				"This web tool allows you to generate adapter code and either download it as a zip file or upload it to a new GitHub repository.",
+			to: `${url}/wizard`,
 			buttons: [
-				<CardButton text="Let's get started" link={`${url}/wizard`} />,
+				<CardButton text="Let's get started" to={`${url}/wizard`} />,
 			],
 		},
 		{
@@ -272,6 +270,7 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 			img: "images/command-line.svg",
 			text:
 				"You can create a new adapter locally by running\n'npx @iobroker/create-adapter'\nin your terminal or cmd.",
+			url: "https://github.com/ioBroker/create-adapter#readme",
 			buttons: [
 				<CardButton
 					text="Learn more"

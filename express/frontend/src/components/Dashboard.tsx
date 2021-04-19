@@ -1,17 +1,33 @@
 import Accordion from "@material-ui/core/Accordion";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
+import Avatar from "@material-ui/core/Avatar";
 import Badge from "@material-ui/core/Badge";
 import Button from "@material-ui/core/Button";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogTitle from "@material-ui/core/DialogTitle";
 import IconButton from "@material-ui/core/IconButton";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemAvatar from "@material-ui/core/ListItemAvatar";
+import ListItemText from "@material-ui/core/ListItemText";
+import TextField from "@material-ui/core/TextField";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import axios from "axios";
+import * as H from "history";
 import React, { useEffect, useState } from "react";
-import { Link, useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
+import { ProjectInfo } from "../../../backend/src/global/sentry";
+import { User as DbUser } from "../../../backend/src/global/user";
 import { handleLogin } from "../App";
 import { GitHubComm, User } from "../lib/gitHub";
-import * as H from "history";
 import {
 	AdapterInfos,
 	getAdapterInfos,
@@ -23,10 +39,12 @@ import {
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
 } from "../lib/ioBroker";
-import { User as DbUser } from "../../../backend/src/global/user";
-import { ProjectInfo } from "../../../backend/src/global/sentry";
+import { getApiUrl } from "../lib/utils";
 import { AdapterCheckLocationState } from "../tools/AdapterCheck";
+import { CardButton } from "./CardButton";
+import { CardGrid, CardGridProps } from "./CardGrid";
 import { getToolsCards, resourcesCards, socialCards } from "./dashboard-static";
+import { DashboardCardProps } from "./DashboardCard";
 import {
 	AdapterCheckIcon,
 	DiscoveryIcon,
@@ -34,82 +52,12 @@ import {
 	SentryIcon,
 	WeblateIcon,
 } from "./Icons";
-import axios from "axios";
-import { getApiUrl } from "../lib/utils";
-import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import TextField from "@material-ui/core/TextField";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import DialogActions from "@material-ui/core/DialogActions";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import Avatar from "@material-ui/core/Avatar";
-import ListItemText from "@material-ui/core/ListItemText";
-import { DashboardCardProps } from "./DashboardCard";
-import { CardGrid, CardGridProps } from "./CardGrid";
 
 const MY_ADAPTERS_CATEGORY = "My Adapters";
 const WATCHED_ADAPTERS_CATEGORY = "Watched Adapters";
 const COLLAPSED_CATEGORIES_KEY = "DASH_COLLAPSED_CATEGORIES";
 
 const uc = encodeURIComponent;
-
-export interface CardButtonProps {
-	text?: string;
-	icon?: JSX.Element;
-	link?: string;
-	url?: string;
-	onClick?: () => void;
-	disabled?: boolean;
-}
-
-export function CardButton(props: CardButtonProps) {
-	const { text, icon, link, url, onClick, disabled } = props;
-	const buttonProps: {
-		component?: any;
-		to?: string;
-		href?: string;
-		target?: string;
-		onClick?: () => void;
-	} = {};
-	if (link) {
-		buttonProps.component = Link;
-		buttonProps.to = link;
-	} else if (url) {
-		buttonProps.href = url;
-		buttonProps.target = "_blank";
-	} else {
-		buttonProps.onClick = onClick;
-	}
-	return (
-		<>
-			{text && (
-				<Button
-					size="small"
-					color="primary"
-					disabled={disabled}
-					{...buttonProps}
-				>
-					{text}
-				</Button>
-			)}
-			{!text && icon && (
-				<IconButton
-					size="small"
-					color="primary"
-					disabled={disabled}
-					{...buttonProps}
-				>
-					{icon}
-				</IconButton>
-			)}
-		</>
-	);
-}
 
 const SentryErrorBadge = React.forwardRef(
 	(props: { errors: number[]; children: any }, ref: any) => {
@@ -590,7 +538,7 @@ export default function Dashboard(props: DashboardProps) {
 					buttons: [
 						<CardButton
 							text="Open Adapter Creator"
-							link="/create-adapter"
+							to="/create-adapter"
 						/>,
 					],
 				});
