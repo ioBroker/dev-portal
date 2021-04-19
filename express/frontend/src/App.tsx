@@ -137,12 +137,12 @@ function NaviListItem(props: NaviListItemProps) {
 	const history = useHistory();
 	const location = useLocation();
 	const navigate = (link: string) => history.push(link);
+	const selected =
+		link.length > 1
+			? !!location.pathname && location.pathname.startsWith(link)
+			: location.pathname === link;
 	return (
-		<ListItem
-			button
-			onClick={() => navigate(link)}
-			selected={location.pathname === link}
-		>
+		<ListItem button onClick={() => navigate(link)} selected={selected}>
 			<ListItemIcon>
 				<Tooltip title={open ? "" : title}>{icon}</Tooltip>
 			</ListItemIcon>

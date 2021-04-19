@@ -3,19 +3,10 @@ import AccordionDetails from "@material-ui/core/AccordionDetails";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import Badge from "@material-ui/core/Badge";
 import Button from "@material-ui/core/Button";
-import Card from "@material-ui/core/Card";
-import CardActions from "@material-ui/core/CardActions";
-import CardContent from "@material-ui/core/CardContent";
-import CardMedia from "@material-ui/core/CardMedia";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import Grid from "@material-ui/core/Grid";
-import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
-import { makeStyles } from "@material-ui/core/styles";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
 import { handleLogin } from "../App";
@@ -38,14 +29,11 @@ import { AdapterCheckLocationState } from "../tools/AdapterCheck";
 import { getToolsCards, resourcesCards, socialCards } from "./dashboard-static";
 import {
 	AdapterCheckIcon,
-	AddCardIcon,
-	CloseIcon,
 	DiscoveryIcon,
 	GitHubIcon,
 	SentryIcon,
 	WeblateIcon,
 } from "./Icons";
-import CardActionArea from "@material-ui/core/CardActionArea";
 import axios from "axios";
 import { getApiUrl } from "../lib/utils";
 import Dialog from "@material-ui/core/Dialog";
@@ -56,18 +44,13 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import TextField from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import DialogActions from "@material-ui/core/DialogActions";
-import Popper from "@material-ui/core/Popper";
-import Grow from "@material-ui/core/Grow";
-import Paper from "@material-ui/core/Paper";
-import MenuList from "@material-ui/core/MenuList";
-import MenuItem from "@material-ui/core/MenuItem";
-import ClickAwayListener from "@material-ui/core/ClickAwayListener";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import Avatar from "@material-ui/core/Avatar";
 import ListItemText from "@material-ui/core/ListItemText";
+import { DashboardCardProps } from "./DashboardCard";
+import { CardGrid, CardGridProps } from "./CardGrid";
 
 const MY_ADAPTERS_CATEGORY = "My Adapters";
 const WATCHED_ADAPTERS_CATEGORY = "Watched Adapters";
@@ -274,182 +257,6 @@ function AdapterSentryButton(props: { projects: ProjectInfo[] }) {
 			</>
 		);
 	}
-}
-
-const useCardStyles = makeStyles((theme) => ({
-	card: {
-		height: "100%",
-		display: "flex",
-		flexDirection: "column",
-	},
-	closeButton: {
-		height: "0px",
-		overflowY: "visible",
-		textAlign: "right",
-	},
-	cardActionArea: {
-		height: "100%",
-	},
-	cardMedia: {
-		paddingTop: "56.25%", // 16:9
-	},
-	adapterCardMedia: {
-		marginLeft: "22%",
-		marginRight: "22%",
-	},
-	cardContent: {
-		flexGrow: 1,
-	},
-	clickableCard: {
-		cursor: "pointer",
-	},
-	loadingProgress: {
-		marginLeft: "25%",
-		[theme.breakpoints.up("sm")]: {
-			marginTop: "40%",
-			marginBottom: "40%",
-		},
-	},
-	centerIcon: {
-		width: "100%",
-		minHeight: "4em",
-		[theme.breakpoints.up("sm")]: {
-			marginTop: "40%",
-			marginBottom: "40%",
-		},
-	},
-}));
-
-export interface DashboardCardProps {
-	title: string;
-	img: string;
-	badges?: Record<string, string>;
-	text: string;
-	buttons?: JSX.Element[];
-	squareImg?: boolean;
-	to?: string;
-	onClose?: () => void;
-}
-
-export function DashboardCard(props: DashboardCardProps) {
-	const { title, img, badges, text, buttons, squareImg, to, onClose } = props;
-	const classes = useCardStyles();
-	const history = useHistory();
-	const handleCardClick = !to ? undefined : () => history.push(to);
-	return (
-		<Card className={classes.card} raised={true}>
-			{onClose && (
-				<div className={classes.closeButton}>
-					<IconButton onClick={onClose} size="small">
-						<CloseIcon />
-					</IconButton>
-				</div>
-			)}
-			<Hidden xsDown>
-				<CardMedia
-					className={clsx(
-						classes.cardMedia,
-						squareImg && classes.adapterCardMedia,
-						to && classes.clickableCard,
-					)}
-					image={img}
-					title={title}
-					onClick={handleCardClick}
-				/>
-			</Hidden>
-			<CardContent
-				className={clsx(
-					classes.cardContent,
-					to && classes.clickableCard,
-				)}
-				onClick={handleCardClick}
-			>
-				<Typography gutterBottom variant="h6" component="h2">
-					{title}
-				</Typography>
-				{badges && (
-					<Typography>
-						{Object.keys(badges).map((name) => (
-							<>
-								<img src={badges[name]} alt={name} />
-								&nbsp;
-							</>
-						))}
-					</Typography>
-				)}
-				{text.split("\n").map((t) => (
-					<Typography key={t}>{t}</Typography>
-				))}
-			</CardContent>
-			{buttons && buttons.length > 0 && (
-				<CardActions>{buttons.map((b) => b)}</CardActions>
-			)}
-		</Card>
-	);
-}
-
-function LoadingCard() {
-	const classes = useCardStyles();
-	return (
-		<Card className={classes.card} raised={true}>
-			<CircularProgress size="50%" className={classes.loadingProgress} />
-		</Card>
-	);
-}
-
-function AddCard(props: { onClick: () => void }) {
-	const { onClick } = props;
-	const classes = useCardStyles();
-	return (
-		<Card className={classes.card} raised={true}>
-			<CardActionArea
-				className={classes.cardActionArea}
-				onClick={onClick}
-			>
-				<AddCardIcon
-					fontSize="large"
-					color="primary"
-					className={classes.centerIcon}
-				/>
-			</CardActionArea>
-		</Card>
-	);
-}
-
-const useStyles = makeStyles((theme) => ({
-	cardGrid: {
-		marginBottom: theme.spacing(1),
-	},
-}));
-
-interface CardGridProps {
-	cards: DashboardCardProps[];
-	onAdd?: () => void;
-}
-
-function CardGrid(props: CardGridProps) {
-	const { cards, onAdd } = props;
-	const classes = useStyles();
-	return (
-		<Grid container spacing={4} className={classes.cardGrid}>
-			{cards.length > 0 &&
-				cards.map((card) => (
-					<Grid item key={card.title} xs={12} sm={6} md={4} lg={3}>
-						<DashboardCard {...card} />
-					</Grid>
-				))}
-			{onAdd && (
-				<Grid item xs={12} sm={6} md={4} lg={3}>
-					<AddCard onClick={onAdd} />
-				</Grid>
-			)}
-			{cards.length === 0 && !onAdd && (
-				<Grid item xs={12} sm={6} md={4} lg={3}>
-					<LoadingCard />
-				</Grid>
-			)}
-		</Grid>
-	);
 }
 
 interface AddWatchDialogProps {

@@ -5,6 +5,9 @@ import {
 	testCondition,
 } from "@iobroker/create-adapter/build/core";
 import Button from "@material-ui/core/Button";
+import Card from "@material-ui/core/Card";
+import CardActionArea from "@material-ui/core/CardActionArea";
+import CardContent from "@material-ui/core/CardContent";
 import Divider from "@material-ui/core/Divider";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
@@ -14,6 +17,10 @@ import Stepper from "@material-ui/core/Stepper";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import React, { useEffect } from "react";
+import { Route, Switch, useRouteMatch } from "react-router-dom";
+import { CardGrid } from "../../components/CardGrid";
+import { CardButton } from "../../components/Dashboard";
+import { DashboardCardProps } from "../../components/DashboardCard";
 import { GitHubComm, User } from "../../lib/gitHub";
 import { getQuestionName } from "./common";
 import { GenerateStep } from "./GenerateStep";
@@ -90,11 +97,11 @@ export const Group = (props: GroupProps): JSX.Element => {
 
 const STORAGE_KEY_TEMP_ANSWERS = "creator-answers";
 
-export interface CreateAdapterProps {
+export interface WizardProps {
 	user?: User;
 }
 
-export default function CreateAdapter(props: CreateAdapterProps) {
+function Wizard(props: WizardProps) {
 	const { user } = props;
 	const classes = useStyles();
 
@@ -238,5 +245,50 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 				</Grid>
 			</Grid>
 		</Paper>
+	);
+}
+
+export interface CreateAdapterProps {
+	user?: User;
+}
+
+export default function CreateAdapter(props: CreateAdapterProps) {
+	const { user } = props;
+
+	const { path, url } = useRouteMatch();
+
+	const cards: DashboardCardProps[] = [
+		{
+			title: "Online Adapter Creator",
+			img: "images/adapter-creator.png",
+			text:
+				"This web tool allows you to generate adapter code and either download it as a zip file or upload it to a new GitHub repository.",
+			buttons: [
+				<CardButton text="Let's get started" link={`${url}/wizard`} />,
+			],
+		},
+		{
+			title: "Local Command Line",
+			img: "images/command-line.svg",
+			text:
+				"You can create a new adapter locally by running\n'npx @iobroker/create-adapter'\nin your terminal or cmd.",
+			buttons: [
+				<CardButton
+					text="Learn more"
+					url="https://github.com/ioBroker/create-adapter#readme"
+				/>,
+			],
+		},
+	];
+
+	return (
+		<Switch>
+			<Route exact path={path}>
+				<CardGrid cards={cards} />
+			</Route>
+			<Route path={`${path}/wizard`}>
+				<Wizard user={user} />
+			</Route>
+		</Switch>
 	);
 }
