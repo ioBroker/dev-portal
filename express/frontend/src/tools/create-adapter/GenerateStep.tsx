@@ -172,7 +172,7 @@ export function GenerateStep(props: GenerateStepProps) {
 	const { answers, user, startGenerator, onRequestLogin } = props;
 	const classes = useStyles();
 
-	const webSocket = useWebSocket(() => getWebSocketUrl("create-adapter"));
+	const webSocket = useWebSocket(getWebSocketUrl("create-adapter"));
 
 	const [generator, setGenerator] = React.useState<GeneratorTarget>();
 
