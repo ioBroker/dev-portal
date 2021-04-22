@@ -20,6 +20,6 @@ services:
         container_name: iobroker-dev-portal-watchtower
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        command: --interval 30 iobroker-dev-portal-express
+        command: --cleanup --interval 30 iobroker-dev-portal-express
 volumes:
     mongo-data: {}
