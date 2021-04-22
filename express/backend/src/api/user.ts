@@ -8,12 +8,11 @@ import { dbConnect } from "../db/utils";
 
 const router = Router();
 
-const cache = new NodeCache({
+const loginCache = new NodeCache({
 	stdTTL: 3600,
 	checkperiod: 3600,
 	useClones: false,
 });
-const TOKEN_TO_LOGIN_KEY = "token-to-login";
 
 async function getGitHubLogin(req: Request) {
 	const cookies = (req as any)["universalCookies"] as Cookies;
@@ -22,7 +21,7 @@ async function getGitHubLogin(req: Request) {
 		return undefined;
 	}
 
-	let login = cache.get<string>(TOKEN_TO_LOGIN_KEY);
+	let login = loginCache.get<string>(ghToken);
 	if (!login) {
 		const requestWithAuth = request.defaults({
 			headers: {
@@ -34,7 +33,7 @@ async function getGitHubLogin(req: Request) {
 		login = user.data.login;
 	}
 
-	cache.set(TOKEN_TO_LOGIN_KEY, login);
+	loginCache.set(ghToken, login);
 	return login;
 }
 
