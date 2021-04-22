@@ -6,6 +6,8 @@ services:
         restart: always
         depends_on:
             - mongo
+        labels:
+            com.centurylinklabs.watchtower.scope: "github"
         environment:
             TEMP_DIR: /tmp
             GOOGLE_APPLICATION_CREDENTIALS: /app/google-translate-credentials.json
@@ -20,6 +22,6 @@ services:
         container_name: iobroker-dev-portal-watchtower
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-        command: --cleanup --interval 30 iobroker-dev-portal-express
+        command: --cleanup --interval 300 --stop-timeout 30s --scope github
 volumes:
     mongo-data: {}
