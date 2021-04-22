@@ -16,6 +16,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Write Git Info to Code
+        run: |
+          echo "export const GIT_COMMIT = \"$(git rev-parse --short HEAD)\", GIT_BRANCH = \"$(git branch --show-current)\";" > express/backend/src/version.ts
+          echo "export const GIT_COMMIT = \"$(git rev-parse --short HEAD)\", GIT_BRANCH = \"$(git branch --show-current)\";" > express/frontend/src/version.ts
+
       - name: Build and push
         uses: docker/build-push-action@v1
         with:
