@@ -1,7 +1,7 @@
 version: "3"
 services:
     express:
-        build: express
+        image: docker.pkg.github.com/unclesamswiss/iobroker-dev-portal/express:main
         restart: always
         depends_on:
             - mongo

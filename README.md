@@ -34,6 +34,14 @@ Note: running the backend in watch mode will not use the frontend in hot-reload!
 
 The orchestration is done using docker-compose.
 
+The docker image of the `express` application is hosted on GitHub, for this you need to login once with docker to the registry:
+
+```bash
+docker login docker.pkg.github.com
+```
+
+As the password you must use a [personal access token](https://github.com/settings/tokens).
+
 ### Running the server
 
 1. Create a file called `docker-compose.override.yml` in this root directory and configure all environment variables and the port to expose:
