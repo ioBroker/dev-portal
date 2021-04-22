@@ -14,6 +14,11 @@ import {
 import auth from "./auth";
 import { env } from "./common";
 import { startCronJobs } from "./cron";
+import { GIT_BRANCH, GIT_COMMIT } from "./version";
+
+console.log(
+	`Starting portal express application from ${GIT_COMMIT}@${GIT_BRANCH}`,
+);
 
 const app = express();
 const port = 8080;

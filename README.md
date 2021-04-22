@@ -30,6 +30,39 @@ For this, you can start each applications with the respective command:
 
 Note: running the backend in watch mode will not use the frontend in hot-reload!
 
+### Running docker-compose (DEV)
+
+These instructions are only for development.
+**DO NOT USE THIS IN A PRODUCTION ENVIRONMENT!**
+
+1. Create a file called `docker-compose.override.yml` in this root directory and configure all environment variables and the port to expose:
+
+```yml
+version: "3"
+services:
+    express:
+        build: express
+        ports:
+            - "8080:8080"
+        environment:
+            ALLOW_CORS: 1
+            PORTAL_GITHUB_OAUTH_CLIENT_ID: 1234567890abcdefghij
+            PORTAL_GITHUB_OAUTH_CLIENT_SECRET: 123456e0a66c140657890abcdefghij7236c1406
+            CREATOR_GITHUB_OAUTH_CLIENT_ID: abcdefghij1234567890
+            CREATOR_GITHUB_OAUTH_CLIENT_SECRET: abcdefghij7236c1406123456e0a66c140657890
+            WEBLATE_ACCESS_TOKEN: AbCdEfGhIjKlMnOpQrStUvWxYz0123456789aBcD
+            SENTRY_AUTH_TOKEN: 01234567890abcdefghij7236c1406123456e0a66c140657890abcef01234567
+    watchtower:
+        command: none
+    mongo-express:
+        image: "mongo-express:latest"
+        restart: always
+        ports:
+            - "8088:8081"
+```
+
+2. In this root directory call `docker-compose pull && docker-compose up --build`
+
 ## Deployment
 
 The orchestration is done using docker-compose.
@@ -40,9 +73,9 @@ The docker image of the `express` application is hosted on GitHub, for this you 
 docker login docker.pkg.github.com
 ```
 
-As the password you must use a [personal access token](https://github.com/settings/tokens).
+As the password you must use a [personal access token for your GitHub account](https://github.com/settings/tokens).
 
-### Running the server
+### Running the server (PROD)
 
 1. Create a file called `docker-compose.override.yml` in this root directory and configure all environment variables and the port to expose:
 
@@ -59,9 +92,13 @@ services:
             CREATOR_GITHUB_OAUTH_CLIENT_SECRET: abcdefghij7236c1406123456e0a66c140657890
             WEBLATE_ACCESS_TOKEN: AbCdEfGhIjKlMnOpQrStUvWxYz0123456789aBcD
             SENTRY_AUTH_TOKEN: 01234567890abcdefghij7236c1406123456e0a66c140657890abcef01234567
+    watchtower:
+        environment:
+            REPO_USER: "YourGitHubUserName"
+            REPO_PASS: "<personal access token (see above)>"
 ```
 
-2. In this root directory call `docker-compose up --build`
+2. In this root directory call `docker-compose pull && docker-compose up`
 
 ### Environment variables
 

@@ -4,6 +4,9 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
+import { GIT_BRANCH, GIT_COMMIT } from "./version";
+
+console.log(`ioBroker developer portal ${GIT_COMMIT}@${GIT_BRANCH}`);
 
 ReactDOM.render(
 	<React.StrictMode>
