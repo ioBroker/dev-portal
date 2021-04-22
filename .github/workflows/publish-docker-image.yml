@@ -22,7 +22,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: UncleSamSwiss/iobroker-dev-portal/express
+          repository: unclesamswiss/iobroker-dev-portal/express
           path: ./express
           tag_with_ref: true
           tag_with_sha: true
