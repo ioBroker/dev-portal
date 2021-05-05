@@ -1,9 +1,15 @@
 import axios from "axios";
 import { job } from "cron";
-import { Collection, FilterQuery } from "mongodb";
+import { Collection } from "mongodb";
 import { RepoAdapter } from "./db/schemas";
 import { dbConnect, escapeObjectKeys } from "./db/utils";
-import { LatestAdapters, StableAdapters, Statistics } from "./global/iobroker";
+import {
+	LatestAdapter,
+	LatestAdapters,
+	StableAdapter,
+	StableAdapters,
+	Statistics,
+} from "./global/iobroker";
 
 export function startCronJobs() {
 	// get the statistics every hour at :30
@@ -57,13 +63,16 @@ async function collectRepos(): Promise<void> {
 			dbConnect(),
 		]);
 		const collection = db.repoAdapters();
+
+		// remove "stale" entries
+		const { deletedCount } = await collection.deleteMany({
+			source: { $exists: false },
+		});
+		console.log(`Deleted ${deletedCount || 0} stale entries`);
+
 		await Promise.all([
-			addRepoAdapters(collection, latest, (adapter) => ({
-				latestVersion: adapter.latestVersion,
-			})),
-			addRepoAdapters(collection, stable, (adapter) => ({
-				stable: adapter.stable,
-			})),
+			addRepoAdapters(collection, latest, "latest"),
+			addRepoAdapters(collection, stable, "stable"),
 		]);
 		console.log("Added all repo adapters");
 	} catch (error) {
@@ -71,25 +80,30 @@ async function collectRepos(): Promise<void> {
 	}
 }
 
-async function addRepoAdapters<T extends RepoAdapter>(
+async function addRepoAdapters<T extends LatestAdapter | StableAdapter>(
 	collection: Collection<RepoAdapter>,
 	adapters: Record<string, T>,
-	getFilter: (adapter: T) => FilterQuery<RepoAdapter>,
+	source: "latest" | "stable",
 ): Promise<void> {
+	const timestamp = new Date().toISOString();
 	for (const adapterName in adapters) {
 		if (Object.prototype.hasOwnProperty.call(adapters, adapterName)) {
 			const adapter = adapters[adapterName];
 			const existing = await collection.findOne({
-				...getFilter(adapter),
+				version: adapter.version,
 				name: adapter.name,
+				source: source as any,
 			});
 			if (existing) {
 				// adapter name & version already exists
 				continue;
 			}
 
-			console.log(`Adding ${adapterName} ${adapter.version}`);
-			await collection.insertOne(escapeObjectKeys(adapter));
+			console.info(
+				`Adding ${adapterName} ${adapter.version} from ${source}`,
+			);
+			const add = { ...adapter, captured: timestamp, source };
+			await collection.insertOne(escapeObjectKeys(add as any));
 		}
 	}
 }

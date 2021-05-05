@@ -1,11 +1,15 @@
-import { LatestAdapter, StableAdapter } from "../global/iobroker";
+import { DateString, LatestAdapter, StableAdapter } from "../global/iobroker";
 export { Statistics } from "../global/iobroker";
 export { User } from "../global/user";
 
-export type RepoAdapter = LatestAdapter | StableAdapter;
-
-export function isLatestAdapter(
-	adapter: RepoAdapter,
-): adapter is LatestAdapter {
-	return (adapter as LatestAdapter).latestVersion !== undefined;
+export interface DbLatestAdapter extends LatestAdapter {
+	source: "latest";
+	captured: DateString;
 }
+
+export interface DbStableAdapter extends StableAdapter {
+	source: "stable";
+	captured: DateString;
+}
+
+export type RepoAdapter = DbLatestAdapter | DbStableAdapter;
