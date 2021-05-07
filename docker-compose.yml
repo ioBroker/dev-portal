@@ -1,7 +1,7 @@
 version: "3"
 services:
     express:
-        image: docker.pkg.github.com/unclesamswiss/iobroker-dev-portal/express:main
+        image: docker.pkg.github.com/iobroker/dev-portal/express:main
         container_name: iobroker-dev-portal-express
         restart: always
         depends_on:

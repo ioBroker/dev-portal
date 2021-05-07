@@ -378,8 +378,8 @@ async function getAdapterCard(
 		onClose,
 		img: info?.extIcon,
 		badges: {
-			"npm version": `http://img.shields.io/npm/v/iobroker.${info.name}.svg`,
-			"Stable version": `http://iobroker.live/badges/${info.name}-stable.svg`,
+			"npm version": `https://img.shields.io/npm/v/iobroker.${info.name}.svg`,
+			"Stable version": `https://iobroker.live/badges/${info.name}-stable.svg`,
 		},
 		text: info?.desc?.en || repo.description || "No description available",
 		squareImg: true,

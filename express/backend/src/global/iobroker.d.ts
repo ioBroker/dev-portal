@@ -35,7 +35,7 @@ export interface AdapterInfo {
 }
 
 export interface StableAdapter extends AdapterInfo {
-	stable: string;
+	latestVersion: string; // points to the latest version of this adapter
 }
 
 /**
@@ -44,7 +44,7 @@ export interface StableAdapter extends AdapterInfo {
 export type StableAdapters = Record<AdapterName, StableAdapter>;
 
 export interface LatestAdapter extends AdapterInfo {
-	latestVersion: string;
+	stable: string; // points to the stable version of this adapter
 }
 
 /**

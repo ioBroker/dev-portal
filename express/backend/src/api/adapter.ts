@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { isLatestAdapter } from "../db/schemas";
 import { dbConnect, unescapeObjectKeys } from "../db/utils";
 import { AdapterStatistics } from "../global/adapter-stats";
 
@@ -36,15 +35,27 @@ router.get("/api/adapter/:name/stats", async function (req, res) {
 				}
 			});
 
+		// the first version timestamp is wrong (except for new adapters)
+		let hadFirstLatest = false;
+		let hadFirstStable = false;
+
 		await repoAdapters
 			.find({ name })
-			.sort({ versionDate: 1 })
+			.sort({ captured: 1 })
 			.forEach((a) => {
 				const adapter = unescapeObjectKeys(a);
-				if (isLatestAdapter(adapter)) {
-					result.latest[adapter.versionDate] = adapter.latestVersion;
+				if (adapter.source === "latest") {
+					if (!hadFirstLatest) {
+						hadFirstLatest = true;
+					} else {
+						result.latest[adapter.captured] = adapter.version;
+					}
 				} else {
-					result.stable[adapter.versionDate] = adapter.stable;
+					if (!hadFirstStable) {
+						hadFirstStable = true;
+					} else {
+						result.stable[adapter.captured] = adapter.version;
+					}
 				}
 			});
 
