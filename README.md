@@ -123,8 +123,16 @@ Both applications must point to `https://<your-server>/auth/` as the Authorizati
 
 ### Optional: Google Translate Credentials
 
-If you wish to use the Google Translate V3 API, you can provide valid credentials in a file called `google-translate-credentials.json` in the directory `./express/backend`.
-The file will be copied by docker-compose into the `express` container and will be available to the web server, so the Adapter Creator application can use larger quota for translations (which may result in costs).
+If you wish to use the Google Translate V3 API, you can provide valid credentials in a file called `google-translate-credentials.json`, so the Adapter Creator application can use larger quota for translations (which may result in costs).
+
+For DEV, you can put it into the directory `./express/backend`. The file will be copied by docker-compose into the `express` container and will be available to the web server.
+
+For PROD, you can put it into the root directory of the project and then add the following volume to the `express` service in your `docker-compose.override.yml`:
+```yml
+        volumes:
+            - ${PWD}/google-translate-credentials.json:/app/google-translate-credentials.json
+```
+
 The file can be generated on the Google Cloud Platform by creating a Service Account for Google Translate V3. See [here](https://cloud.google.com/translate/docs/setup) for additional information. The expected format looks something like this:
 
 ```json
