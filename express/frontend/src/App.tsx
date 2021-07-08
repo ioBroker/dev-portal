@@ -39,6 +39,7 @@ import {
 } from "./components/Icons";
 import AdapterDetails from "./tools/AdapterDetails";
 import { getMyAdapterInfos, getWatchedAdapterInfos } from "./lib/ioBroker";
+import { GIT_BRANCH, GIT_COMMIT } from "./version";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";
@@ -85,6 +86,7 @@ const useStyles = makeStyles((theme) => ({
 		position: "relative",
 		whiteSpace: "nowrap",
 		width: drawerWidth,
+		overflowX: "hidden",
 		transition: theme.transitions.create("width", {
 			easing: theme.transitions.easing.sharp,
 			duration: theme.transitions.duration.enteringScreen,
@@ -103,6 +105,12 @@ const useStyles = makeStyles((theme) => ({
 	},
 	navIcon: {
 		height: "2em",
+	},
+	version: {
+		position: "absolute",
+		bottom: "0px",
+		color: "#ccc",
+		padding: theme.spacing(1),
 	},
 	appBarSpacer: theme.mixins.toolbar,
 	content: {
@@ -382,6 +390,11 @@ export default function App() {
 
 							{watchedAdapters && watchedAdapters.length > 0 && (
 								<Divider />
+							)}
+							{open && (
+								<div className={classes.version}>
+									{GIT_COMMIT}@{GIT_BRANCH}
+								</div>
 							)}
 						</Drawer>
 					</Hidden>

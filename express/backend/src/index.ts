@@ -39,6 +39,12 @@ app.use(weblateProxy);
 app.use(adapterApi);
 app.use(userApi);
 app.use(sentryApi);
+app.get("/api/version", function (_req, res) {
+	res.send({
+		branch: GIT_BRANCH,
+		commit: GIT_COMMIT,
+	});
+});
 app.get("/api/*", function (_req, res) {
 	// ensure that unknown API calls don't end up serving the HTML below
 	res.status(404).send("API endpoint not found");
