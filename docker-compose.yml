@@ -3,7 +3,7 @@ services:
     express:
         image: docker.pkg.github.com/iobroker/dev-portal/express:main
         container_name: iobroker-dev-portal-express
-        restart: always
+        restart: unless-stopped
         depends_on:
             - mongo
         labels:
@@ -14,12 +14,13 @@ services:
     mongo:
         image: "mongo:4.4"
         container_name: iobroker-dev-portal-mongo
-        restart: always
+        restart: unless-stopped
         volumes:
             - mongo-data:/data/db
     watchtower:
         image: containrrr/watchtower
         container_name: iobroker-dev-portal-watchtower
+        restart: unless-stopped
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         command: --cleanup --interval 300 --stop-timeout 30s --scope github
