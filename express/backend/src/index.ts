@@ -14,6 +14,7 @@ import {
 import auth from "./auth";
 import { env } from "./common";
 import { startCronJobs } from "./cron";
+import { Version } from "./global/version";
 import { GIT_BRANCH, GIT_COMMIT } from "./version";
 
 console.log(
@@ -39,7 +40,7 @@ app.use(weblateProxy);
 app.use(adapterApi);
 app.use(userApi);
 app.use(sentryApi);
-app.get("/api/version", function (_req, res) {
+app.get<any, Version>("/api/version", function (_req, res) {
 	res.send({
 		branch: GIT_BRANCH,
 		commit: GIT_COMMIT,

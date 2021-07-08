@@ -40,6 +40,7 @@ import {
 import AdapterDetails from "./tools/AdapterDetails";
 import { getMyAdapterInfos, getWatchedAdapterInfos } from "./lib/ioBroker";
 import { GIT_BRANCH, GIT_COMMIT } from "./version";
+import ReloadPageSnackbar from "./components/ReloadPageSnackbar";
 
 const drawerWidth = 240;
 export const gitHubTokenCookie = "gh-token";
@@ -264,7 +265,7 @@ export default function App() {
 	return (
 		<div className={classes.root}>
 			<CssBaseline />
-
+			<ReloadPageSnackbar />
 			<AppBar
 				position="absolute"
 				className={clsx(classes.appBar, open && classes.appBarShift)}
