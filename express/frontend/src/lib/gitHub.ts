@@ -1,4 +1,4 @@
-import { components } from "@octokit/openapi-types/dist-types/generated/types";
+import { components } from "@octokit/openapi-types/types";
 import { request } from "@octokit/request";
 import { RequestInterface } from "@octokit/types";
 import { AsyncCache } from "./utils";
