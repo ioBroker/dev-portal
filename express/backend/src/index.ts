@@ -36,6 +36,7 @@ app.use(express.static(publicPath));
 app.use(auth);
 
 // api
+app.use(createAdapterRouter);
 app.use(weblateProxy);
 app.use(adapterApi);
 app.use(userApi);
@@ -50,9 +51,6 @@ app.get("/api/*", function (_req, res) {
 	// ensure that unknown API calls don't end up serving the HTML below
 	res.status(404).send("API endpoint not found");
 });
-
-// apps
-app.use(createAdapterRouter);
 
 app.get("/*", function (_req, res) {
 	res.sendFile(path.join(publicPath, "index.html"));

@@ -22,6 +22,8 @@ import { GitHubComm, User } from "../../lib/gitHub";
 import { getQuestionName } from "./common";
 import { GenerateStep } from "./GenerateStep";
 import { QuestionView } from "./QuestionView";
+import axios from "axios";
+import { getApiUrl } from "../../lib/utils";
 
 const useStyles = makeStyles((theme) => ({
 	root: {
@@ -33,6 +35,10 @@ const useStyles = makeStyles((theme) => ({
 	divider: {
 		marginTop: theme.spacing(1),
 		marginBottom: theme.spacing(1),
+	},
+	version: {
+		marginLeft: "auto",
+		color: "#ccc",
 	},
 }));
 
@@ -102,6 +108,7 @@ function Wizard(props: WizardProps) {
 	const { user } = props;
 	const classes = useStyles();
 
+	const [version, setVersion] = React.useState("");
 	const [activeStep, setActiveStep] = React.useState(0);
 	const [hasError, setHasError] = React.useState(false);
 	const [answers, _setAnswers] = React.useState({ ...initialAnswers });
@@ -160,6 +167,19 @@ function Wizard(props: WizardProps) {
 			console.error(e);
 		}
 	}, [startGenerator]);
+
+	useEffect(() => {
+		if (version) {
+			return;
+		}
+		const getVersion = async () => {
+			const { data } = await axios.get(
+				getApiUrl("create-adapter/version"),
+			);
+			setVersion(`${data.name} ${data.version}`);
+		};
+		getVersion().catch(console.error);
+	}, [version]);
 
 	const handleLoginRequest = () => {
 		window.localStorage.setItem(
@@ -239,6 +259,10 @@ function Wizard(props: WizardProps) {
 					>
 						Next
 					</Button>
+				</Grid>
+				<Grid item className={classes.version}>
+					<br />
+					{version}
 				</Grid>
 			</Grid>
 		</Paper>

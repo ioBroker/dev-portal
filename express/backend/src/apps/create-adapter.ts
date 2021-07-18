@@ -4,6 +4,7 @@ import {
 	File,
 	writeFiles,
 } from "@iobroker/create-adapter";
+import createAdapter from "@iobroker/create-adapter/package.json";
 import { request as GitHubRequest } from "@octokit/request";
 import archiver from "archiver";
 import { execSync } from "child_process";
@@ -49,7 +50,15 @@ type GitHubTreeItem = {
 
 export const router = Router();
 
-router.get("/create-adapter/:id/:hash/:filename", async (req, res) => {
+router.get("/api/create-adapter/version", async (_req, res) => {
+	res.send({
+		name: createAdapter.name,
+		version: createAdapter.version,
+		integrity: createAdapter._integrity,
+	});
+});
+
+router.get("/api/create-adapter/:id/:hash/:filename", async (req, res) => {
 	if (
 		!req.params.id.match(/^[0-9a-f\-]+$/) ||
 		!req.params.hash.match(/^[0-9a-f]+$/)
@@ -175,7 +184,7 @@ function handleConnection(client: WebSocket, request: IncomingMessage) {
 		} else if (target === "zip") {
 			sendMsg({
 				result: true,
-				resultLink: `/create-adapter/${id}/${hash}/ioBroker.${answers.adapterName}.zip`,
+				resultLink: `/api/create-adapter/${id}/${hash}/ioBroker.${answers.adapterName}.zip`,
 			});
 		} else {
 			throw new Error(`Target ${target} not supported`);
