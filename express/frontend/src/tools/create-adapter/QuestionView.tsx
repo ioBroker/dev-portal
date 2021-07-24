@@ -212,7 +212,9 @@ export const BooleanSelectRenderer = (
 					label={question.label}
 				/>
 			</FormGroup>
-			<FormHelperText>{error || question.hint || " "}</FormHelperText>
+			<FormHelperText style={{ margin: 0 }}>
+				{error || question.hint || " "}
+			</FormHelperText>
 		</FormControl>
 	);
 };
