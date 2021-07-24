@@ -82,9 +82,8 @@ export const Group = (props: GroupProps): JSX.Element => {
 					return null;
 				}
 				return (
-					<Grid item xs={12}>
+					<Grid item xs={12} key={i}>
 						<QuestionView
-							key={i}
 							question={question}
 							answers={answers}
 							onAnswerChanged={(value, error) =>
