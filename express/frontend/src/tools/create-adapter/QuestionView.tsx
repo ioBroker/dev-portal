@@ -41,7 +41,9 @@ export interface QuestionViewProps<T = SpecificPromptOptions> {
 
 const isRequired = (question: Question): boolean => {
 	return (
-		(question.optional !== true || question.required === true) &&
+		(question.optional !== true ||
+			question.required === true ||
+			question.type === "select") &&
 		question.type !== "multiselect"
 	);
 };
@@ -220,7 +222,7 @@ export const RadioSelectRenderer = (
 ): JSX.Element => {
 	const { question } = props;
 
-	const [value, setValue] = useValueState(props, "no");
+	const [value, setValue] = useValueState(props, "");
 	const [error, setError] = React.useState("");
 
 	const handleChange = (
@@ -232,7 +234,11 @@ export const RadioSelectRenderer = (
 	};
 
 	return (
-		<FormControl component="fieldset">
+		<FormControl
+			component="fieldset"
+			error={!!error}
+			required={isRequired(question)}
+		>
 			<FormLabel component="legend">{question.message}</FormLabel>
 			<RadioGroup value={value} onChange={handleChange} row>
 				{question.choices.map((c: string | Choice, i: number) =>
