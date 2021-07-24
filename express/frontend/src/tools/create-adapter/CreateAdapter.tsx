@@ -14,7 +14,7 @@ import Stepper from "@material-ui/core/Stepper";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import React, { useEffect } from "react";
-import { Route, Switch, useRouteMatch } from "react-router-dom";
+import { Route, Switch, useHistory, useRouteMatch } from "react-router-dom";
 import { CardGrid } from "../../components/CardGrid";
 import { CardButton } from "../../components/CardButton";
 import { DashboardCardProps } from "../../components/DashboardCard";
@@ -97,7 +97,8 @@ export const Group = (props: GroupProps): JSX.Element => {
 	);
 };
 
-const STORAGE_KEY_TEMP_ANSWERS = "creator-answers";
+const STORAGE_KEY_ANSWERS_AFTER_LOGIN = "creator-answers-after-login";
+const STORAGE_KEY_CURRENT_ANSWERS = "creator-current-answers";
 
 export interface WizardProps {
 	user?: User;
@@ -110,15 +111,25 @@ function Wizard(props: WizardProps) {
 	const [version, setVersion] = React.useState("");
 	const [activeStep, setActiveStep] = React.useState(0);
 	const [hasError, setHasError] = React.useState(false);
-	const [answers, _setAnswers] = React.useState({ ...initialAnswers });
+	const [answers, setAnswers] = React.useState({ ...initialAnswers });
 	const [startGenerator, setStartGenerator] = React.useState<boolean>();
 
-	const setAnswers = (
-		newAnswers: React.SetStateAction<Record<string, any>>,
-	): void => {
-		console.log(newAnswers);
-		_setAnswers(newAnswers);
-	};
+	useEffect(() => {
+		const currentAnswers = window.localStorage.getItem(
+			STORAGE_KEY_CURRENT_ANSWERS,
+		);
+		if (currentAnswers) {
+			setAnswers(JSON.parse(currentAnswers));
+		}
+	}, []);
+
+	useEffect(() => {
+		console.log(answers);
+		window.localStorage.setItem(
+			STORAGE_KEY_CURRENT_ANSWERS,
+			JSON.stringify(answers),
+		);
+	}, [answers]);
 
 	useEffect(() => {
 		if (user) {
@@ -153,10 +164,10 @@ function Wizard(props: WizardProps) {
 		}
 		try {
 			const loadedAnswers = window.localStorage.getItem(
-				STORAGE_KEY_TEMP_ANSWERS,
+				STORAGE_KEY_ANSWERS_AFTER_LOGIN,
 			);
 			if (loadedAnswers) {
-				window.localStorage.removeItem(STORAGE_KEY_TEMP_ANSWERS);
+				window.localStorage.removeItem(STORAGE_KEY_ANSWERS_AFTER_LOGIN);
 				setAnswers(JSON.parse(loadedAnswers));
 				setStartGenerator(true);
 				setActiveStep(questionGroups.length);
@@ -182,7 +193,7 @@ function Wizard(props: WizardProps) {
 
 	const handleLoginRequest = () => {
 		window.localStorage.setItem(
-			STORAGE_KEY_TEMP_ANSWERS,
+			STORAGE_KEY_ANSWERS_AFTER_LOGIN,
 			JSON.stringify(answers),
 		);
 
@@ -277,15 +288,22 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 
 	const { path, url } = useRouteMatch();
 
-	const cards: DashboardCardProps[] = [
+	const history = useHistory();
+
+	const onClickWizard = () => {
+		window.localStorage.removeItem(STORAGE_KEY_CURRENT_ANSWERS);
+		history.push(`${url}/wizard`);
+	};
+
+	const [cards, setCards] = React.useState<DashboardCardProps[]>([
 		{
-			title: "Online Adapter Creator",
+			title: "Create New Adapter Online",
 			img: "images/adapter-creator.png",
 			text:
 				"This web tool allows you to generate adapter code and either download it as a zip file or upload it to a new GitHub repository.",
-			to: `${url}/wizard`,
+			onClick: onClickWizard,
 			buttons: [
-				<CardButton text="Let's get started" to={`${url}/wizard`} />,
+				<CardButton text="Let's get started" onClick={onClickWizard} />,
 			],
 		},
 		{
@@ -301,7 +319,53 @@ export default function CreateAdapter(props: CreateAdapterProps) {
 				/>,
 			],
 		},
-	];
+	]);
+
+	useEffect(() => {
+		const removeContinueCard = () => {
+			setCards((c) => {
+				if (c.length === 3) {
+					c.shift();
+				}
+				return [...c];
+			});
+		};
+		const currentAnswers = window.localStorage.getItem(
+			STORAGE_KEY_CURRENT_ANSWERS,
+		);
+		if (currentAnswers) {
+			const answers = JSON.parse(currentAnswers) as Answers;
+			if (answers.adapterName) {
+				const icon = answers.icon?.data;
+				const handleClose = () => {
+					window.localStorage.removeItem(STORAGE_KEY_CURRENT_ANSWERS);
+					removeContinueCard();
+				};
+				const card = {
+					title: `Continue with ioBroker.${answers.adapterName}`,
+					img:
+						typeof icon === "string"
+							? icon
+							: "images/adapter-creator.png",
+					squareImg: typeof icon === "string",
+					text: `Continue the online wizard for ioBroker.${answers.adapterName} with all your answers from the last time you used the creator.`,
+					to: `${url}/wizard`,
+					buttons: [
+						<CardButton text="Continue" to={`${url}/wizard`} />,
+					],
+					onClose: handleClose,
+				};
+				setCards((c) => {
+					if (c.length === 3) {
+						c.shift();
+					}
+					return [card, ...c];
+				});
+			} else {
+				removeContinueCard();
+			}
+		}
+	}, [url, history.location]);
 
 	return (
 		<Switch>
