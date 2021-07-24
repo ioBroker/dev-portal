@@ -66,6 +66,7 @@ export interface DashboardCardProps {
 	squareImg?: boolean;
 	to?: string;
 	url?: string;
+	onClick?: () => void;
 	onClose?: () => void;
 }
 
@@ -79,6 +80,7 @@ export function DashboardCard(props: DashboardCardProps) {
 		squareImg,
 		to,
 		url,
+		onClick,
 		onClose,
 	} = props;
 	const classes = useStyles();
@@ -87,7 +89,7 @@ export function DashboardCard(props: DashboardCardProps) {
 		? () => history.push(to)
 		: url
 		? () => window.open(url, "_blank")
-		: undefined;
+		: onClick;
 	return (
 		<Card className={classes.card} raised={true}>
 			{onClose && (
