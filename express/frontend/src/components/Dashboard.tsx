@@ -27,7 +27,7 @@ import { useHistory } from "react-router-dom";
 import { ProjectInfo } from "../../../backend/src/global/sentry";
 import { User as DbUser } from "../../../backend/src/global/user";
 import { handleLogin } from "../App";
-import { GitHubComm, User } from "../lib/gitHub";
+import { GitHubComm, Repository, User } from "../lib/gitHub";
 import {
 	AdapterInfos,
 	getAdapterInfos,
@@ -59,11 +59,57 @@ const COLLAPSED_CATEGORIES_KEY = "DASH_COLLAPSED_CATEGORIES";
 
 const uc = encodeURIComponent;
 
+function AdapterGitHubButton(props: { repo: Repository; user: User }) {
+	const { repo, user } = props;
+	const [counts, setCounts] = useState(`${repo.open_issues} open issues/PRs`);
+	const [color, setColor] = useState<"primary" | "error">("primary");
+
+	useEffect(() => {
+		const loadPullRequests = async () => {
+			if (!repo.open_issues) {
+				setCounts("no open PRs / no open issues");
+				return;
+			}
+
+			const gitHub = GitHubComm.forToken(user.token);
+			const pullRequests = await gitHub.getPullRequests(
+				repo.owner!.login,
+				repo.name,
+				"open",
+			);
+			const prCount = pullRequests.length;
+			const issueCount = repo.open_issues - prCount;
+			const getText = (value: number, type: string) => {
+				return `${value || "no"} open ${type}${value === 1 ? "" : "s"}`;
+			};
+
+			setCounts(
+				`${getText(prCount, "PR")} / ${getText(issueCount, "issue")}`,
+			);
+			setColor(prCount > 0 ? "error" : "primary");
+		};
+		loadPullRequests().catch(console.error);
+	}, [repo, user]);
+
+	return (
+		<CardButton
+			icon={
+				<Tooltip title={`GitHub Repository (${counts})`}>
+					<Badge badgeContent={repo.open_issues} color={color}>
+						<GitHubIcon />
+					</Badge>
+				</Tooltip>
+			}
+			url={repo.html_url}
+		/>
+	);
+}
+
 const SentryErrorBadge = React.forwardRef(
 	(props: { errors: number[]; children: any }, ref: any) => {
 		const { errors, children } = props;
 		const errorCount = errors[0] || errors[1];
-		const color = errors[0] ? "secondary" : "primary";
+		const color = errors[0] ? "error" : "primary";
 		return (
 			<Badge badgeContent={errorCount} color={color} {...props} ref={ref}>
 				{children}
@@ -356,6 +402,7 @@ async function getSentryProjects(adapterName: string) {
 async function getAdapterCard(
 	infos: AdapterInfos,
 	history: H.History<AdapterCheckLocationState>,
+	user: User,
 	onClose?: () => void,
 ): Promise<DashboardCardProps | undefined> {
 	const { repo, info } = infos;
@@ -385,21 +432,7 @@ async function getAdapterCard(
 		squareImg: true,
 		to: `/adapter/${info.name}`,
 		buttons: [
-			<CardButton
-				icon={
-					<Tooltip
-						title={`GitHub Repository (${repo.open_issues} open issues/PRs)`}
-					>
-						<Badge
-							badgeContent={repo.open_issues}
-							color="secondary"
-						>
-							<GitHubIcon />
-						</Badge>
-					</Tooltip>
-				}
-				url={repo.html_url}
-			/>,
+			<AdapterGitHubButton repo={repo} user={user} />,
 			<CardButton
 				icon={
 					<Tooltip title="Start Adapter Check">
@@ -490,7 +523,7 @@ export default function Dashboard(props: DashboardProps) {
 			const infos = await getWatchedAdapterInfos(user.token);
 			const cards = await Promise.all(
 				infos.map((info) =>
-					getAdapterCard(info, history, () =>
+					getAdapterCard(info, history, user, () =>
 						handleRemoveWatch(info).catch(console.error),
 					).catch(console.error),
 				),
@@ -522,7 +555,7 @@ export default function Dashboard(props: DashboardProps) {
 			const infos = await getMyAdapterInfos(user.token);
 			const cards = await Promise.all(
 				infos.map((info) =>
-					getAdapterCard(info, history).catch(console.error),
+					getAdapterCard(info, history, user).catch(console.error),
 				),
 			);
 

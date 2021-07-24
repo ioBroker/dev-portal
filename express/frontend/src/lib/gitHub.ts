@@ -9,6 +9,7 @@ export type User = components["schemas"]["public-user"] & {
 
 export type MinimalRepository = components["schemas"]["minimal-repository"];
 export type FullRepository = components["schemas"]["full-repository"];
+export type PullRequestSimple = components["schemas"]["pull-request-simple"];
 export type Repository = MinimalRepository | FullRepository;
 
 const PAGE_SIZE = 100; // max 100
@@ -66,6 +67,19 @@ export class GitHubComm {
 		const result = await this.request("GET /repos/{owner}/{repo}", {
 			owner,
 			repo,
+		});
+		return result.data;
+	}
+
+	public async getPullRequests(
+		owner: string,
+		repo: string,
+		state?: "open" | "closed" | "all",
+	): Promise<PullRequestSimple[]> {
+		const result = await this.request("GET /repos/{owner}/{repo}/pulls", {
+			owner,
+			repo,
+			state,
 		});
 		return result.data;
 	}
