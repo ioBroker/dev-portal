@@ -33,6 +33,8 @@ const useStyles = makeStyles((theme) => ({
 	adapterCardMedia: {
 		marginLeft: "22%",
 		marginRight: "22%",
+		marginTop: "2%",
+		marginBottom: "-2%",
 	},
 	cardContent: {
 		flexGrow: 1,
