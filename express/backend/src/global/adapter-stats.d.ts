@@ -5,7 +5,7 @@ export interface AdapterVersions {
 	total: number;
 }
 
-export interface AdapterStatistics {
+export interface AdapterStats {
 	counts: Record<DateString, AdapterVersions>;
 	latest: Record<DateString, Version>;
 	stable: Record<DateString, Version>;

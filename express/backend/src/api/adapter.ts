@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { dbConnect, unescapeObjectKeys } from "../db/utils";
-import { AdapterStatistics } from "../global/adapter-stats";
+import { AdapterStats } from "../global/adapter-stats";
 
 const router = Router();
 
@@ -11,7 +11,7 @@ router.get("/api/adapter/:name/stats", async function (req, res) {
 		const rawStatistics = db.rawStatistics();
 		const repoAdapters = db.repoAdapters();
 
-		const result: AdapterStatistics = {
+		const result: AdapterStats = {
 			counts: {},
 			latest: {},
 			stable: {},

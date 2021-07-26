@@ -2,13 +2,19 @@ import axios from "axios";
 import {
 	LatestAdapter,
 	LatestAdapters,
+	StableAdapters,
 } from "../../../backend/src/global/iobroker";
 import {
 	ProjectInfo,
 	ProjectStatistics,
 } from "../../../backend/src/global/sentry";
 import { User as RestUser } from "../../../backend/src/global/user";
-import { GitHubComm, Repository } from "./gitHub";
+import {
+	FullRepository,
+	GitHubComm,
+	MinimalRepository,
+	Repository,
+} from "./gitHub";
 import { AsyncCache, getApiUrl } from "./utils";
 
 const uc = encodeURIComponent;
@@ -22,7 +28,16 @@ export const getLatest = AsyncCache.of(async () => {
 	return result.data;
 });
 
-export async function getMyAdapterRepos(ghToken: string) {
+export const getStable = AsyncCache.of(async () => {
+	const result = await axios.get<StableAdapters>(
+		"https://repo.iobroker.live/sources-dist.json",
+	);
+	return result.data;
+});
+
+export async function getMyAdapterRepos(
+	ghToken: string,
+): Promise<MinimalRepository[]> {
 	const gitHub = GitHubComm.forToken(ghToken);
 	const repos = await gitHub.getUserRepos();
 	const latest = await getLatest();
@@ -48,14 +63,21 @@ export async function getMyAdapterRepos(ghToken: string) {
 	});
 }
 
-export async function getWatchedAdapterRepos(ghToken: string) {
-	const { data: user } = await axios.get<RestUser>(getApiUrl("user"));
-	const gitHub = GitHubComm.forToken(ghToken);
-	return await Promise.all(
-		user.watches
-			.map((r) => r.split("/", 2))
-			.map(([owner, repo]) => gitHub.getRepo(owner, repo)),
-	);
+export async function getWatchedAdapterRepos(
+	ghToken: string,
+): Promise<FullRepository[]> {
+	try {
+		const { data: user } = await axios.get<RestUser>(getApiUrl("user"));
+		const gitHub = GitHubComm.forToken(ghToken);
+		return await Promise.all(
+			user.watches
+				.map((r) => r.split("/", 2))
+				.map(([owner, repo]) => gitHub.getRepo(owner, repo).getRepo()),
+		);
+	} catch (e) {
+		console.error(e);
+		return [];
+	}
 }
 
 export interface AdapterInfos {
@@ -96,7 +118,7 @@ export const getWatchedAdapterInfos = async (ghToken: string) => {
 export async function getAdapterInfos(
 	repo: Repository,
 	latest: LatestAdapters,
-) {
+): Promise<AdapterInfos> {
 	const adapterName = repo.name.split(".")[1];
 	let info = latest[adapterName];
 	const defaultBranch = repo.default_branch || "master";

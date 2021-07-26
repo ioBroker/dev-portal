@@ -9,8 +9,11 @@ export type User = components["schemas"]["public-user"] & {
 
 export type MinimalRepository = components["schemas"]["minimal-repository"];
 export type FullRepository = components["schemas"]["full-repository"];
-export type PullRequestSimple = components["schemas"]["pull-request-simple"];
 export type Repository = MinimalRepository | FullRepository;
+
+export type PullRequestSimple = components["schemas"]["pull-request-simple"];
+
+export type Tag = components["schemas"]["tag"];
 
 const PAGE_SIZE = 100; // max 100
 
@@ -63,24 +66,75 @@ export class GitHubComm {
 		},
 	);
 
-	public async getRepo(owner: string, repo: string): Promise<FullRepository> {
+	public getRepo(owner: string, repo: string): GitHubRepoComm;
+	public getRepo(repo: Repository): GitHubRepoComm;
+	public getRepo(owner: string | Repository, repo?: string): GitHubRepoComm {
+		if (typeof owner !== "string") {
+			repo = owner.name;
+			owner = owner.owner!.login;
+		}
+		return new GitHubRepoComm(owner, repo!, this);
+	}
+}
+
+export class GitHubRepoComm {
+	private readonly baseOptions: { owner: string; repo: string };
+	constructor(
+		owner: string,
+		repo: string,
+		public readonly parent: GitHubComm,
+	) {
+		this.baseOptions = { owner, repo };
+	}
+
+	private get request() {
+		return this.parent.request;
+	}
+
+	public async getRepo(): Promise<FullRepository> {
 		const result = await this.request("GET /repos/{owner}/{repo}", {
-			owner,
-			repo,
+			...this.baseOptions,
 		});
 		return result.data;
 	}
 
 	public async getPullRequests(
-		owner: string,
-		repo: string,
 		state?: "open" | "closed" | "all",
 	): Promise<PullRequestSimple[]> {
 		const result = await this.request("GET /repos/{owner}/{repo}/pulls", {
-			owner,
-			repo,
+			...this.baseOptions,
 			state,
 		});
+		return result.data;
+	}
+
+	public async getTags(): Promise<Tag[]> {
+		const result = await this.request("GET /repos/{owner}/{repo}/tags", {
+			...this.baseOptions,
+			per_page: 100,
+		});
+		return result.data;
+	}
+
+	public async getRef(ref: string) {
+		const result = await this.request(
+			"GET /repos/{owner}/{repo}/git/ref/{ref}",
+			{
+				...this.baseOptions,
+				ref,
+			},
+		);
+		return result.data;
+	}
+
+	public async getCommit(commit_sha: string) {
+		const result = await this.request(
+			"GET /repos/{owner}/{repo}/git/commits/{commit_sha}",
+			{
+				...this.baseOptions,
+				commit_sha,
+			},
+		);
 		return result.data;
 	}
 }

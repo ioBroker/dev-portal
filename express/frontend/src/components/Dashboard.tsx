@@ -72,11 +72,9 @@ function AdapterGitHubButton(props: { repo: Repository; user: User }) {
 			}
 
 			const gitHub = GitHubComm.forToken(user.token);
-			const pullRequests = await gitHub.getPullRequests(
-				repo.owner!.login,
-				repo.name,
-				"open",
-			);
+			const pullRequests = await gitHub
+				.getRepo(repo)
+				.getPullRequests("open");
 			const prCount = pullRequests.length;
 			const issueCount = repo.open_issues - prCount;
 			const getText = (value: number, type: string) => {
@@ -291,7 +289,7 @@ function AddWatchDialog(props: AddWatchDialogProps) {
 			const [owner, repo] = repoName.split("/", 2);
 			const latest = await getLatest();
 			const infos = await getAdapterInfos(
-				await gitHub.getRepo(owner, repo),
+				await gitHub.getRepo(owner, repo).getRepo(),
 				latest,
 			);
 			if (!infos.info) {
