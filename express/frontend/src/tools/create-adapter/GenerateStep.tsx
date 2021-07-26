@@ -19,6 +19,7 @@ import {
 	LogMessage,
 	ServerClientMessage,
 } from "../../../../backend/src/global/create-adapter-ws";
+import AuthConsentDialog from "../../components/AuthConsentDialog";
 import { CardButton } from "../../components/CardButton";
 import { CardGrid } from "../../components/CardGrid";
 import { DashboardCardProps } from "../../components/DashboardCard";
@@ -70,6 +71,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 	useEffect(() => {
 		if (state === "idle" && target) {
 			//console.log(state, target, "--> sendMessage", startMessage);
+			setLog([]);
 			webSocket.sendMessage(startMessage);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -175,6 +177,7 @@ export function GenerateStep(props: GenerateStepProps) {
 	const webSocket = useWebSocket(getWebSocketUrl("create-adapter"));
 
 	const [generator, setGenerator] = React.useState<GeneratorTarget>();
+	const [consentOpen, setConsentOpen] = React.useState(false);
 
 	useEffect(() => {
 		if (startGenerator) {
@@ -190,13 +193,12 @@ export function GenerateStep(props: GenerateStepProps) {
 		{
 			title: "Create GitHub Repository",
 			text:
-				"Your code will be uploaded to a newly created GitHub Repository for the user or organisation you choose.\n" +
-				"You will be asked by GitHub to authorize this application. The generated authentication token is never transmitted to anybody but GitHub and will not be stored by this website. Nobody but you will be able to modify the generated repository.",
+				"Your code will be uploaded to a newly created GitHub repository for the user or organisation you choose.",
 			buttons: [
 				<CardButton
 					text="Create Repository"
 					startIcon={<GitHubIcon />}
-					onClick={() => onRequestLogin()}
+					onClick={() => setConsentOpen(true)}
 					disabled={!user || !!generator}
 				/>,
 			],
@@ -219,6 +221,16 @@ export function GenerateStep(props: GenerateStepProps) {
 
 	return (
 		<>
+			<AuthConsentDialog
+				reason="create a new adapter repository"
+				actions={[
+					`create a new repository called ioBroker.${answers.adapterName} for the user or organisation you choose`,
+					"upload all generated files",
+				]}
+				open={consentOpen}
+				onClose={() => setConsentOpen(false)}
+				onContinue={onRequestLogin}
+			/>
 			{!!generator && (
 				<GeneratorDialog
 					webSocket={webSocket}
