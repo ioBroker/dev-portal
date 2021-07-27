@@ -17,6 +17,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { coerce } from "semver";
+import AuthConsentDialog from "../../components/AuthConsentDialog";
 import {
 	GitHubIcon,
 	IoBrokerIcon,
@@ -126,6 +127,9 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	const { name } = useParams<{ name: string }>();
 	const [rows, setRows] = useState<ReleaseInfo[]>();
 	const [hasReleaseScript, setHasReleaseScript] = useState<boolean>();
+	const [authReason, setAuthReason] = useState<string>();
+	const [authActions, setAuthActions] = useState<string[]>([]);
+	const [releaseAction, setReleaseAction] = useState<ReleaseAction>();
 
 	useEffect(() => {
 		const loadReleases = async () => {
@@ -211,13 +215,64 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 		checkPackageInfo().catch(console.error);
 	}, [infos]);
 
-	const handleCreateRelease = () => {};
-	const handleToLatest = () => {};
-	const handleToStable = () => {};
+	useEffect(() => {
+		switch (releaseAction) {
+			case "release":
+				setAuthReason("create a new release");
+				setAuthActions([
+					"download your repository",
+					"update the changelog if requested",
+					"execute the release script",
+					"upload all changes performed by the release script",
+					"tag the new release",
+					"let GitHub actions create a new npm release (if configured)",
+				]);
+				break;
+			case "to-latest":
+				setAuthReason(
+					`add ioBroker.${name} to the beta/latest repository`,
+				);
+				setAuthActions([
+					"fork ioBroker.repositories to the user or organisation you choose (if not yet done)",
+					"create a new branch",
+					"update sources-dist.json",
+					"create a pull request for those changes",
+				]);
+				break;
+			case "to-stable":
+				setAuthReason(
+					`update ioBroker.${name} in the stable repository`,
+				);
+				setAuthActions([
+					"fork ioBroker.repositories to the user or organisation you choose (if not yet done)",
+					"create a new branch",
+					"update sources-dist-stable.json",
+					"create a pull request for those changes",
+				]);
+				break;
+		}
+	}, [releaseAction, name]);
+
+	const handleConsent = () => {
+		const url = encodeURIComponent(
+			`${window.location.pathname}/${releaseAction}`,
+		);
+		window.location.href = `/login?redirect=${url}&scope=repo`;
+	};
+	const handleCreateRelease = () => setReleaseAction("release");
+	const handleToLatest = () => setReleaseAction("to-latest");
+	const handleToStable = () => setReleaseAction("to-stable");
 
 	const classes = useStyles();
 	return (
 		<Paper>
+			<AuthConsentDialog
+				reason={authReason || ""}
+				actions={authActions}
+				open={!!authReason}
+				onClose={() => setAuthReason(undefined)}
+				onContinue={handleConsent}
+			/>
 			{rows?.length === 0 && (
 				<Alert
 					severity="error"
