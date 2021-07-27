@@ -18,7 +18,7 @@ import {
 	GeneratorTarget,
 	LogMessage,
 	ServerClientMessage,
-} from "../../../../backend/src/global/create-adapter-ws";
+} from "../../../../backend/src/global/websocket";
 import AuthConsentDialog from "../../components/AuthConsentDialog";
 import { CardButton } from "../../components/CardButton";
 import { CardGrid } from "../../components/CardGrid";

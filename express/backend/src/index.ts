@@ -8,10 +8,8 @@ import npmProxy from "./api/npm-proxy";
 import sentryApi from "./api/sentry";
 import userApi from "./api/user";
 import weblateProxy from "./api/weblate-proxy";
-import {
-	handleUpgrade,
-	router as createAdapterRouter,
-} from "./apps/create-adapter";
+import { router as createAdapterRouter } from "./apps/create-adapter";
+import { handleUpgrade } from "./apps/websocket-handler";
 import auth from "./auth";
 import { env } from "./common";
 import { startCronJobs } from "./cron";
@@ -65,11 +63,7 @@ const server = app.listen(port, () => {
 server.on(
 	"upgrade",
 	(request: IncomingMessage, socket: Socket, head: Buffer) => {
-		if (request.url === "/ws/create-adapter") {
-			handleUpgrade(request, socket, head);
-		} else {
-			socket.destroy();
-		}
+		handleUpgrade(request, socket, head);
 	},
 );
 
