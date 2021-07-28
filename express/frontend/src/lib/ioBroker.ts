@@ -19,6 +19,9 @@ import { AsyncCache, getApiUrl } from "./utils";
 
 const uc = encodeURIComponent;
 
+const CHECK_ADAPTER_URL =
+	"https://3jjxddo33l.execute-api.eu-west-1.amazonaws.com/default/checkAdapter";
+
 export type TranslatedText = Record<string, string>;
 
 export const getLatest = AsyncCache.of(async () => {
@@ -178,4 +181,21 @@ export async function getSentryStats(ids: string[], statsPeriod?: string) {
 		getApiUrl(`sentry/stats/?query=${uc(query)}&statsPeriod=${period}`),
 	);
 	return result.data;
+}
+
+export type CheckResult = string | Record<string, any>;
+
+export interface CheckResults {
+	version: string;
+	result: string;
+	checks: CheckResult[];
+	warnings: CheckResult[];
+	errors: CheckResult[];
+}
+
+export async function checkAdapter(repoName: string) {
+	const { data } = await axios.get<CheckResults>(
+		`${CHECK_ADAPTER_URL}?url=${uc(`https://github.com/${repoName}`)}`,
+	);
+	return data;
 }

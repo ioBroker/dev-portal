@@ -22,10 +22,7 @@ import React, { useEffect, useState } from "react";
 import Chart from "react-google-charts";
 import { useLocation } from "react-router-dom";
 import { User } from "../lib/gitHub";
-import { getMyAdapterRepos } from "../lib/ioBroker";
-
-const URL =
-	"https://3jjxddo33l.execute-api.eu-west-1.amazonaws.com/default/checkAdapter";
+import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
 
 const iconStyles = {
 	check: {
@@ -39,7 +36,7 @@ const iconStyles = {
 	},
 };
 
-const useStyles = makeStyles((theme) => ({
+export const useStyles = makeStyles((theme) => ({
 	title: {
 		marginBottom: theme.spacing(1),
 	},
@@ -59,19 +56,9 @@ const useStyles = makeStyles((theme) => ({
 	...iconStyles,
 }));
 
-type CheckResult = string | Record<string, any>;
-
-interface CheckResults {
-	version: string;
-	result: string;
-	checks: CheckResult[];
-	warnings: CheckResult[];
-	errors: CheckResult[];
-}
-
 type MessageType = "check" | "warning" | "error";
 
-class Message {
+export class Message {
 	public readonly text: string;
 
 	constructor(public readonly type: MessageType, result: CheckResult) {
@@ -143,17 +130,13 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 		setMessages([]);
 		setBusy(true);
 		try {
-			const result = await axios.get<CheckResults>(
-				`${URL}?url=https://github.com/${encodeURIComponent(repoName)}`,
-			);
-			const messages = result.data.errors.map(
-				(c) => new Message("error", c),
+			const results = await checkAdapter(repoName);
+			const messages = results.errors.map((c) => new Message("error", c));
+			messages.push(
+				...results.warnings.map((c) => new Message("warning", c)),
 			);
 			messages.push(
-				...result.data.warnings.map((c) => new Message("warning", c)),
-			);
-			messages.push(
-				...result.data.checks.map((c) => new Message("check", c)),
+				...results.checks.map((c) => new Message("check", c)),
 			);
 			setMessages(messages);
 		} catch (error) {
