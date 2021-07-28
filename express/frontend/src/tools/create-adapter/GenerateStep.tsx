@@ -106,12 +106,16 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		logEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [log]);
 
+	const canClose = state === "success" || state === "failed";
+
 	return (
 		<Dialog
 			open
 			scroll="paper"
 			maxWidth="md"
 			fullWidth
+			disableBackdropClick={!canClose}
+			disableEscapeKeyDown={!canClose}
 			aria-labelledby="scroll-dialog-title"
 			aria-describedby="scroll-dialog-description"
 		>
@@ -153,7 +157,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 				)}
 				<Button
 					onClick={() => onClose()}
-					disabled={state !== "success" && state !== "failed"}
+					disabled={!canClose}
 					color="primary"
 				>
 					Close
