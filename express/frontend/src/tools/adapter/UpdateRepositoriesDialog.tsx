@@ -17,7 +17,11 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import useWebSocket from "react-use-websocket";
-import { ServerClientMessage } from "../../../../backend/src/global/websocket";
+import {
+	ServerClientMessage,
+	ToLatestMessage,
+	ToStableMessage,
+} from "../../../../backend/src/global/websocket";
 import { GitHubIcon } from "../../components/Icons";
 import WebSocketLog, {
 	isLogMessage,
@@ -32,17 +36,38 @@ import {
 	useStyles as useAdapterCheckStyles,
 } from "../AdapterCheck";
 
+export type RepositoriesAction = "to-stable" | "to-latest";
+
 function AdapterCheckStep(props: {
 	infos: AdapterInfos;
 	user: User;
+	action: RepositoriesAction;
 	onSuccess: () => void;
 }) {
-	const { infos, user, onSuccess } = props;
+	const { infos, user, action, onSuccess } = props;
 	const { name } = useParams<{ name: string }>();
 	const [errors, setErrors] = useState<Message[]>();
 	const [pullRequestUrl, setPullRequestUrl] = useState<string>();
 
 	useEffect(() => {
+		// check the diffs for an add (line starts with "+") of this adapter
+		const sameAdapter: (file: {
+			filename: string;
+			patch?: string;
+		}) => boolean =
+			action === "to-latest"
+				? (file) =>
+						file.filename === "sources-dist.json" &&
+						!!file.patch?.match(
+							new RegExp(`^\\+\\s*"${name}"\\s*:\\s*`, "m"),
+						)
+				: (file) =>
+						file.filename === "sources-dist-stable.json" &&
+						!!file.patch?.match(
+							new RegExp(
+								`"icon"\\s*:\\s*"https:\\/\\/raw\\.githubusercontent\\.com\\/${infos.repo.owner?.login}\\/ioBroker\\.${infos.repo.name}[^"]+",\\s+"type"\\s*:\\s*"[^"]+",\\s+-\\s+"version"`,
+							),
+						);
 		const findPullRequest = async () => {
 			const gitHub = GitHubComm.forToken(user.token);
 			const repo = gitHub.getRepo("ioBroker", "ioBroker.repositories");
@@ -50,15 +75,8 @@ function AdapterCheckStep(props: {
 			const diffs = await Promise.all(
 				prs.map((pr) => repo.compare(pr.base.sha, pr.head.sha)),
 			);
-			// check the diffs for an add (line starts with "+") of this adapter
 			const index = diffs.findIndex((diff) =>
-				diff.files.some(
-					(file) =>
-						file.filename === "sources-dist.json" &&
-						file.patch?.match(
-							new RegExp(`^\\+\\s*"${name}"\\s*:\\s*`, "m"),
-						),
-				),
+				diff.files.some(sameAdapter),
 			);
 			return index < 0 ? undefined : prs[index].html_url;
 		};
@@ -74,7 +92,7 @@ function AdapterCheckStep(props: {
 			}
 		};
 		runAdapterCheck().catch(console.error);
-	}, [infos, user, name]);
+	}, [infos, user, action, name]);
 
 	useEffect(() => {
 		if (errors && errors.length === 0 && !pullRequestUrl) {
@@ -84,6 +102,10 @@ function AdapterCheckStep(props: {
 
 	const classes = useAdapterCheckStyles();
 	if (pullRequestUrl) {
+		const text =
+			action === "to-latest"
+				? `add ioBroker.${name} to beta/latest`
+				: `update the stable version of ioBroker.${name}`;
 		return (
 			<Alert
 				severity="error"
@@ -99,8 +121,7 @@ function AdapterCheckStep(props: {
 				}
 			>
 				<AlertTitle>Open pull request</AlertTitle>
-				You already have an open pull request to add ioBroker.{name} to
-				beta/latest.
+				You already have an open pull request to {text}.
 			</Alert>
 		);
 	}
@@ -136,17 +157,20 @@ function AdapterCheckStep(props: {
 	);
 }
 
-interface AddToLatestDialogProps {
+interface UpdateRepositoriesDialogProps {
 	infos: AdapterInfos;
 	user: User;
+	action: RepositoriesAction;
 	open: boolean;
 	onClose: () => void;
 }
-export default function AddToLatestDialog(props: AddToLatestDialogProps) {
-	const { infos, user, open, onClose } = props;
-	const { name } = useParams<{ name: string }>();
+export default function UpdateRepositoriesDialog(
+	props: UpdateRepositoriesDialogProps,
+) {
+	const { infos, user, action, open, onClose } = props;
+	const { name, version } = useParams<{ name: string; version?: string }>();
 
-	const webSocket = useWebSocket(getWebSocketUrl("to-latest"));
+	const webSocket = useWebSocket(getWebSocketUrl(action));
 
 	const [step, setStep] = useState<"check" | "add">("check");
 	const [busy, setBusy] = useState(false);
@@ -158,15 +182,20 @@ export default function AddToLatestDialog(props: AddToLatestDialogProps) {
 			const start = async () => {
 				const owner = infos.repo.owner?.login!;
 				const repo = infos.repo.name;
-				const { data: ioPackage } = await axios.get(
-					`https://raw.githubusercontent.com/${owner}/${repo}/${infos.repo.default_branch}/io-package.json`,
-				);
-
-				webSocket.sendJsonMessage({
+				let msg: Partial<ToLatestMessage & ToStableMessage> = {
 					owner,
 					repo,
-					type: ioPackage.common.type,
-				});
+				};
+				if (action === "to-latest") {
+					const { data: ioPackage } = await axios.get(
+						`https://raw.githubusercontent.com/${owner}/${repo}/${infos.repo.default_branch}/io-package.json`,
+					);
+					msg.type = ioPackage.common.type;
+				} else {
+					msg.version = version;
+				}
+
+				webSocket.sendJsonMessage(msg);
 			};
 			start().catch(console.error);
 		}
@@ -186,6 +215,10 @@ export default function AddToLatestDialog(props: AddToLatestDialogProps) {
 		}
 	};
 
+	const title =
+		action === "to-latest"
+			? `Add ioBroker.${name} to beta/latest`
+			: `Update ioBroker.${name} to ${version} in stable`;
 	return (
 		<Dialog
 			open={open}
@@ -196,15 +229,14 @@ export default function AddToLatestDialog(props: AddToLatestDialogProps) {
 			disableBackdropClick={busy}
 			disableEscapeKeyDown={busy}
 		>
-			<DialogTitle>
-				Add ioBroker.{name} to beta/latest repository
-			</DialogTitle>
+			<DialogTitle>{title} repository</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText style={{ minHeight: "60vh" }}>
 					{step === "check" && (
 						<AdapterCheckStep
 							infos={infos}
 							user={user}
+							action={action}
 							onSuccess={() => setStep("add")}
 						/>
 					)}

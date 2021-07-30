@@ -41,10 +41,11 @@ export default function CreateAdapter(props: { user: User }) {
 	const { name } = useParams<{ name: string }>();
 
 	const history = useHistory();
-	const pathnames = history.location.pathname
+	const pathNames = history.location.pathname
 		.replace(url, "")
+		.replace(/~.+$/, "")
 		.split("/")
-		.filter((x) => x && x[0] !== "~");
+		.filter((x) => x);
 
 	const [infos, setInfos] = useState<AdapterInfos | string>();
 
@@ -99,9 +100,9 @@ export default function CreateAdapter(props: { user: User }) {
 				<LinkRouter color="inherit" to={url}>
 					ioBroker.{name}
 				</LinkRouter>
-				{pathnames.map((value, index) => {
-					const last = index === pathnames.length - 1;
-					const to = `${url}/${pathnames
+				{pathNames.map((value, index) => {
+					const last = index === pathNames.length - 1;
+					const to = `${url}/${pathNames
 						.slice(0, index + 1)
 						.join("/")}`;
 

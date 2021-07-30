@@ -2,7 +2,7 @@ import { Answers } from "@iobroker/create-adapter";
 
 // client -> server
 export type GeneratorTarget = "github" | "zip";
-export interface GenarateAdapterMessage {
+export interface GenerateAdapterMessage {
 	answers: Answers;
 	target: GeneratorTarget;
 }
@@ -11,7 +11,15 @@ export interface ToLatestMessage {
 	repo: string;
 	type: string;
 }
-export type ClientServerMessage = GenarateAdapterMessage | ToLatestMessage;
+export interface ToStableMessage {
+	owner: string;
+	repo: string;
+	version: string;
+}
+export type ClientServerMessage =
+	| GenerateAdapterMessage
+	| ToLatestMessage
+	| ToStableMessage;
 
 // server -> client
 export interface LogMessage {

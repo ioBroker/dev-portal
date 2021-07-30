@@ -27,9 +27,10 @@ import {
 import { GitHubComm, User } from "../../lib/gitHub";
 import { AdapterInfos, getLatest } from "../../lib/ioBroker";
 import { getPackage as getPackageMetaData } from "../../lib/npm";
-import AddToLatestDialog from "./AddToLatestDialog";
+import UpdateRepositoriesDialog, {
+	RepositoriesAction,
+} from "./UpdateRepositoriesDialog";
 
-export type RepositoriesAction = "to-stable" | "to-latest";
 type ReleaseAction = "release" | RepositoriesAction;
 
 type ReleaseIcon = "github" | "npm" | "beta" | "stable";
@@ -136,6 +137,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	const [authReason, setAuthReason] = useState<string>();
 	const [authActions, setAuthActions] = useState<string[]>([]);
 	const [releaseAction, setReleaseAction] = useState<ReleaseAction>();
+	const [releaseVersion, setReleaseVersion] = useState<string>();
 
 	useEffect(() => {
 		const loadReleases = async () => {
@@ -263,19 +265,27 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	}, [releaseAction, name]);
 
 	const handleConsent = () => {
-		const redirect = encodeURIComponent(`${url}/~${releaseAction}`);
+		let redirect = encodeURIComponent(`${url}/~${releaseAction}`);
+		if (releaseVersion) {
+			redirect += `/${releaseVersion}`;
+		}
 		window.location.href = `/login?redirect=${redirect}&scope=repo`;
 	};
-	const handleCreateRelease = () => setReleaseAction("release");
-	const handleToLatest = () => setReleaseAction("to-latest");
-	const handleToStable = () => setReleaseAction("to-stable");
-	const handleCloseDialog = () => history.replace(url.replace(/\/~.+/, ""));
+	const setReleaseInfo = (action: ReleaseAction, version?: string) => {
+		setReleaseVersion(version);
+		setReleaseAction(action);
+	};
+	const handleCreateRelease = () => setReleaseInfo("release");
+	const handleToLatest = () => setReleaseInfo("to-latest");
+	const handleToStable = (version: string) =>
+		setReleaseInfo("to-stable", version);
+	const handleCloseDialog = () => history.replace(url.replace(/\/~.+$/, ""));
 
 	const classes = useStyles();
 	const DataRow = (props: { row: ReleaseInfo }) => {
 		const { row } = props;
 		return (
-			<TableRow key={row.version}>
+			<TableRow>
 				<TableCell className={classes.icons}>
 					<Icons icons={row.icons} />
 				</TableCell>
@@ -319,7 +329,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 								color="primary"
 								size="small"
 								startIcon={<IoBrokerIcon />}
-								onClick={handleToStable}
+								onClick={() => handleToStable(row.version)}
 							>
 								Set as stable
 							</Button>
@@ -350,9 +360,19 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 				onContinue={handleConsent}
 			/>
 			<Route path={`${path}/~to-latest`}>
-				<AddToLatestDialog
+				<UpdateRepositoriesDialog
 					infos={infos}
 					user={user}
+					action="to-latest"
+					open={true}
+					onClose={handleCloseDialog}
+				/>
+			</Route>
+			<Route path={`${path}/~to-stable/:version`}>
+				<UpdateRepositoriesDialog
+					infos={infos}
+					user={user}
+					action="to-stable"
 					open={true}
 					onClose={handleCloseDialog}
 				/>
@@ -426,7 +446,9 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 									</TableCell>
 								</TableRow>
 							) : (
-								rows.map((row) => <DataRow row={row} />)
+								rows.map((row, i) => (
+									<DataRow row={row} key={i} />
+								))
 							)}
 						</TableBody>
 					</Table>

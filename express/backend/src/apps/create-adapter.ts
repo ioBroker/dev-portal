@@ -17,7 +17,7 @@ import rimraf from "rimraf";
 import { promisify } from "util";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
 import { delay } from "../common";
-import { GenarateAdapterMessage } from "../global/websocket";
+import { GenerateAdapterMessage } from "../global/websocket";
 import {
 	tempDir,
 	WebSocketConnectionHandler,
@@ -84,11 +84,11 @@ router.get("/api/create-adapter/:id/:hash/:filename", async (req, res) => {
 	archive.finalize();
 });
 
-export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<GenarateAdapterMessage> {
+export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<GenerateAdapterMessage> {
 	private readonly creators = new Map<string, Promise<File[]>>();
 
 	protected async handleMessage(
-		message: GenarateAdapterMessage,
+		message: GenerateAdapterMessage,
 	): Promise<void> {
 		const { target, answers } = message;
 		if (target === "github" && !this.cookies[COOKIE_NAME_CREATOR_TOKEN]) {
