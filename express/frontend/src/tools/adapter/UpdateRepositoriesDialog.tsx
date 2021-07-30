@@ -174,10 +174,11 @@ export default function UpdateRepositoriesDialog(
 
 	const [step, setStep] = useState<"check" | "add">("check");
 	const [busy, setBusy] = useState(false);
+	const [done, setDone] = useState(false);
 	const [resultLink, setResultLink] = useState<string>();
 
 	useEffect(() => {
-		if (step === "add") {
+		if (step === "add" && !busy && !done) {
 			setBusy(true);
 			const start = async () => {
 				const owner = infos.repo.owner?.login!;
@@ -200,12 +201,13 @@ export default function UpdateRepositoriesDialog(
 			start().catch(console.error);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [step, infos, user]);
+	}, [step, busy, done, infos, action, version, user]);
 
 	const handleMessage = (msg: ServerClientMessage, appendLog: LogHandler) => {
 		if (isLogMessage(msg)) {
 			return;
 		}
+		setDone(true);
 		setBusy(false);
 		if (msg.result) {
 			appendLog("Completed successfully", "green");
