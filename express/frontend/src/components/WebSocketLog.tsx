@@ -36,7 +36,13 @@ export default function WebSocketLog(props: WebsocketLogProps) {
 		}
 		console.log("msg", lastJsonMessage);
 		const appendLog = (text: string, color: string) =>
-			setLog((old) => [...old, { text, color }]);
+			setLog((old) => {
+				if (old.length > 0 && old[old.length - 1].text === text) {
+					// prevent duplicate log messages
+					return old;
+				}
+				return [...old, { text, color }];
+			});
 		try {
 			const msg = lastJsonMessage as ServerClientMessage;
 			if (isLogMessage(msg)) {
