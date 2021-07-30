@@ -32,6 +32,8 @@ RUN npm run build
 
 FROM node:14-slim
 
+RUN apt update && apt install -y git
+
 RUN mkdir -p /app/public
 WORKDIR /app
 

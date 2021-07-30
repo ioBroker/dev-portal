@@ -86,6 +86,8 @@ export abstract class RepositoriesConnectionHandler<
 			`git remote add upstream "${baseUrl}${ORG}/${REPOSITORY}.git"`,
 		);
 		await this.exec(`git fetch upstream`);
+		await this.exec(`git config user.email "${user.email}"`);
+		await this.exec(`git config user.name "${user.name || user.login}"`);
 
 		const branchName = this.getBranchName(context);
 		this.log(`Creating branch ${branchName}`);
