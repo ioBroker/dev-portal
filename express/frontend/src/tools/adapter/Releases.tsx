@@ -29,8 +29,10 @@ import { AdapterInfos, getLatest } from "../../lib/ioBroker";
 import { getPackage as getPackageMetaData } from "../../lib/npm";
 import AddToLatestDialog from "./AddToLatestDialog";
 
+export type RepositoriesAction = "to-stable" | "to-latest";
+type ReleaseAction = "release" | RepositoriesAction;
+
 type ReleaseIcon = "github" | "npm" | "beta" | "stable";
-type ReleaseAction = "release" | "to-stable" | "to-latest";
 
 interface ReleaseInfo {
 	icons: ReleaseIcon[];
@@ -240,7 +242,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 					`add ioBroker.${name} to the beta/latest repository`,
 				);
 				setAuthActions([
-					"fork ioBroker.repositories to the user or organisation you choose (if not yet done)",
+					"fork ioBroker.repositories to the user or organization you choose (if not yet done)",
 					"create a new branch",
 					"update sources-dist.json",
 					"create a pull request for those changes",
@@ -251,7 +253,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 					`update ioBroker.${name} in the stable repository`,
 				);
 				setAuthActions([
-					"fork ioBroker.repositories to the user or organisation you choose (if not yet done)",
+					"fork ioBroker.repositories to the user or organization you choose (if not yet done)",
 					"create a new branch",
 					"update sources-dist-stable.json",
 					"create a pull request for those changes",
@@ -270,6 +272,74 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	const handleCloseDialog = () => history.replace(url.replace(/\/~.+/, ""));
 
 	const classes = useStyles();
+	const DataRow = (props: { row: ReleaseInfo }) => {
+		const { row } = props;
+		return (
+			<TableRow key={row.version}>
+				<TableCell className={classes.icons}>
+					<Icons icons={row.icons} />
+				</TableCell>
+				<TableCell>{row.version}</TableCell>
+				<TableCell>
+					<Hidden smDown>{row.date}</Hidden>
+					<Hidden mdUp>{row.shortDate}</Hidden>
+				</TableCell>
+				<TableCell>
+					{row.commit && (
+						<Link
+							href={`https://github.com/${infos.repo.full_name}/commit/${row.commit}`}
+							target="_blank"
+						>
+							{row.commit.substring(0, 7)}
+						</Link>
+					)}
+					{!row.commit && (
+						<Tooltip title="No git tag found for this release">
+							<span>n/a</span>
+						</Tooltip>
+					)}
+				</TableCell>
+				{canPush && (
+					<TableCell>
+						{row.action === "release" && (
+							<Button
+								variant="contained"
+								color="primary"
+								size="small"
+								disabled={!hasReleaseScript}
+								startIcon={<NpmIcon />}
+								onClick={handleCreateRelease}
+							>
+								Create new release
+							</Button>
+						)}
+						{row.action === "to-stable" && (
+							<Button
+								variant="contained"
+								color="primary"
+								size="small"
+								startIcon={<IoBrokerIcon />}
+								onClick={handleToStable}
+							>
+								Set as stable
+							</Button>
+						)}
+						{row.action === "to-latest" && (
+							<Button
+								variant="contained"
+								color="primary"
+								size="small"
+								startIcon={<LatestIcon />}
+								onClick={handleToLatest}
+							>
+								Add to latest
+							</Button>
+						)}
+					</TableCell>
+				)}
+			</TableRow>
+		);
+	};
 	return (
 		<Paper>
 			<AuthConsentDialog
@@ -287,7 +357,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 					onClose={handleCloseDialog}
 				/>
 			</Route>
-			{rows?.length === 0 && (
+			{canPush && rows?.length === 0 && (
 				<Alert
 					severity="error"
 					action={
@@ -304,14 +374,6 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 				>
 					<AlertTitle>Not on npm</AlertTitle>
 					This adapter was not yet published on npm.
-				</Alert>
-			)}
-			{canPush === false && (
-				<Alert severity="info">
-					<AlertTitle>No push permissions</AlertTitle>
-					You don't have push permissions for this adapter. Therefore
-					you won't be able to create new releases or update
-					ioBroker.repositories.
 				</Alert>
 			)}
 			{canPush && hasReleaseScript === false && (
@@ -332,6 +394,14 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 					<AlertTitle>No release script</AlertTitle>
 					This adapter is not configured to use the release script.
 					You won't be able to create new releases from this page.
+				</Alert>
+			)}
+			{canPush === false && (
+				<Alert severity="info">
+					<AlertTitle>No push permissions</AlertTitle>
+					You don't have push permissions for this adapter. Therefore
+					you won't be able to create new releases or update
+					ioBroker.repositories.
 				</Alert>
 			)}
 			{rows?.length !== 0 && (
@@ -356,81 +426,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 									</TableCell>
 								</TableRow>
 							) : (
-								rows.map((row) => (
-									<TableRow key={row.version}>
-										<TableCell className={classes.icons}>
-											<Icons icons={row.icons} />
-										</TableCell>
-										<TableCell>{row.version}</TableCell>
-										<TableCell>
-											<Hidden smDown>{row.date}</Hidden>
-											<Hidden mdUp>
-												{row.shortDate}
-											</Hidden>
-										</TableCell>
-										<TableCell>
-											{row.commit && (
-												<Link
-													href={`https://github.com/${infos.repo.full_name}/commit/${row.commit}`}
-													target="_blank"
-												>
-													{row.commit.substring(0, 7)}
-												</Link>
-											)}
-											{!row.commit && (
-												<Tooltip title="No git tag found for this release">
-													<span>n/a</span>
-												</Tooltip>
-											)}
-										</TableCell>
-										{canPush && (
-											<TableCell>
-												{row.action === "release" && (
-													<Button
-														variant="contained"
-														color="primary"
-														size="small"
-														disabled={
-															!hasReleaseScript
-														}
-														startIcon={<NpmIcon />}
-														onClick={
-															handleCreateRelease
-														}
-													>
-														Create new release
-													</Button>
-												)}
-												{row.action === "to-stable" && (
-													<Button
-														variant="contained"
-														color="primary"
-														size="small"
-														startIcon={
-															<IoBrokerIcon />
-														}
-														onClick={handleToStable}
-													>
-														Set as stable
-													</Button>
-												)}
-												{row.action === "to-latest" && (
-													<Button
-														variant="contained"
-														color="primary"
-														size="small"
-														startIcon={
-															<LatestIcon />
-														}
-														onClick={handleToLatest}
-													>
-														Add to latest
-													</Button>
-												)}
-											</TableCell>
-										)}
-									</TableRow>
-								))
+								rows.map((row) => <DataRow row={row} />)
 							)}
 						</TableBody>
 					</Table>
