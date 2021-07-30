@@ -18,7 +18,10 @@ import { promisify } from "util";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
 import { delay } from "../common";
 import { GenarateAdapterMessage } from "../global/websocket";
-import { tempDir, WebSocketConnectionHandler } from "./websocket-handler";
+import {
+	tempDir,
+	WebSocketConnectionHandler,
+} from "./websocket-connection-handler";
 
 const rimrafAsync = promisify(rimraf);
 

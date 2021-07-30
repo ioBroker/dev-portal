@@ -11,7 +11,7 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import {
@@ -24,6 +24,7 @@ import { CardButton } from "../../components/CardButton";
 import { CardGrid } from "../../components/CardGrid";
 import { DashboardCardProps } from "../../components/DashboardCard";
 import { DownloadIcon, GitHubIcon } from "../../components/Icons";
+import WebSocketLog, { LogHandler } from "../../components/WebSocketLog";
 import { User } from "../../lib/gitHub";
 import { getWebSocketUrl } from "../../lib/utils";
 
@@ -57,54 +58,31 @@ export interface GeneratorDialogProps {
 export function GeneratorDialog(props: GeneratorDialogProps) {
 	const { webSocket, target, answers, onClose } = props;
 
-	type LogItem = { color: string; text: string };
-
-	const [log, setLog] = React.useState<LogItem[]>([]);
-	const [state, setState] = React.useState<GeneratorState>("idle");
-	const [resultLink, setResultLink] = React.useState<string>();
-
-	const { lastJsonMessage } = webSocket;
-
-	const logEndRef = useRef<any>();
+	const [state, setState] = useState<GeneratorState>("idle");
+	const [resultLink, setResultLink] = useState<string>();
 
 	const startMessage = JSON.stringify({ answers, target });
 	useEffect(() => {
 		if (state === "idle" && target) {
 			//console.log(state, target, "--> sendMessage", startMessage);
-			setLog([]);
 			webSocket.sendMessage(startMessage);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [target, state]);
 
-	useEffect(() => {
-		if (!lastJsonMessage) {
+	const handleMessage = (msg: ServerClientMessage, appendLog: LogHandler) => {
+		if (isLogMessage(msg)) {
 			return;
 		}
-		console.log("msg", lastJsonMessage);
-		const appendLog = (text: string, color: string) =>
-			setLog((old) => [...old, { text, color }]);
-		try {
-			const msg = lastJsonMessage as ServerClientMessage;
-			if (isLogMessage(msg)) {
-				const logMsg = msg;
-				appendLog(logMsg.log, logMsg.isError ? "red" : "black");
-			} else if (msg.result) {
-				appendLog("Completed sucessfully", "green");
-				setResultLink(msg.resultLink);
-				setState("success");
-			} else {
-				appendLog("Failed", "red");
-				setState("failed");
-			}
-		} catch (error) {
-			console.error(error);
+		if (msg.result) {
+			appendLog("Completed successfully", "green");
+			setResultLink(msg.resultLink);
+			setState("success");
+		} else {
+			appendLog("Failed", "red");
+			setState("failed");
 		}
-	}, [lastJsonMessage]);
-
-	useEffect(() => {
-		logEndRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [log]);
+	};
 
 	const canClose = state === "success" || state === "failed";
 
@@ -124,12 +102,10 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 			</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText style={{ minHeight: "60vh" }}>
-					{log.map((entry, i) => (
-						<pre key={i} style={{ color: entry.color, margin: 0 }}>
-							{entry.text}
-						</pre>
-					))}
-					<div ref={logEndRef} />
+					<WebSocketLog
+						webSocket={webSocket}
+						onMessageReceived={handleMessage}
+					/>
 				</DialogContentText>
 			</DialogContent>
 			<DialogActions>

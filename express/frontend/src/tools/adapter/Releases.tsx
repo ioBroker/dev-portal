@@ -15,7 +15,7 @@ import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Route, useHistory, useParams, useRouteMatch } from "react-router-dom";
 import { coerce } from "semver";
 import AuthConsentDialog from "../../components/AuthConsentDialog";
 import {
@@ -27,6 +27,7 @@ import {
 import { GitHubComm, User } from "../../lib/gitHub";
 import { AdapterInfos, getLatest } from "../../lib/ioBroker";
 import { getPackage as getPackageMetaData } from "../../lib/npm";
+import AddToLatestDialog from "./AddToLatestDialog";
 
 type ReleaseIcon = "github" | "npm" | "beta" | "stable";
 type ReleaseAction = "release" | "to-stable" | "to-latest";
@@ -124,7 +125,10 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	const { user, infos } = props;
+	const { path, url } = useRouteMatch();
+	const history = useHistory();
 	const { name } = useParams<{ name: string }>();
+	const [canPush, setCanPush] = useState<boolean>();
 	const [rows, setRows] = useState<ReleaseInfo[]>();
 	const [hasReleaseScript, setHasReleaseScript] = useState<boolean>();
 	const [authReason, setAuthReason] = useState<string>();
@@ -135,12 +139,14 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 		const loadReleases = async () => {
 			const gitHub = GitHubComm.forToken(user.token);
 			const repo = gitHub.getRepo(infos.repo);
-			const [npm, tags, latest, master] = await Promise.all([
+			const [npm, fullRepo, tags, latest, master] = await Promise.all([
 				getPackageMetaData(`iobroker.${name}`),
+				repo.getRepo(),
 				repo.getTags(),
 				getLatest(),
 				repo.getRef(`heads/${infos.repo.default_branch}`),
 			]);
+			setCanPush(fullRepo.permissions?.push);
 			const releases: ReleaseInfo[] = [];
 			const adapter = latest[name];
 			const adapterStableSemver = coerce(adapter?.stable);
@@ -197,6 +203,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 
 			setRows(releases);
 		};
+		setCanPush(undefined);
 		setRows(undefined);
 		loadReleases().catch((e) => {
 			console.error(e);
@@ -254,14 +261,13 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	}, [releaseAction, name]);
 
 	const handleConsent = () => {
-		const url = encodeURIComponent(
-			`${window.location.pathname}/${releaseAction}`,
-		);
-		window.location.href = `/login?redirect=${url}&scope=repo`;
+		const redirect = encodeURIComponent(`${url}/~${releaseAction}`);
+		window.location.href = `/login?redirect=${redirect}&scope=repo`;
 	};
 	const handleCreateRelease = () => setReleaseAction("release");
 	const handleToLatest = () => setReleaseAction("to-latest");
 	const handleToStable = () => setReleaseAction("to-stable");
+	const handleCloseDialog = () => history.replace(url.replace(/\/~.+/, ""));
 
 	const classes = useStyles();
 	return (
@@ -273,6 +279,14 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 				onClose={() => setAuthReason(undefined)}
 				onContinue={handleConsent}
 			/>
+			<Route path={`${path}/~to-latest`}>
+				<AddToLatestDialog
+					infos={infos}
+					user={user}
+					open={true}
+					onClose={handleCloseDialog}
+				/>
+			</Route>
 			{rows?.length === 0 && (
 				<Alert
 					severity="error"
@@ -292,7 +306,15 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 					This adapter was not yet published on npm.
 				</Alert>
 			)}
-			{hasReleaseScript === false && (
+			{canPush === false && (
+				<Alert severity="info">
+					<AlertTitle>No push permissions</AlertTitle>
+					You don't have push permissions for this adapter. Therefore
+					you won't be able to create new releases or update
+					ioBroker.repositories.
+				</Alert>
+			)}
+			{canPush && hasReleaseScript === false && (
 				<Alert
 					severity="warning"
 					action={
@@ -323,7 +345,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 								<TableCell>Release</TableCell>
 								<TableCell>Date</TableCell>
 								<TableCell>Commit</TableCell>
-								<TableCell>Action</TableCell>
+								{canPush && <TableCell>Action</TableCell>}
 							</TableRow>
 						</TableHead>
 						<TableBody>
@@ -361,44 +383,52 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 												</Tooltip>
 											)}
 										</TableCell>
-										<TableCell>
-											{row.action === "release" && (
-												<Button
-													variant="contained"
-													color="primary"
-													size="small"
-													disabled={!hasReleaseScript}
-													startIcon={<NpmIcon />}
-													onClick={
-														handleCreateRelease
-													}
-												>
-													Create new release
-												</Button>
-											)}
-											{row.action === "to-stable" && (
-												<Button
-													variant="contained"
-													color="primary"
-													size="small"
-													startIcon={<IoBrokerIcon />}
-													onClick={handleToStable}
-												>
-													Set as stable
-												</Button>
-											)}
-											{row.action === "to-latest" && (
-												<Button
-													variant="contained"
-													color="primary"
-													size="small"
-													startIcon={<LatestIcon />}
-													onClick={handleToLatest}
-												>
-													Add to latest
-												</Button>
-											)}
-										</TableCell>
+										{canPush && (
+											<TableCell>
+												{row.action === "release" && (
+													<Button
+														variant="contained"
+														color="primary"
+														size="small"
+														disabled={
+															!hasReleaseScript
+														}
+														startIcon={<NpmIcon />}
+														onClick={
+															handleCreateRelease
+														}
+													>
+														Create new release
+													</Button>
+												)}
+												{row.action === "to-stable" && (
+													<Button
+														variant="contained"
+														color="primary"
+														size="small"
+														startIcon={
+															<IoBrokerIcon />
+														}
+														onClick={handleToStable}
+													>
+														Set as stable
+													</Button>
+												)}
+												{row.action === "to-latest" && (
+													<Button
+														variant="contained"
+														color="primary"
+														size="small"
+														startIcon={
+															<LatestIcon />
+														}
+														onClick={handleToLatest}
+													>
+														Add to latest
+													</Button>
+												)}
+											</TableCell>
+										)}
 									</TableRow>
 								))
 							)}

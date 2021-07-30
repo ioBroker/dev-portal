@@ -137,4 +137,16 @@ export class GitHubRepoComm {
 		);
 		return result.data;
 	}
+
+	public async compare(base: string, head: string) {
+		const result = await this.request(
+			"GET /repos/{owner}/{repo}/compare/{base}...{head}",
+			{
+				...this.baseOptions,
+				base,
+				head,
+			},
+		);
+		return result.data;
+	}
 }

@@ -44,7 +44,7 @@ export default function CreateAdapter(props: { user: User }) {
 	const pathnames = history.location.pathname
 		.replace(url, "")
 		.split("/")
-		.filter((x) => x);
+		.filter((x) => x && x[0] !== "~");
 
 	const [infos, setInfos] = useState<AdapterInfos | string>();
 
@@ -101,7 +101,7 @@ export default function CreateAdapter(props: { user: User }) {
 				</LinkRouter>
 				{pathnames.map((value, index) => {
 					const last = index === pathnames.length - 1;
-					const to = `${path}/${pathnames
+					const to = `${url}/${pathnames
 						.slice(0, index + 1)
 						.join("/")}`;
 
