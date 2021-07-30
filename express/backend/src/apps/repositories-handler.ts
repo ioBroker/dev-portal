@@ -92,7 +92,7 @@ export abstract class RepositoriesConnectionHandler<
 		await this.exec(`git checkout -b ${branchName} upstream/${BRANCH}`);
 
 		this.log(`Preparing ${REPOSITORY} (this may take a while)`);
-		await this.exec(`npm i`);
+		await this.exec(`npm ci`);
 
 		await this.updateRepositories(context);
 
