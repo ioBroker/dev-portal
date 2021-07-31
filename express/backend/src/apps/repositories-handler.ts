@@ -133,7 +133,11 @@ export abstract class RepositoriesConnectionHandler<
 			});
 			child
 				.on("error", (err) => reject(err))
-				.on("exit", (code) => (code === 0 ? resolve() : reject(code)));
+				.on("exit", (code) =>
+					code === 0
+						? resolve()
+						: reject(new Error(`Process exited with ${code}`)),
+				);
 		});
 	}
 
