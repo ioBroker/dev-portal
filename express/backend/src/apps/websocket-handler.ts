@@ -2,6 +2,7 @@ import { IncomingMessage } from "http";
 import { Socket } from "net";
 import WebSocket from "ws";
 import { CreateAdapterConnectionHandler } from "./create-adapter";
+import { ReleaseConnectionHandler } from "./release-handler";
 import { ToLatestConnectionHandler } from "./to-latest";
 import { ToStableConnectionHandler } from "./to-stable";
 
@@ -22,6 +23,10 @@ export function handleUpgrade(
 function handleConnection(client: WebSocket, request: IncomingMessage) {
 	if (request.url === "/ws/create-adapter") {
 		new CreateAdapterConnectionHandler(client, request);
+		return;
+	}
+	if (request.url === "/ws/release") {
+		new ReleaseConnectionHandler(client, request);
 		return;
 	}
 	if (request.url === "/ws/to-latest") {

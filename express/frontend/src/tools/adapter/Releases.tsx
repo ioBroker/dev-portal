@@ -27,6 +27,7 @@ import {
 import { GitHubComm, User } from "../../lib/gitHub";
 import { AdapterInfos, getLatest } from "../../lib/ioBroker";
 import { getPackage as getPackageMetaData } from "../../lib/npm";
+import CreateReleaseDialog from "./CreateReleaseDialog";
 import UpdateRepositoriesDialog, {
 	RepositoriesAction,
 } from "./UpdateRepositoriesDialog";
@@ -140,11 +141,24 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	const [releaseVersion, setReleaseVersion] = useState<string>();
 
 	useEffect(() => {
+		const tryGetPackageMetaData = async () => {
+			try {
+				return await getPackageMetaData(`iobroker.${name}`);
+			} catch {
+				return undefined;
+			}
+		};
 		const loadReleases = async () => {
 			const gitHub = GitHubComm.forToken(user.token);
 			const repo = gitHub.getRepo(infos.repo);
-			const [npm, fullRepo, tags, latest, master] = await Promise.all([
-				getPackageMetaData(`iobroker.${name}`),
+			const [
+				npm,
+				fullRepo,
+				tags,
+				latest,
+				defaultHead,
+			] = await Promise.all([
+				tryGetPackageMetaData(),
 				repo.getRepo(),
 				repo.getTags(),
 				getLatest(),
@@ -152,53 +166,55 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 			]);
 			setCanPush(fullRepo.permissions?.push);
 			const releases: ReleaseInfo[] = [];
-			const adapter = latest[name];
-			const adapterStableSemver = coerce(adapter?.stable);
-			const latestNpm = npm["dist-tags"].latest;
-			for (const version of Object.keys(npm.versions).reverse()) {
-				const semver = coerce(version);
-				const release: ReleaseInfo = { version, icons: [] };
-				const time = npm.time[version];
-				if (time) {
-					setDates(release, time);
-				}
-				const tag = tags.find((t) => t.name === `v${version}`);
-				if (tag) {
-					release.commit = tag.commit.sha;
-				}
-				if (adapter?.stable === version) {
-					release.icons.push("stable");
-				}
-				if (adapter?.version === version) {
-					release.icons.push("beta");
-				}
-				if (version === latestNpm) {
-					release.icons.push("npm");
-					if (!adapter) {
-						release.action = "to-latest";
+			if (npm) {
+				const adapter = latest[name];
+				const adapterStableSemver = coerce(adapter?.stable);
+				const latestNpm = npm["dist-tags"].latest;
+				for (const version of Object.keys(npm.versions).reverse()) {
+					const semver = coerce(version);
+					const release: ReleaseInfo = { version, icons: [] };
+					const time = npm.time[version];
+					if (time) {
+						setDates(release, time);
 					}
+					const tag = tags.find((t) => t.name === `v${version}`);
+					if (tag) {
+						release.commit = tag.commit.sha;
+					}
+					if (adapter?.stable === version) {
+						release.icons.push("stable");
+					}
+					if (adapter?.version === version) {
+						release.icons.push("beta");
+					}
+					if (version === latestNpm) {
+						release.icons.push("npm");
+						if (!adapter) {
+							release.action = "to-latest";
+						}
+					}
+					if (
+						adapter &&
+						(!adapterStableSemver ||
+							semver?.compare(adapterStableSemver) === 1)
+					) {
+						release.action = "to-stable";
+					}
+					releases.push(release);
 				}
-				if (
-					adapter &&
-					(!adapterStableSemver ||
-						semver?.compare(adapterStableSemver) === 1)
-				) {
-					release.action = "to-stable";
-				}
-				releases.push(release);
 			}
 
 			const masterRelease = releases.find(
-				(r) => r.commit === master.object.sha,
+				(r) => r.commit === defaultHead.object.sha,
 			);
 			if (masterRelease) {
 				masterRelease.icons.push("github");
 			} else {
-				const commit = await repo.getCommit(master.object.sha);
+				const commit = await repo.getCommit(defaultHead.object.sha);
 				const release: ReleaseInfo = {
 					version: `(${infos.repo.default_branch})`,
 					icons: ["github"],
-					commit: master.object.sha,
+					commit: defaultHead.object.sha,
 					action: "release",
 				};
 				setDates(release, commit.committer.date);
@@ -232,11 +248,10 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 				setAuthReason("create a new release");
 				setAuthActions([
 					"download your repository",
-					"update the changelog if requested",
-					"execute the release script",
+					"execute the release script which will update some files",
 					"upload all changes performed by the release script",
 					"tag the new release",
-					"let GitHub actions create a new npm release (if configured)",
+					"let GitHub actions create a new npm and GitHub release (if configured)",
 				]);
 				break;
 			case "to-latest":
@@ -359,6 +374,13 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 				onClose={() => setAuthReason(undefined)}
 				onContinue={handleConsent}
 			/>
+			<Route path={`${path}/~release`}>
+				<CreateReleaseDialog
+					infos={infos}
+					open={true}
+					onClose={handleCloseDialog}
+				/>
+			</Route>
 			<Route path={`${path}/~to-latest`}>
 				<UpdateRepositoriesDialog
 					infos={infos}

@@ -6,6 +6,13 @@ export interface GenerateAdapterMessage {
 	answers: Answers;
 	target: GeneratorTarget;
 }
+
+export type ReleaseType = "major" | "minor" | "patch";
+export interface CreateReleaseMessage {
+	owner: string;
+	repo: string;
+	type: ReleaseType;
+}
 export interface ToLatestMessage {
 	owner: string;
 	repo: string;
