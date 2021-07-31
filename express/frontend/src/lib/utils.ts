@@ -31,6 +31,6 @@ export function getWebSocketUrl(path: string) {
 		return `ws://localhost:8080/ws/${path}`;
 	} else {
 		const protocol = loc.protocol.replace(/^http/, "ws");
-		return `${protocol}//${loc.host}/ws/create-adapter`;
+		return `${protocol}//${loc.host}/ws/${path}`;
 	}
 }
