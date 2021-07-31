@@ -208,7 +208,7 @@ export function GenerateStep(props: GenerateStepProps) {
 					"upload all generated files",
 				]}
 				open={consentOpen}
-				onClose={() => setConsentOpen(false)}
+				onCancel={() => setConsentOpen(false)}
 				onContinue={onRequestLogin}
 			/>
 			{!!generator && (

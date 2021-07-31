@@ -279,12 +279,17 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 		}
 	}, [releaseAction, name]);
 
-	const handleConsent = () => {
-		let redirect = encodeURIComponent(`${url}/~${releaseAction}`);
-		if (releaseVersion) {
-			redirect += `/${releaseVersion}`;
+	const handleConsent = (ok: boolean) => {
+		setAuthReason(undefined);
+		if (ok) {
+			let redirect = encodeURIComponent(`${url}/~${releaseAction}`);
+			if (releaseVersion) {
+				redirect += `/${releaseVersion}`;
+			}
+			window.location.href = `/login?redirect=${redirect}&scope=repo`;
+		} else {
+			setReleaseAction(undefined);
 		}
-		window.location.href = `/login?redirect=${redirect}&scope=repo`;
 	};
 	const setReleaseInfo = (action: ReleaseAction, version?: string) => {
 		setReleaseVersion(version);
@@ -371,8 +376,8 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 				reason={authReason || ""}
 				actions={authActions}
 				open={!!authReason}
-				onClose={() => setAuthReason(undefined)}
-				onContinue={handleConsent}
+				onCancel={() => handleConsent(false)}
+				onContinue={() => handleConsent(true)}
 			/>
 			<Route path={`${path}/~release`}>
 				<CreateReleaseDialog

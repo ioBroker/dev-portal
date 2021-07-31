@@ -9,22 +9,14 @@ export interface AuthConsentDialogProps {
 	reason: string;
 	actions: string[];
 	open: boolean;
-	/**
-	 * This will be called when the dialog must be closed,
-	 * independent of what the user clicked.
-	 */
-	onClose: () => void;
 	onContinue: () => void;
+	onCancel: () => void;
 }
 
 export default function AuthConsentDialog(props: AuthConsentDialogProps) {
-	const { reason, actions, open, onClose, onContinue } = props;
-	const handleContinue = () => {
-		onClose();
-		onContinue();
-	};
+	const { reason, actions, open, onContinue, onCancel } = props;
 	return (
-		<Dialog open={open} onClose={onClose}>
+		<Dialog open={open} onClose={onCancel}>
 			<DialogTitle>
 				Allow extended access to your GitHub account?
 			</DialogTitle>
@@ -49,10 +41,10 @@ export default function AuthConsentDialog(props: AuthConsentDialogProps) {
 				</DialogContentText>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={onClose} color="primary">
+				<Button onClick={onCancel} color="primary">
 					Disagree
 				</Button>
-				<Button onClick={handleContinue} color="primary" autoFocus>
+				<Button onClick={onContinue} color="primary" autoFocus>
 					Agree
 				</Button>
 			</DialogActions>
