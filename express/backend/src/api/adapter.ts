@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { dbConnect, unescapeObjectKeys } from "../db/utils";
 import { AdapterStats } from "../global/adapter-stats";
+import { Statistics } from "../global/iobroker";
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.get("/api/adapter/:name/stats", async function (req, res) {
 		};
 		await rawStatistics
 			.find()
-			.project({
+			.project<Statistics>({
 				adapters: { [name]: 1 },
 				versions: { [name]: 1 },
 				date: 1,

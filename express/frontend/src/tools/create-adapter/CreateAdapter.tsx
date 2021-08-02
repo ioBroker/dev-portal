@@ -24,6 +24,10 @@ import { GenerateStep } from "./GenerateStep";
 import { QuestionView } from "./QuestionView";
 import axios from "axios";
 import { getApiUrl } from "../../lib/utils";
+import Hidden from "@material-ui/core/Hidden";
+import MobileStepper from "@material-ui/core/MobileStepper";
+import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
+import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 
 const useStyles = makeStyles((theme) => ({
 	root: {
@@ -201,29 +205,36 @@ function Wizard(props: WizardProps) {
 		window.location.href = `/login?redirect=${url}&scope=repo`;
 	};
 
+	const hasPrevious = activeStep !== 0;
+	const handlePrevious = () => setActiveStep(activeStep - 1);
+	const hasNext = activeStep !== questionGroups.length && !hasError;
+	const handleNext = () => setActiveStep(activeStep + 1);
+
 	return (
 		<Paper className={classes.root}>
-			<Stepper
-				activeStep={activeStep}
-				className={classes.stepper}
-				alternativeLabel
-			>
-				{questionGroups.map((group, index) => (
-					<Step key={group.title}>
-						<StepButton onClick={() => setActiveStep(index)}>
-							{group.title}
+			<Hidden xsDown>
+				<Stepper
+					activeStep={activeStep}
+					className={classes.stepper}
+					alternativeLabel
+				>
+					{questionGroups.map((group, index) => (
+						<Step key={group.title}>
+							<StepButton onClick={() => setActiveStep(index)}>
+								{group.title}
+							</StepButton>
+						</Step>
+					))}
+					<Step>
+						<StepButton
+							onClick={() => setActiveStep(questionGroups.length)}
+						>
+							Generate
 						</StepButton>
 					</Step>
-				))}
-				<Step>
-					<StepButton
-						onClick={() => setActiveStep(questionGroups.length)}
-					>
-						Generate
-					</StepButton>
-				</Step>
-			</Stepper>
-			<Divider className={classes.divider} />
+				</Stepper>
+				<Divider className={classes.divider} />
+			</Hidden>
 			{questionGroups[activeStep] ? (
 				<Group
 					key={questionGroups[activeStep].title}
@@ -248,33 +259,61 @@ function Wizard(props: WizardProps) {
 					onRequestLogin={handleLoginRequest}
 				/>
 			)}
-			<Grid container spacing={1}>
-				<Grid item>
-					<Button
-						variant="contained"
-						disabled={activeStep === 0}
-						onClick={() => setActiveStep(activeStep - 1)}
-					>
-						Previous
-					</Button>
+			<Hidden xsDown>
+				<Grid container spacing={1}>
+					<Grid item>
+						<Button
+							variant="contained"
+							disabled={!hasPrevious}
+							onClick={handlePrevious}
+						>
+							Previous
+						</Button>
+					</Grid>
+					<Grid item>
+						<Button
+							color="primary"
+							variant="contained"
+							disabled={!hasNext}
+							onClick={handleNext}
+						>
+							Next
+						</Button>
+					</Grid>
+					<Grid item className={classes.version}>
+						<br />
+						{version}
+					</Grid>
 				</Grid>
-				<Grid item>
-					<Button
-						color="primary"
-						variant="contained"
-						disabled={
-							activeStep === questionGroups.length || hasError
-						}
-						onClick={() => setActiveStep(activeStep + 1)}
-					>
-						Next
-					</Button>
-				</Grid>
-				<Grid item className={classes.version}>
-					<br />
-					{version}
-				</Grid>
-			</Grid>
+			</Hidden>
+			<Hidden smUp>
+				<MobileStepper
+					steps={questionGroups.length + 1}
+					position="static"
+					variant="text"
+					activeStep={activeStep}
+					backButton={
+						<Button
+							size="small"
+							onClick={handlePrevious}
+							disabled={!hasPrevious}
+						>
+							<KeyboardArrowLeft />
+							Back
+						</Button>
+					}
+					nextButton={
+						<Button
+							size="small"
+							onClick={handleNext}
+							disabled={!hasNext}
+						>
+							Next
+							<KeyboardArrowRight />
+						</Button>
+					}
+				/>
+			</Hidden>
 		</Paper>
 	);
 }
