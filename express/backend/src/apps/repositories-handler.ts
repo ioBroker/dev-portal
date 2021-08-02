@@ -21,15 +21,13 @@ export interface Context<T extends ToLatestMessage | ToStableMessage> {
 }
 
 export abstract class RepositoriesConnectionHandler<
-	T extends ToLatestMessage | ToStableMessage
+	T extends ToLatestMessage | ToStableMessage,
 > extends WebSocketConnectionHandler<T> {
 	protected abstract getBranchName(context: Context<T>): string;
 
 	protected abstract updateRepositories(context: Context<T>): Promise<void>;
 
-	protected abstract getPullRequestDetails(
-		context: Context<T>,
-	): {
+	protected abstract getPullRequestDetails(context: Context<T>): {
 		title: string;
 		body: string;
 	};
@@ -64,7 +62,7 @@ export abstract class RepositoriesConnectionHandler<
 			this.log(`Found fork ${user.login}/${forkName}`);
 		} else {
 			const { data: fork } = await requestWithAuth(
-				"POST /repos/{owner}/{repo}/forks{?org,organization}",
+				"POST /repos/{owner}/{repo}/forks",
 				{
 					owner: ORG,
 					repo: REPOSITORY,

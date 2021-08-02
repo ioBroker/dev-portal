@@ -76,7 +76,7 @@ function AdapterCheckStep(props: {
 				prs.map((pr) => repo.compare(pr.base.sha, pr.head.sha)),
 			);
 			const index = diffs.findIndex((diff) =>
-				diff.files.some(sameAdapter),
+				diff.files?.some(sameAdapter),
 			);
 			return index < 0 ? undefined : prs[index].html_url;
 		};

@@ -7,7 +7,7 @@ const request = axios.create({
 	baseURL: "https://registry.npmjs.org/",
 });
 
-router.get("/api/npm/*", async function (req, res) {
+router.get<any>("/api/npm/*", async function (req, res) {
 	try {
 		const result = await request.get(`/${req.params["0"]}`);
 		res.send(result.data);
