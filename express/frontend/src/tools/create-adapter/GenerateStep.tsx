@@ -11,11 +11,11 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import {
-	GeneratorTarget,
+	GenerateAdapterMessage,
 	LogMessage,
 	ServerClientMessage,
 } from "../../../../backend/src/global/websocket";
@@ -47,21 +47,27 @@ function isLogMessage(obj: unknown): obj is LogMessage {
 }
 
 type GeneratorState = "idle" | "generating" | "success" | "failed";
+type GeneratorTarget = "github" | "zip";
+
+export type AnswersWithoutTarget = Omit<Answers, "target">;
 
 export interface GeneratorDialogProps {
 	webSocket: WebSocketHook;
-	target: GeneratorTarget;
 	answers: Answers;
 	onClose: () => void;
 }
 
 export function GeneratorDialog(props: GeneratorDialogProps) {
-	const { webSocket, target, answers, onClose } = props;
+	const { webSocket, answers, onClose } = props;
+	const { target } = answers;
 
 	const [state, setState] = useState<GeneratorState>("idle");
 	const [resultLink, setResultLink] = useState<string>();
 
-	const startMessage = JSON.stringify({ answers, target });
+	const msg: GenerateAdapterMessage = {
+		answers,
+	};
+	const startMessage = JSON.stringify(msg);
 	useEffect(() => {
 		if (state === "idle" && target) {
 			//console.log(state, target, "--> sendMessage", startMessage);
@@ -144,7 +150,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 }
 
 export interface GenerateStepProps {
-	answers: Answers;
+	answers: AnswersWithoutTarget;
 	user?: User;
 	startGenerator?: boolean;
 	onRequestLogin: () => void;
@@ -172,8 +178,7 @@ export function GenerateStep(props: GenerateStepProps) {
 	const cards: DashboardCardProps[] = [
 		{
 			title: "Create GitHub Repository",
-			text:
-				"Your code will be uploaded to a newly created GitHub repository for the user or organisation you choose.",
+			text: "Your code will be uploaded to a newly created GitHub repository for the user or organisation you choose.",
 			buttons: [
 				<CardButton
 					text="Create Repository"
@@ -204,7 +209,7 @@ export function GenerateStep(props: GenerateStepProps) {
 			<AuthConsentDialog
 				reason="create a new adapter repository"
 				actions={[
-					`create a new repository called ioBroker.${answers.adapterName} for the user or organisation you choose`,
+					`create a new repository called ioBroker.${answers.adapterName} for the user or organization you choose`,
 					"upload all generated files",
 				]}
 				open={consentOpen}
@@ -214,8 +219,7 @@ export function GenerateStep(props: GenerateStepProps) {
 			{!!generator && (
 				<GeneratorDialog
 					webSocket={webSocket}
-					target={generator}
-					answers={answers}
+					answers={{ ...answers, target: generator }}
 					onClose={() => setGenerator(undefined)}
 				/>
 			)}

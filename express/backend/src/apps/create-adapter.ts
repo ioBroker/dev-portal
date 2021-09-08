@@ -90,7 +90,8 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 	protected async handleMessage(
 		message: GenerateAdapterMessage,
 	): Promise<void> {
-		const { target, answers } = message;
+		const { answers } = message;
+		const { target } = answers;
 		if (target === "github" && !this.cookies[COOKIE_NAME_CREATOR_TOKEN]) {
 			throw new Error("GitHub token cookie is missing");
 		}

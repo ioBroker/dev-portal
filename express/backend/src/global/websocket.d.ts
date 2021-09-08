@@ -1,10 +1,8 @@
 import { Answers } from "@iobroker/create-adapter";
 
 // client -> server
-export type GeneratorTarget = "github" | "zip";
 export interface GenerateAdapterMessage {
 	answers: Answers;
-	target: GeneratorTarget;
 }
 
 export type ReleaseType = "major" | "minor" | "patch";
