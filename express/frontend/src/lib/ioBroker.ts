@@ -196,6 +196,9 @@ export interface CheckResults {
 export async function checkAdapter(repoName: string) {
 	const { data } = await axios.get<CheckResults>(
 		`${CHECK_ADAPTER_URL}?url=${uc(`https://github.com/${repoName}`)}`,
+		{
+			validateStatus: () => true, // workaround for https://github.com/ioBroker/ioBroker.repochecker/issues/45
+		},
 	);
 	return data;
 }
