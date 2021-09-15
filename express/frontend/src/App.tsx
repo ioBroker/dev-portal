@@ -37,7 +37,7 @@ import {
 	DashboardIcon,
 	GitHubIcon,
 } from "./components/Icons";
-import AdapterDetails from "./tools/AdapterDetails";
+import AdapterDetails from "./tools/adapter/AdapterDetails";
 import { getMyAdapterInfos, getWatchedAdapterInfos } from "./lib/ioBroker";
 import { GIT_BRANCH, GIT_COMMIT } from "./version";
 import ReloadPageSnackbar from "./components/ReloadPageSnackbar";
@@ -413,7 +413,7 @@ export default function App() {
 								)}
 								{user && (
 									<Route path="/adapter/:name">
-										<AdapterDetails />
+										<AdapterDetails user={user} />
 									</Route>
 								)}
 								<Route path="/">

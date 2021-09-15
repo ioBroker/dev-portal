@@ -52,17 +52,17 @@ router.get("/api/user/", cookiesMiddleware(), async function (req, res) {
 
 		let user = await users.findOne({ login });
 		if (!user) {
-			const inserted = await users.insertOne({
+			user = {
 				login,
 				watches: [],
-			});
-			user = inserted.ops[0];
+			};
+			await users.insertOne(user);
 		}
 
 		// we don't want to return the _id field (which is returned even if the signature doesn't say so)
 		delete (user as any)._id;
 		res.send(user);
-	} catch (error) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).send(error.message || error);
 	}
@@ -93,7 +93,7 @@ router.put(
 				{ upsert: true },
 			);
 			res.send(result.value);
-		} catch (error) {
+		} catch (error: any) {
 			console.error(error);
 			res.status(500).send(error.message || error);
 		}

@@ -72,11 +72,9 @@ function AdapterGitHubButton(props: { repo: Repository; user: User }) {
 			}
 
 			const gitHub = GitHubComm.forToken(user.token);
-			const pullRequests = await gitHub.getPullRequests(
-				repo.owner!.login,
-				repo.name,
-				"open",
-			);
+			const pullRequests = await gitHub
+				.getRepo(repo)
+				.getPullRequests("open");
 			const prCount = pullRequests.length;
 			const issueCount = repo.open_issues - prCount;
 			const getText = (value: number, type: string) => {
@@ -291,14 +289,14 @@ function AddWatchDialog(props: AddWatchDialogProps) {
 			const [owner, repo] = repoName.split("/", 2);
 			const latest = await getLatest();
 			const infos = await getAdapterInfos(
-				await gitHub.getRepo(owner, repo),
+				await gitHub.getRepo(owner, repo).getRepo(),
 				latest,
 			);
 			if (!infos.info) {
 				throw new Error("This is not an ioBroker adapter");
 			}
 			onClose(repoName);
-		} catch (error) {
+		} catch (error: any) {
 			setError(error.message || error);
 		} finally {
 			setValidating(false);
@@ -494,7 +492,7 @@ export default function Dashboard(props: DashboardProps) {
 		storedCollapsed = JSON.parse(
 			localStorage.getItem(COLLAPSED_CATEGORIES_KEY) || "[]",
 		);
-	} catch (error) {
+	} catch {
 		storedCollapsed = [];
 	}
 	const [collapsed, setCollapsed] = useState<boolean[]>(storedCollapsed);
@@ -566,8 +564,7 @@ export default function Dashboard(props: DashboardProps) {
 				adapters.push({
 					title: "No adapters found",
 					img: "images/adapter-creator.png",
-					text:
-						"You can create your first ioBroker adapter by answering questions in the Adapter Creator.",
+					text: "You can create your first ioBroker adapter by answering questions in the Adapter Creator.",
 					buttons: [
 						<CardButton
 							text="Open Adapter Creator"

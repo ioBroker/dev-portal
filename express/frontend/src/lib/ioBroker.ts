@@ -2,16 +2,25 @@ import axios from "axios";
 import {
 	LatestAdapter,
 	LatestAdapters,
+	StableAdapters,
 } from "../../../backend/src/global/iobroker";
 import {
 	ProjectInfo,
 	ProjectStatistics,
 } from "../../../backend/src/global/sentry";
 import { User as RestUser } from "../../../backend/src/global/user";
-import { GitHubComm, Repository } from "./gitHub";
+import {
+	FullRepository,
+	GitHubComm,
+	MinimalRepository,
+	Repository,
+} from "./gitHub";
 import { AsyncCache, getApiUrl } from "./utils";
 
 const uc = encodeURIComponent;
+
+const CHECK_ADAPTER_URL =
+	"https://3jjxddo33l.execute-api.eu-west-1.amazonaws.com/default/checkAdapter";
 
 export type TranslatedText = Record<string, string>;
 
@@ -22,7 +31,16 @@ export const getLatest = AsyncCache.of(async () => {
 	return result.data;
 });
 
-export async function getMyAdapterRepos(ghToken: string) {
+export const getStable = AsyncCache.of(async () => {
+	const result = await axios.get<StableAdapters>(
+		"https://repo.iobroker.live/sources-dist.json",
+	);
+	return result.data;
+});
+
+export async function getMyAdapterRepos(
+	ghToken: string,
+): Promise<MinimalRepository[]> {
 	const gitHub = GitHubComm.forToken(ghToken);
 	const repos = await gitHub.getUserRepos();
 	const latest = await getLatest();
@@ -48,14 +66,21 @@ export async function getMyAdapterRepos(ghToken: string) {
 	});
 }
 
-export async function getWatchedAdapterRepos(ghToken: string) {
-	const { data: user } = await axios.get<RestUser>(getApiUrl("user"));
-	const gitHub = GitHubComm.forToken(ghToken);
-	return await Promise.all(
-		user.watches
-			.map((r) => r.split("/", 2))
-			.map(([owner, repo]) => gitHub.getRepo(owner, repo)),
-	);
+export async function getWatchedAdapterRepos(
+	ghToken: string,
+): Promise<FullRepository[]> {
+	try {
+		const { data: user } = await axios.get<RestUser>(getApiUrl("user"));
+		const gitHub = GitHubComm.forToken(ghToken);
+		return await Promise.all(
+			user.watches
+				.map((r) => r.split("/", 2))
+				.map(([owner, repo]) => gitHub.getRepo(owner, repo).getRepo()),
+		);
+	} catch (e) {
+		console.error(e);
+		return [];
+	}
 }
 
 export interface AdapterInfos {
@@ -96,7 +121,7 @@ export const getWatchedAdapterInfos = async (ghToken: string) => {
 export async function getAdapterInfos(
 	repo: Repository,
 	latest: LatestAdapters,
-) {
+): Promise<AdapterInfos> {
 	const adapterName = repo.name.split(".")[1];
 	let info = latest[adapterName];
 	const defaultBranch = repo.default_branch || "master";
@@ -133,7 +158,7 @@ export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 						`${encodeURIComponent(adapterName)}.js`,
 				);
 				return true;
-			} catch (error) {
+			} catch {
 				return false;
 			}
 		};
@@ -156,4 +181,24 @@ export async function getSentryStats(ids: string[], statsPeriod?: string) {
 		getApiUrl(`sentry/stats/?query=${uc(query)}&statsPeriod=${period}`),
 	);
 	return result.data;
+}
+
+export type CheckResult = string | Record<string, any>;
+
+export interface CheckResults {
+	version: string;
+	result: string;
+	checks: CheckResult[];
+	warnings: CheckResult[];
+	errors: CheckResult[];
+}
+
+export async function checkAdapter(repoName: string) {
+	const { data } = await axios.get<CheckResults>(
+		`${CHECK_ADAPTER_URL}?url=${uc(`https://github.com/${repoName}`)}`,
+		{
+			validateStatus: () => true, // workaround for https://github.com/ioBroker/ioBroker.repochecker/issues/45
+		},
+	);
+	return data;
 }

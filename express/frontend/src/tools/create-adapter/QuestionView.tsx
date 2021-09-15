@@ -95,7 +95,7 @@ const checkAdapterExistence = async (name: string): Promise<CheckResult> => {
 			`https://api.npms.io/v2/package/iobroker.${encodedName}`,
 		);
 		return `The adapter ioBroker.${name} already exists!`;
-	} catch (e) {
+	} catch {
 		return true;
 	}
 };
@@ -132,7 +132,7 @@ const handleValueChange = async (
 
 		setError("");
 		onAnswerChanged(value, false);
-	} catch (e) {
+	} catch (e: any) {
 		setError(JSON.stringify(e));
 		onAnswerChanged(value, true);
 	}
@@ -489,7 +489,7 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 			setError("");
 			setValue(newValue);
 			onAnswerChanged(newValue, false);
-		} catch (e) {
+		} catch (e: any) {
 			setError(e.message);
 			setValue(undefined);
 			onAnswerChanged(undefined, false);

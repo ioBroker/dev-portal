@@ -1,14 +1,12 @@
-import Hidden from "@material-ui/core/Hidden";
 import Paper from "@material-ui/core/Paper";
 import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import ReactECharts from "echarts-for-react";
 import axios from "axios";
-import { AdapterStatistics } from "../../../backend/src/global/adapter-stats";
+import { AdapterStats } from "../../../../backend/src/global/adapter-stats";
 import sort from "semver/functions/sort";
-import { getApiUrl } from "../lib/utils";
+import { getApiUrl } from "../../lib/utils";
 
 const uc = encodeURIComponent;
 
@@ -71,9 +69,9 @@ const chartDefaults = {
 	series: [],
 };
 
-export interface AdapterDetailsProps {}
+export interface AdapterStatisticsProps {}
 
-export default function AdapterDetails(props: AdapterDetailsProps) {
+export default function AdapterStatistics(props: AdapterStatisticsProps) {
 	const classes = useStyles();
 	const { name } = useParams<{ name: string }>();
 	const [option, setOption] = useState<any>();
@@ -84,7 +82,7 @@ export default function AdapterDetails(props: AdapterDetailsProps) {
 		setShowLoading(true);
 		const loadStatistics = async () => {
 			const url = getApiUrl(`adapter/${uc(name)}/stats`);
-			const { data: stats } = await axios.get<AdapterStatistics>(url);
+			const { data: stats } = await axios.get<AdapterStats>(url);
 
 			const versions = new Set<string>();
 			for (const date of Object.keys(stats.counts)) {
@@ -172,9 +170,6 @@ export default function AdapterDetails(props: AdapterDetailsProps) {
 	}, [name]);
 	return (
 		<Paper className={classes.root}>
-			<Typography variant="h3">
-				<Hidden xsDown>Adapter</Hidden> ioBroker.{name}
-			</Typography>
 			{(option || showLoading) && (
 				<ReactECharts
 					className={classes.chart}

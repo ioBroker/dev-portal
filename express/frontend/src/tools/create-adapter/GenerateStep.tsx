@@ -9,22 +9,27 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import { makeStyles } from "@material-ui/core/styles";
+import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import {
-	GeneratorTarget,
+	GenerateAdapterMessage,
 	LogMessage,
 	ServerClientMessage,
-} from "../../../../backend/src/global/create-adapter-ws";
+} from "../../../../backend/src/global/websocket";
+import AuthConsentDialog from "../../components/AuthConsentDialog";
 import { CardButton } from "../../components/CardButton";
 import { CardGrid } from "../../components/CardGrid";
 import { DashboardCardProps } from "../../components/DashboardCard";
 import { DownloadIcon, GitHubIcon } from "../../components/Icons";
+import WebSocketLog, { LogHandler } from "../../components/WebSocketLog";
 import { User } from "../../lib/gitHub";
 import { getWebSocketUrl } from "../../lib/utils";
+
+const STORAGE_KEY_SECRETS_AFTER_LOGIN = "creator-secrets-after-login";
 
 const useStyles = makeStyles((theme) => ({
 	configPreview: {
@@ -45,28 +50,170 @@ function isLogMessage(obj: unknown): obj is LogMessage {
 }
 
 type GeneratorState = "idle" | "generating" | "success" | "failed";
+type GeneratorTarget = "github" | "zip";
+
+export type AnswersWithoutTarget = Omit<Answers, "target">;
+
+export interface TokensDialogProps {
+	adapterName: string;
+	tokens: string[];
+	open: boolean;
+	onContinue: (secrets: Record<string, string>) => void;
+	onCancel: () => void;
+}
+
+export default function TokensDialog(props: TokensDialogProps) {
+	const { adapterName, tokens, open, onContinue, onCancel } = props;
+
+	const [index, setIndex] = useState(0);
+	const [secrets, setSecrets] = useState<Record<string, string>>({});
+	const [value, setValue] = useState("");
+
+	useEffect(() => {
+		if (open) {
+			setSecrets({});
+			setIndex(0);
+			setValue("");
+		}
+	}, [open]);
+
+	const handleValueChange = (event: any) => {
+		setValue(event.target.value);
+	};
+
+	const handleContinue = () => {
+		const newSecrets = { ...secrets, [tokens[index]]: value };
+		if (index === tokens.length - 1) {
+			onContinue(newSecrets);
+		} else {
+			setSecrets(newSecrets);
+			setIndex((i) => i + 1);
+			setValue("");
+		}
+	};
+	return (
+		<Dialog open={open} onClose={onCancel}>
+			<DialogTitle>Create {tokens[index]}</DialogTitle>
+			<DialogContent>
+				{tokens[index] === "AUTO_MERGE_TOKEN" && (
+					<DialogContentText>
+						To use Dependabot you must provide a GitHub Personal
+						Access Token with the permission "public_repo".
+						<br />
+						Please follow these steps:
+						<ol>
+							<li>
+								Open the{" "}
+								<a
+									href="https://github.com/settings/tokens"
+									target="tokens"
+								>
+									tokens settings
+								</a>{" "}
+								of your GitHub account
+							</li>
+							<li>Click on "Generate new token"</li>
+							<li>
+								As a "Note" enter:{" "}
+								<code>
+									ioBroker.{adapterName} dependabot-auto-merge
+								</code>
+							</li>
+							<li>
+								Set the expiration to <code>No expiration</code>
+							</li>
+							<li>
+								Only check the box next to{" "}
+								<code>public_repo</code>
+							</li>
+							<li>Click on "Generate token"</li>
+							<li>
+								Copy the generated token; it should start with{" "}
+								<code>ghp_...</code>
+							</li>
+							<li>Paste the token here:</li>
+						</ol>
+						<TextField
+							id="auto-merge-token"
+							label="AUTO_MERGE_TOKEN"
+							fullWidth
+							value={value}
+							onChange={handleValueChange}
+						/>
+						<br />
+						This token will not be stored anywhere but in your
+						repository secrets.
+					</DialogContentText>
+				)}
+				{tokens[index] === "NPM_TOKEN" && (
+					<DialogContentText>
+						To use the release script with GitHub Actions you must
+						provide a npm Access Token with the type "Automation".
+						<br />
+						Please follow these steps:
+						<ol>
+							<li>
+								Open the{" "}
+								<a
+									href="https://www.npmjs.com/settings/unclesamswiss/tokens"
+									target="tokens"
+								>
+									tokens settings
+								</a>{" "}
+								of your npmjs account
+							</li>
+							<li>Click on "Generate New Token"</li>
+							<li>
+								Select the type <code>Automation</code>
+							</li>
+							<li>Click on "Generate Token"</li>
+							<li>Copy the generated token</li>
+							<li>Paste the token here:</li>
+						</ol>
+						<TextField
+							id="npm-token"
+							label="NPM_TOKEN"
+							fullWidth
+							value={value}
+							onChange={handleValueChange}
+						/>
+						<br />
+						This token will not be stored anywhere but in your
+						repository secrets.
+					</DialogContentText>
+				)}
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onCancel} color="primary">
+					Cancel
+				</Button>
+				<Button onClick={handleContinue} color="primary">
+					Continue
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+}
 
 export interface GeneratorDialogProps {
 	webSocket: WebSocketHook;
-	target: GeneratorTarget;
 	answers: Answers;
+	secrets: Record<string, string>;
 	onClose: () => void;
 }
 
 export function GeneratorDialog(props: GeneratorDialogProps) {
-	const { webSocket, target, answers, onClose } = props;
+	const { webSocket, answers, secrets, onClose } = props;
+	const { target } = answers;
 
-	type LogItem = { color: string; text: string };
+	const [state, setState] = useState<GeneratorState>("idle");
+	const [resultLink, setResultLink] = useState<string>();
 
-	const [log, setLog] = React.useState<LogItem[]>([]);
-	const [state, setState] = React.useState<GeneratorState>("idle");
-	const [resultLink, setResultLink] = React.useState<string>();
-
-	const { lastJsonMessage } = webSocket;
-
-	const logEndRef = useRef<any>();
-
-	const startMessage = JSON.stringify({ answers, target });
+	const msg: GenerateAdapterMessage = {
+		answers,
+		secrets,
+	};
+	const startMessage = JSON.stringify(msg);
 	useEffect(() => {
 		if (state === "idle" && target) {
 			//console.log(state, target, "--> sendMessage", startMessage);
@@ -75,34 +222,21 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [target, state]);
 
-	useEffect(() => {
-		if (!lastJsonMessage) {
+	const handleMessage = (msg: ServerClientMessage, appendLog: LogHandler) => {
+		if (isLogMessage(msg)) {
 			return;
 		}
-		console.log("msg", lastJsonMessage);
-		const appendLog = (text: string, color: string) =>
-			setLog((old) => [...old, { text, color }]);
-		try {
-			const msg = lastJsonMessage as ServerClientMessage;
-			if (isLogMessage(msg)) {
-				const logMsg = msg;
-				appendLog(logMsg.log, logMsg.isError ? "red" : "black");
-			} else if (msg.result) {
-				appendLog("Completed sucessfully", "green");
-				setResultLink(msg.resultLink);
-				setState("success");
-			} else {
-				appendLog("Failed", "red");
-				setState("failed");
-			}
-		} catch (error) {
-			console.error(error);
+		if (msg.result) {
+			appendLog("Completed successfully", "green");
+			setResultLink(msg.resultLink);
+			setState("success");
+		} else {
+			appendLog("Failed", "red");
+			setState("failed");
 		}
-	}, [lastJsonMessage]);
+	};
 
-	useEffect(() => {
-		logEndRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [log]);
+	const canClose = state === "success" || state === "failed";
 
 	return (
 		<Dialog
@@ -110,6 +244,8 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 			scroll="paper"
 			maxWidth="md"
 			fullWidth
+			disableBackdropClick={!canClose}
+			disableEscapeKeyDown={!canClose}
 			aria-labelledby="scroll-dialog-title"
 			aria-describedby="scroll-dialog-description"
 		>
@@ -118,12 +254,10 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 			</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText style={{ minHeight: "60vh" }}>
-					{log.map((entry, i) => (
-						<pre key={i} style={{ color: entry.color, margin: 0 }}>
-							{entry.text}
-						</pre>
-					))}
-					<div ref={logEndRef} />
+					<WebSocketLog
+						webSocket={webSocket}
+						onMessageReceived={handleMessage}
+					/>
 				</DialogContentText>
 			</DialogContent>
 			<DialogActions>
@@ -151,7 +285,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 				)}
 				<Button
 					onClick={() => onClose()}
-					disabled={state !== "success" && state !== "failed"}
+					disabled={!canClose}
 					color="primary"
 				>
 					Close
@@ -162,7 +296,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 }
 
 export interface GenerateStepProps {
-	answers: Answers;
+	answers: AnswersWithoutTarget;
 	user?: User;
 	startGenerator?: boolean;
 	onRequestLogin: () => void;
@@ -175,28 +309,80 @@ export function GenerateStep(props: GenerateStepProps) {
 	const webSocket = useWebSocket(getWebSocketUrl("create-adapter"));
 
 	const [generator, setGenerator] = React.useState<GeneratorTarget>();
+	const [consentOpen, setConsentOpen] = React.useState(false);
+	const [tokensOpen, setTokensOpen] = React.useState(false);
+	const [consentActions, setConsentActions] = React.useState<string[]>([]);
+	const [tokens, setTokens] = React.useState<string[]>([]);
+	const [secrets, setSecrets] = React.useState<Record<string, string>>({});
 
 	useEffect(() => {
 		if (startGenerator) {
+			const loadedSecrets = window.localStorage.getItem(
+				STORAGE_KEY_SECRETS_AFTER_LOGIN,
+			);
+			if (loadedSecrets) {
+				window.localStorage.removeItem(STORAGE_KEY_SECRETS_AFTER_LOGIN);
+				setSecrets(JSON.parse(loadedSecrets));
+			} else {
+				setSecrets({});
+			}
 			setGenerator("github");
 		}
 	}, [startGenerator]);
+
+	useEffect(() => {
+		const tokens: string[] = [];
+		if (answers.dependabot === "yes") {
+			tokens.push("AUTO_MERGE_TOKEN");
+		}
+		if (answers.releaseScript === "yes") {
+			tokens.push("NPM_TOKEN");
+		}
+		const actions = [
+			`create a new repository called ioBroker.${answers.adapterName} for the user or organization you choose`,
+			"upload all generated files",
+		];
+		if (tokens.length > 0) {
+			actions.push(
+				`add the following token${
+					tokens.length === 1 ? "" : "s"
+				} to your repository: ${tokens.join(", ")}`,
+			);
+		}
+		setConsentActions(actions);
+		setTokens(tokens);
+	}, [answers]);
 
 	const onRequestZip = () => {
 		setGenerator("zip");
 	};
 
+	const onRequestGitHub = () => {
+		if (tokens.length > 0) {
+			setTokensOpen(true);
+		} else {
+			setConsentOpen(true);
+		}
+	};
+
+	const onSecretsEntered = (secrets: Record<string, string>) => {
+		window.localStorage.setItem(
+			STORAGE_KEY_SECRETS_AFTER_LOGIN,
+			JSON.stringify(secrets),
+		);
+		setTokensOpen(false);
+		setConsentOpen(true);
+	};
+
 	const cards: DashboardCardProps[] = [
 		{
 			title: "Create GitHub Repository",
-			text:
-				"Your code will be uploaded to a newly created GitHub Repository for the user or organisation you choose.\n" +
-				"You will be asked by GitHub to authorize this application. The generated authentication token is never transmitted to anybody but GitHub and will not be stored by this website. Nobody but you will be able to modify the generated repository.",
+			text: "Your code will be uploaded to a newly created GitHub repository for the user or organization you choose.",
 			buttons: [
 				<CardButton
 					text="Create Repository"
 					startIcon={<GitHubIcon />}
-					onClick={() => onRequestLogin()}
+					onClick={() => onRequestGitHub()}
 					disabled={!user || !!generator}
 				/>,
 			],
@@ -219,11 +405,25 @@ export function GenerateStep(props: GenerateStepProps) {
 
 	return (
 		<>
+			<AuthConsentDialog
+				reason="create a new adapter repository"
+				actions={consentActions}
+				open={consentOpen}
+				onCancel={() => setConsentOpen(false)}
+				onContinue={onRequestLogin}
+			/>
+			<TokensDialog
+				adapterName={answers.adapterName}
+				tokens={tokens}
+				open={tokensOpen}
+				onCancel={() => setTokensOpen(false)}
+				onContinue={onSecretsEntered}
+			/>
 			{!!generator && (
 				<GeneratorDialog
 					webSocket={webSocket}
-					target={generator}
-					answers={answers}
+					answers={{ ...answers, target: generator }}
+					secrets={secrets}
 					onClose={() => setGenerator(undefined)}
 				/>
 			)}

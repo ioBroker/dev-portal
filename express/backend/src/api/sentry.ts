@@ -50,7 +50,7 @@ router.get("/api/sentry/projects/", async function (req, res) {
 		}
 		cache.set(PROJECTS_KEY, projects);
 		res.send(projects);
-	} catch (error) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).send(error.message || error);
 	}
@@ -64,7 +64,7 @@ router.get("/api/sentry/stats/", async function (req, res) {
 			`?statsPeriod=${period}&query=${uc(query as string)}`,
 		);
 		res.send(data);
-	} catch (error) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).send(error.message || error);
 	}

@@ -4,7 +4,7 @@ import { env } from "../common";
 
 const router = Router();
 
-router.get("/api/weblate/*", async function (req, res) {
+router.get<any>("/api/weblate/*", async function (req, res) {
 	try {
 		const result = await axios.get(
 			`https://weblate.iobroker.net/api/${req.params["0"]}`,
@@ -16,7 +16,7 @@ router.get("/api/weblate/*", async function (req, res) {
 			},
 		);
 		res.send(result.data);
-	} catch (error) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).send(error.message || error);
 	}
