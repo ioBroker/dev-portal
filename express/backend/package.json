@@ -27,7 +27,7 @@
 		"tweetsodium": "0.0.5",
 		"universal-cookie-express": "^4.0.3",
 		"uuid": "^8.3.2",
-		"ws": "^8.2.2"
+		"ws": "^7.5.3"
 	},
 	"devDependencies": {
 		"@types/archiver": "^5.1.1",
