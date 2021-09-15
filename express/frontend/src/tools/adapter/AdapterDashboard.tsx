@@ -19,12 +19,11 @@ const EMPTY_CARDS = {
 };
 
 export default function AdapterDashboard(props: { infos: AdapterInfos }) {
-	const { infos } = props;
+	// const { infos } = props;
 	const { name } = useParams<{ name: string }>();
 	const { url } = useRouteMatch();
-	const [categories, setCategories] = useState<Record<string, CardGridProps>>(
-		EMPTY_CARDS,
-	);
+	const [categories, setCategories] =
+		useState<Record<string, CardGridProps>>(EMPTY_CARDS);
 	const [collapsed, setCollapsed] = useState<boolean[]>([]);
 
 	useEffect(() => {
@@ -45,8 +44,7 @@ export default function AdapterDashboard(props: { infos: AdapterInfos }) {
 			if (latest[name]) {
 				generalCards.push({
 					title: "Statistics",
-					text:
-						"Learn more about the usage and distribution of your adapter.",
+					text: "Learn more about the usage and distribution of your adapter.",
 					to: `${url}/statistics`,
 					buttons: [
 						<CardButton text="Show" to={`${url}/statistics`} />,
