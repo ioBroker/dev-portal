@@ -12,7 +12,7 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
-		"@iobroker/create-adapter": "^1.34.1",
+		"@iobroker/create-adapter": "^2.0.0",
 		"@octokit/request": "^5.6.0",
 		"archiver": "^5.3.0",
 		"axios": "^0.21.1",
@@ -24,6 +24,7 @@
 		"mongodb": "^4.0.0",
 		"node-cache": "^5.1.2",
 		"rimraf": "^3.0.2",
+		"tweetsodium": "0.0.5",
 		"universal-cookie-express": "^4.0.3",
 		"uuid": "^8.3.2",
 		"ws": "^7.5.3"

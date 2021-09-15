@@ -14,6 +14,7 @@ import { existsSync, readFile } from "fs-extra";
 import mkdirp from "mkdirp";
 import path from "path";
 import rimraf from "rimraf";
+import sodium from "tweetsodium";
 import { promisify } from "util";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
 import { delay } from "../common";
@@ -90,7 +91,7 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 	protected async handleMessage(
 		message: GenerateAdapterMessage,
 	): Promise<void> {
-		const { answers } = message;
+		const { answers, secrets } = message;
 		const { target } = answers;
 		if (target === "github" && !this.cookies[COOKIE_NAME_CREATOR_TOKEN]) {
 			throw new Error("GitHub token cookie is missing");
@@ -108,6 +109,7 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 		if (target === "github") {
 			const resultLink = await this.uploadToGitHub(
 				answers,
+				secrets,
 				files,
 				outputDir,
 			);
@@ -142,6 +144,7 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 
 	private async uploadToGitHub(
 		answers: Answers,
+		secrets: Record<string, string>,
 		files: File[],
 		outputDir: string,
 	) {
@@ -303,6 +306,38 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 			},
 		);
 		this.log(`${options.branch} updated to ${refUpdate.data.object.sha}`);
+
+		if (secrets && Object.keys(secrets).length > 0) {
+			this.log(`Storing ${Object.keys(secrets).length} secret(s)...`);
+
+			const { data: keys } = await requestWithAuth(
+				"GET /repos/{owner}/{repo}/actions/secrets/public-key",
+				{
+					...options,
+				},
+			);
+
+			for (const [secretName, value] of Object.entries(secrets)) {
+				const messageBytes = Buffer.from(value);
+				const keyBytes = Buffer.from(keys.key, "base64");
+				const encryptedBytes = sodium.seal(messageBytes, keyBytes);
+				const encrypted =
+					Buffer.from(encryptedBytes).toString("base64");
+
+				await requestWithAuth(
+					"PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}",
+					{
+						...options,
+						secret_name: secretName,
+						encrypted_value: encrypted,
+						key_id: keys.key_id,
+					},
+				);
+
+				this.log(`Added ${secretName}`);
+			}
+		}
+
 		return createdRepo.data.html_url;
 	}
 

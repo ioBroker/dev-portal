@@ -3,6 +3,7 @@ import { Answers } from "@iobroker/create-adapter";
 // client -> server
 export interface GenerateAdapterMessage {
 	answers: Answers;
+	secrets: Record<string, string>;
 }
 
 export type ReleaseType = "major" | "minor" | "patch";

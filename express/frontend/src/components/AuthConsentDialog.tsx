@@ -28,7 +28,7 @@ export default function AuthConsentDialog(props: AuthConsentDialogProps) {
 					We will do the following:
 					<ul>
 						{actions.map((action) => (
-							<li>{action}</li>
+							<li key={action}>{action}</li>
 						))}
 					</ul>
 					No interaction with your repositories will ever be made
