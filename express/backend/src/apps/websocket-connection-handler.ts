@@ -15,7 +15,7 @@ console.log(`Clearing ${tempDir}`);
 rimraf(tempDir, (e) => e && console.error(e));
 
 export abstract class WebSocketConnectionHandler<
-	T extends ClientServerMessage
+	T extends ClientServerMessage,
 > {
 	protected readonly cookies: Readonly<Record<string, string>>;
 	protected readonly id = v4();
@@ -46,10 +46,17 @@ export abstract class WebSocketConnectionHandler<
 		client.on("message", (data) => {
 			this.logLocal("Received message", data);
 			try {
-				if (typeof data !== "string") {
-					throw new Error(`Wrong data type: ${data}`);
+				let message: ClientServerMessage;
+
+				if (typeof data === "string") {
+					message = JSON.parse(data) as ClientServerMessage;
+				} else if (typeof data === "object") {
+					message = data as any as ClientServerMessage;
+				} else {
+					throw new Error(
+						`Wrong data type: ${typeof data} "${data}"`,
+					);
 				}
-				const message = JSON.parse(data) as ClientServerMessage;
 				this.handleMessage(message as T)
 					.catch((e) => {
 						this.log(`${e}`, true);
