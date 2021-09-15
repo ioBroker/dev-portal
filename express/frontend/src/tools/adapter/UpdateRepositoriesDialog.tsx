@@ -87,7 +87,7 @@ function AdapterCheckStep(props: {
 				setPullRequestUrl(pr);
 				const results = await awaitCheckAdapter;
 				setErrors(results.errors.map((c) => new Message("error", c)));
-			} catch (error) {
+			} catch (error: any) {
 				setErrors([new Message("error", error)]);
 			}
 		};

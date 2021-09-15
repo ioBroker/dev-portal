@@ -16,7 +16,7 @@ router.get<any>("/api/weblate/*", async function (req, res) {
 			},
 		);
 		res.send(result.data);
-	} catch (error) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).send(error.message || error);
 	}

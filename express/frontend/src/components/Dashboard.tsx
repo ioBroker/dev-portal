@@ -296,7 +296,7 @@ function AddWatchDialog(props: AddWatchDialogProps) {
 				throw new Error("This is not an ioBroker adapter");
 			}
 			onClose(repoName);
-		} catch (error) {
+		} catch (error: any) {
 			setError(error.message || error);
 		} finally {
 			setValidating(false);
@@ -492,7 +492,7 @@ export default function Dashboard(props: DashboardProps) {
 		storedCollapsed = JSON.parse(
 			localStorage.getItem(COLLAPSED_CATEGORIES_KEY) || "[]",
 		);
-	} catch (error) {
+	} catch {
 		storedCollapsed = [];
 	}
 	const [collapsed, setCollapsed] = useState<boolean[]>(storedCollapsed);
@@ -564,8 +564,7 @@ export default function Dashboard(props: DashboardProps) {
 				adapters.push({
 					title: "No adapters found",
 					img: "images/adapter-creator.png",
-					text:
-						"You can create your first ioBroker adapter by answering questions in the Adapter Creator.",
+					text: "You can create your first ioBroker adapter by answering questions in the Adapter Creator.",
 					buttons: [
 						<CardButton
 							text="Open Adapter Creator"

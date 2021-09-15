@@ -139,7 +139,7 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 				...results.checks.map((c) => new Message("check", c)),
 			);
 			setMessages(messages);
-		} catch (error) {
+		} catch (error: any) {
 			setMessages([new Message("error", error)]);
 		}
 		setBusy(false);

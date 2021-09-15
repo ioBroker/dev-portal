@@ -67,7 +67,7 @@ router.get("/api/adapter/:name/stats", async function (req, res) {
 		}
 
 		res.send(result);
-	} catch (error) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).send(error.message || error);
 	}

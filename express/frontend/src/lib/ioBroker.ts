@@ -158,7 +158,7 @@ export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 						`${encodeURIComponent(adapterName)}.js`,
 				);
 				return true;
-			} catch (error) {
+			} catch {
 				return false;
 			}
 		};

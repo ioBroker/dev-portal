@@ -11,7 +11,7 @@ router.get<any>("/api/npm/*", async function (req, res) {
 	try {
 		const result = await request.get(`/${req.params["0"]}`);
 		res.send(result.data);
-	} catch (error) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).send(error.message || error);
 	}
