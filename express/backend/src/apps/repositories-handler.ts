@@ -154,7 +154,7 @@ export abstract class RepositoriesConnectionHandler<
 		} catch {
 			// ignore error and simply search for the fork in all repos
 		}
-		let page = 0;
+		let page = 1;
 		let repos;
 		do {
 			repos = await requestWithAuth("GET /users/{username}/repos", {

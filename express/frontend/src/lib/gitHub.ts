@@ -52,7 +52,7 @@ export class GitHubComm {
 		async (): Promise<MinimalRepository[]> => {
 			const user = await this.getUser();
 			const result = [];
-			let page = 0;
+			let page = 1;
 			let repos;
 			do {
 				repos = await this.request("GET /users/{username}/repos", {
