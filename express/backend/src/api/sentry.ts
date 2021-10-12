@@ -31,7 +31,7 @@ router.get("/api/sentry/projects/", async function (req, res) {
 		projects = [];
 		let url: string | undefined = "";
 		while (url !== undefined) {
-			const { data, headers } = await request.get(url);
+			const { data, headers } = await request.get<any>(url);
 			projects.push(
 				...data
 					.map((p: { id: string; slug: string }) => {

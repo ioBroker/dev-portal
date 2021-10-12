@@ -186,7 +186,7 @@ function Wizard(props: WizardProps) {
 			return;
 		}
 		const getVersion = async () => {
-			const { data } = await axios.get(
+			const { data } = await axios.get<any>(
 				getApiUrl("create-adapter/version"),
 			);
 			setVersion(`${data.name} ${data.version}`);

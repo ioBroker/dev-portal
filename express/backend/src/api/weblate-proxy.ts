@@ -6,7 +6,7 @@ const router = Router();
 
 router.get<any>("/api/weblate/*", async function (req, res) {
 	try {
-		const result = await axios.get(
+		const result = await axios.get<any>(
 			`https://weblate.iobroker.net/api/${req.params["0"]}`,
 			{
 				headers: {

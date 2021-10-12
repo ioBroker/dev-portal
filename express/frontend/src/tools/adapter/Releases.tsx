@@ -151,19 +151,14 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 		const loadReleases = async () => {
 			const gitHub = GitHubComm.forToken(user.token);
 			const repo = gitHub.getRepo(infos.repo);
-			const [
-				npm,
-				fullRepo,
-				tags,
-				latest,
-				defaultHead,
-			] = await Promise.all([
-				tryGetPackageMetaData(),
-				repo.getRepo(),
-				repo.getTags(),
-				getLatest(),
-				repo.getRef(`heads/${infos.repo.default_branch}`),
-			]);
+			const [npm, fullRepo, tags, latest, defaultHead] =
+				await Promise.all([
+					tryGetPackageMetaData(),
+					repo.getRepo(),
+					repo.getTags(),
+					getLatest(),
+					repo.getRef(`heads/${infos.repo.default_branch}`),
+				]);
 			setCanPush(fullRepo.permissions?.push);
 			const releases: ReleaseInfo[] = [];
 			if (npm) {
@@ -233,7 +228,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 
 	useEffect(() => {
 		const checkPackageInfo = async () => {
-			const { data: pkg } = await axios.get(
+			const { data: pkg } = await axios.get<any>(
 				`https://raw.githubusercontent.com/${infos.repo.full_name}/${infos.repo.default_branch}/package.json`,
 			);
 			setHasReleaseScript(!!pkg.scripts?.release);

@@ -188,7 +188,7 @@ export default function UpdateRepositoriesDialog(
 					repo,
 				};
 				if (action === "to-latest") {
-					const { data: ioPackage } = await axios.get(
+					const { data: ioPackage } = await axios.get<any>(
 						`https://raw.githubusercontent.com/${owner}/${repo}/${infos.repo.default_branch}/io-package.json`,
 					);
 					msg.type = ioPackage.common.type;
