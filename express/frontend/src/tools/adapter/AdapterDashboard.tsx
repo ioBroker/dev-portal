@@ -9,7 +9,7 @@ import AccordionDetails from "@material-ui/core/AccordionDetails";
 import { useParams, useRouteMatch } from "react-router-dom";
 import { useEffect } from "react";
 import { CardButton } from "../../components/CardButton";
-import { AdapterInfos, getLatest } from "../../lib/ioBroker";
+import { AdapterInfos, getAllRatings, getLatest } from "../../lib/ioBroker";
 
 const CATEGORY_GENERAL = "General";
 const CATEGORY_FEATURES = "Features";
@@ -30,6 +30,7 @@ export default function AdapterDashboard(props: { infos: AdapterInfos }) {
 		setCategories(EMPTY_CARDS);
 		const loadCards = async () => {
 			const latest = await getLatest();
+			const ratings = await getAllRatings();
 			const generalCards: DashboardCardProps[] = [];
 			generalCards.push({
 				title: "Releases",
@@ -49,6 +50,15 @@ export default function AdapterDashboard(props: { infos: AdapterInfos }) {
 					buttons: [
 						<CardButton text="Show" to={`${url}/statistics`} />,
 					],
+				});
+			}
+			if (ratings[name]) {
+				generalCards.push({
+					title: "Ratings",
+					text: "Have a look at how users are rating your adapter.",
+					rating: ratings[name].rating,
+					to: `${url}/ratings`,
+					buttons: [<CardButton text="Show" to={`${url}/ratings`} />],
 				});
 			}
 			//const featureCards: DashboardCardProps[] = [];

@@ -24,6 +24,7 @@ import {
 	getWatchedAdapterInfos,
 } from "../../lib/ioBroker";
 import AdapterDashboard from "./AdapterDashboard";
+import AdapterRatings from "./AdapterRatings";
 import AdapterStatistics from "./AdapterStatistics";
 import Releases from "./Releases";
 
@@ -132,6 +133,9 @@ export default function CreateAdapter(props: { user: User }) {
 					</Route>
 					<Route path={`${path}/statistics`}>
 						<AdapterStatistics />
+					</Route>
+					<Route path={`${path}/ratings`}>
+						<AdapterRatings />
 					</Route>
 				</Switch>
 			) : (
