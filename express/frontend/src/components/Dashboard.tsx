@@ -31,6 +31,7 @@ import { GitHubComm, Repository, User } from "../lib/gitHub";
 import {
 	AdapterInfos,
 	getAdapterInfos,
+	getAllRatings,
 	getLatest,
 	getMyAdapterInfos,
 	getSentryProjectInfos,
@@ -407,10 +408,11 @@ async function getAdapterCard(
 	if (!info) {
 		return;
 	}
-	const [discoveryLink, weblateLink, sentryProjects] = await Promise.all([
+	const [discoveryLink, weblateLink, sentryProjects, ratings] = await Promise.all([
 		getDiscoveryLink(info.name),
 		getWeblateLink(info.name),
 		getSentryProjects(info.name),
+		getAllRatings(),
 	]);
 	const openAdapterCheck = () => {
 		history.push("/adapter-check", {
@@ -426,6 +428,7 @@ async function getAdapterCard(
 			"npm version": `https://img.shields.io/npm/v/iobroker.${info.name}.svg`,
 			"Stable version": `https://iobroker.live/badges/${info.name}-stable.svg`,
 		},
+		rating: ratings[info.name]?.rating,
 		text: info?.desc?.en || repo.description || "No description available",
 		squareImg: true,
 		to: `/adapter/${info.name}`,

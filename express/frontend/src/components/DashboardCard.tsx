@@ -8,10 +8,12 @@ import Hidden from "@material-ui/core/Hidden";
 import IconButton from "@material-ui/core/IconButton";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
+import { Rating } from "@material-ui/lab";
 import clsx from "clsx";
 import React from "react";
 import { useHistory } from "react-router-dom";
 import { AddCardIcon, CloseIcon } from "./Icons";
+import { Rating as IoBrokerRating } from "../../../backend/src/global/iobroker";
 
 const useStyles = makeStyles((theme) => ({
 	card: {
@@ -63,6 +65,7 @@ export interface DashboardCardProps {
 	title: string;
 	img?: string;
 	badges?: Record<string, string>;
+	rating?: IoBrokerRating;
 	text: string;
 	buttons?: JSX.Element[];
 	squareImg?: boolean;
@@ -77,6 +80,7 @@ export function DashboardCard(props: DashboardCardProps) {
 		title,
 		img,
 		badges,
+		rating,
 		text,
 		buttons,
 		squareImg,
@@ -133,6 +137,17 @@ export function DashboardCard(props: DashboardCardProps) {
 								&nbsp;
 							</>
 						))}
+					</Typography>
+				)}
+				{rating && (
+					<Typography>
+						<Rating
+							size="small"
+							value={rating.r}
+							precision={0.1}
+							readOnly
+						/>{" "}
+						({rating.c})
 					</Typography>
 				)}
 				{text.split("\n").map((t) => (

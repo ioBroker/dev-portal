@@ -1,5 +1,7 @@
 import axios from "axios";
 import {
+	AdapterRatings,
+	AllRatings,
 	LatestAdapter,
 	LatestAdapters,
 	StableAdapters,
@@ -37,6 +39,20 @@ export const getStable = AsyncCache.of(async () => {
 	);
 	return result.data;
 });
+
+export const getAllRatings = AsyncCache.of(async () => {
+	const result = await axios.get<AllRatings>(
+		"https://rating.iobroker.net/rating?uuid=iobroker.dev",
+	);
+	return result.data;
+});
+
+export async function getAdapterRatings(name: string) {
+	const result = await axios.get<AdapterRatings>(
+		`https://rating.iobroker.net/adapter/${uc(name)}?uuid=iobroker.dev`,
+	);
+	return result.data;
+}
 
 export async function getMyAdapterRepos(
 	ghToken: string,
