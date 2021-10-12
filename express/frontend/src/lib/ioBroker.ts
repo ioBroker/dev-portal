@@ -127,7 +127,7 @@ export async function getAdapterInfos(
 	const defaultBranch = repo.default_branch || "master";
 	if (!info) {
 		try {
-			const ioPackage = await axios.get(
+			const ioPackage = await axios.get<any>(
 				`https://raw.githubusercontent.com/` +
 					`${uc(repo.full_name)}/` +
 					`${uc(defaultBranch)}/io-package.json`,
@@ -142,7 +142,7 @@ export async function getAdapterInfos(
 }
 
 export const getWeblateAdapterComponents = AsyncCache.of(async () => {
-	const result = await axios.get(
+	const result = await axios.get<any>(
 		getApiUrl("weblate/projects/adapters/components/"),
 	);
 	return result.data;
@@ -196,9 +196,6 @@ export interface CheckResults {
 export async function checkAdapter(repoName: string) {
 	const { data } = await axios.get<CheckResults>(
 		`${CHECK_ADAPTER_URL}?url=${uc(`https://github.com/${repoName}`)}`,
-		{
-			validateStatus: () => true, // workaround for https://github.com/ioBroker/ioBroker.repochecker/issues/45
-		},
 	);
 	return data;
 }

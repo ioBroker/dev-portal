@@ -42,7 +42,7 @@ router.get("/auth", cookiesMiddleware(), async function (req, res) {
 	}
 	console.log("login with", login);
 
-	const result = await axios.post(
+	const result = await axios.post<any>(
 		"https://github.com/login/oauth/access_token",
 		{
 			client_id: login.scope
