@@ -34,3 +34,7 @@ export function getWebSocketUrl(path: string) {
 		return `${protocol}//${loc.host}/ws/${path}`;
 	}
 }
+
+export function equalIgnoreCase(str1: string, str2: string) {
+	return str1.localeCompare(str2, undefined, { sensitivity: "accent" }) === 0;
+}
