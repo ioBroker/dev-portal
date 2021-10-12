@@ -1,3 +1,5 @@
+import { Languages } from "@iobroker/create-adapter";
+
 export type AdapterName = string;
 
 export type DateString = string;
@@ -68,4 +70,34 @@ export interface Statistics {
 	counts: Record<string, number>;
 	nodes: Record<string, number>;
 	date: string;
+}
+
+export interface Rating {
+	r: number;
+	c: number;
+}
+
+/**
+ * Result of https://rating.iobroker.net/rating
+ */
+export type AllRatings = Record<
+	AdapterName,
+	Record<"string" | Version, Rating>
+>;
+
+export interface RatingComment {
+	ts: DateString;
+	comment: string;
+	version: Version;
+	uuid: false | string;
+	rating: 0 | 1 | 2 | 3 | 4 | 5;
+	lang: Languages;
+}
+
+/**
+ * Result of https://rating.iobroker.net/adapter/<name>
+ */
+export interface AdapterRatings {
+	rating: {}; // currently empty
+	comments: RatingComment[];
 }
