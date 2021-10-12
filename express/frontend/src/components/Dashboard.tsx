@@ -40,7 +40,7 @@ import {
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
 } from "../lib/ioBroker";
-import { getApiUrl } from "../lib/utils";
+import { equalIgnoreCase, getApiUrl } from "../lib/utils";
 import { AdapterCheckLocationState } from "../tools/AdapterCheck";
 import { CardButton } from "./CardButton";
 import { CardGrid, CardGridProps } from "./CardGrid";
@@ -408,12 +408,13 @@ async function getAdapterCard(
 	if (!info) {
 		return;
 	}
-	const [discoveryLink, weblateLink, sentryProjects, ratings] = await Promise.all([
-		getDiscoveryLink(info.name),
-		getWeblateLink(info.name),
-		getSentryProjects(info.name),
-		getAllRatings(),
-	]);
+	const [discoveryLink, weblateLink, sentryProjects, ratings] =
+		await Promise.all([
+			getDiscoveryLink(info.name),
+			getWeblateLink(info.name),
+			getSentryProjects(info.name),
+			getAllRatings(),
+		]);
 	const openAdapterCheck = () => {
 		history.push("/adapter-check", {
 			repoFullName: repo.full_name,
@@ -634,7 +635,7 @@ export default function Dashboard(props: DashboardProps) {
 		const url = getApiUrl("user");
 		const { data: dbUser } = await axios.get<DbUser>(url);
 		dbUser.watches = dbUser.watches.filter(
-			(w) => w !== info.repo.full_name,
+			(w) => !equalIgnoreCase(w, info.repo.full_name),
 		);
 		await axios.put(url, dbUser);
 		onAdapterListChanged();
