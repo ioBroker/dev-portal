@@ -7,6 +7,7 @@ import axios from "axios";
 import { AdapterStats } from "../../../../backend/src/global/adapter-stats";
 import sort from "semver/functions/sort";
 import { getApiUrl } from "../../lib/utils";
+import { coerce } from "semver";
 
 const uc = encodeURIComponent;
 
@@ -86,9 +87,10 @@ export default function AdapterStatistics(props: AdapterStatisticsProps) {
 
 			const versions = new Set<string>();
 			for (const date of Object.keys(stats.counts)) {
-				Object.keys(stats.counts[date].versions).forEach((v) =>
-					versions.add(v),
-				);
+				Object.keys(stats.counts[date].versions)
+					.map((v) => coerce(v))
+					.filter((v) => !!v)
+					.forEach((v) => versions.add(v!.version));
 			}
 
 			const sortedVersions = Array.from(versions);
