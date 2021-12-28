@@ -606,6 +606,43 @@ export default function Dashboard(props: DashboardProps) {
 		}
 	}, [user]);
 
+	useEffect(() => {
+		const updateBlogIcon = async () => {
+			const url =
+				"https://raw.githubusercontent.com/ioBroker/ioBroker.docs/master/engine/front-end/public/blog.json";
+			const { data: blog } = await axios.get<{
+				pages: Record<
+					string,
+					{
+						date: string;
+						title: Record<string, string>;
+						logo: string;
+					}
+				>;
+			}>(url);
+			const page = Object.values(blog.pages)[0];
+			if (!page) return;
+			setCategories((old) => {
+				const res = old.Resources;
+				const index = res.cards.findIndex((c) => c.title === "Blog");
+				if (index >= 0) {
+					const card = res.cards[index];
+					const date = page.date.replace(
+						/^(\d{4})\.(\d{2})\.(\d{2})$/,
+						"$3.$2.$1",
+					);
+					res.cards[index] = {
+						...card,
+						img: `https://www.iobroker.net/${page.logo}`,
+						text: `${card.text}\n \nLatest entry: ${page.title.en} (${date})`,
+					};
+				}
+				return { ...old };
+			});
+		};
+		updateBlogIcon().catch(console.error);
+	}, []);
+
 	const handleAddWatch = async (repo?: string) => {
 		setShowAddWatch(false);
 		if (!repo) {

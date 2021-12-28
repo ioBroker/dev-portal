@@ -16,12 +16,26 @@ export const resourcesCards = [
 		],
 	},
 	{
+		title: "Blog",
+		img: "images/iobroker.png",
+		text: "Get the latest news about ioBroker.",
+		url: "https://www.iobroker.net/#en/blog",
+		buttons: [
+			<CardButton
+				text="English"
+				url="https://www.iobroker.net/#en/blog"
+			/>,
+			<CardButton
+				text="Deutsch"
+				url="https://www.iobroker.net/#de/blog"
+			/>,
+		],
+	},
+	{
 		title: "Best Practices",
 		img: "images/best-practices.jpg",
-		text:
-			"Development and coding best practices help you to create a great adapter.",
-		url:
-			"https://github.com/ioBroker/ioBroker.repositories#development-and-coding-best-practices",
+		text: "Development and coding best practices help you to create a great adapter.",
+		url: "https://github.com/ioBroker/ioBroker.repositories#development-and-coding-best-practices",
 		buttons: [
 			<CardButton
 				text="Open"
@@ -33,10 +47,8 @@ export const resourcesCards = [
 		title: "Review Checklist",
 		img: "images/code-review.svg",
 		squareImg: true,
-		text:
-			"When you complete this checklist, your adapter should meet all requirements to be added to the repository.",
-		url:
-			"https://github.com/ioBroker/ioBroker.repositories/blob/master/REVIEW_CHECKLIST.md#adapter-review-checklist",
+		text: "When you complete this checklist, your adapter should meet all requirements to be added to the repository.",
+		url: "https://github.com/ioBroker/ioBroker.repositories/blob/master/REVIEW_CHECKLIST.md#adapter-review-checklist",
 		buttons: [
 			<CardButton
 				text="Open"
@@ -62,8 +74,7 @@ export const socialCards = [
 	{
 		title: "Developer Forum",
 		img: "images/iobroker.png",
-		text:
-			"Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
+		text: "Get in touch with other developers and discuss features.\nIn other sections of the forum you can request user feedback about your adapter releases.",
 		url: "https://forum.iobroker.net/category/8/entwicklung",
 		buttons: [
 			<CardButton
@@ -76,8 +87,7 @@ export const socialCards = [
 		title: "Telegram",
 		img: "images/telegram.svg",
 		squareImg: true,
-		text:
-			"In the telegram channel for ioBroker development (German) you can exchange ideas and ask questions.",
+		text: "In the telegram channel for ioBroker development (German) you can exchange ideas and ask questions.",
 		url: "https://t.me/ioBroker_development",
 		buttons: [
 			<CardButton text="Join" url="https://t.me/ioBroker_development" />,
@@ -87,8 +97,7 @@ export const socialCards = [
 		title: "Discord",
 		img: "images/discord.png",
 		squareImg: true,
-		text:
-			"Get in touch with other developers and discuss features on our Discord server.",
+		text: "Get in touch with other developers and discuss features on our Discord server.",
 		url: "https://discord.gg/Ne3y6fUac3",
 		buttons: [
 			<CardButton text="Join" url="https://discord.gg/Ne3y6fUac3" />,
@@ -101,8 +110,7 @@ export function getToolsCards(isLoggedIn: boolean) {
 		{
 			title: "Adapter Creator",
 			img: "images/adapter-creator.png",
-			text:
-				"Create a new ioBroker adapter by answering questions. The resulting adapter can be downloaded as a zip file or directly exported to a new GitHub repository.",
+			text: "Create a new ioBroker adapter by answering questions. The resulting adapter can be downloaded as a zip file or directly exported to a new GitHub repository.",
 			to: "/create-adapter",
 			buttons: [<CardButton text="Open" to="/create-adapter" />],
 		},
@@ -124,8 +132,7 @@ export function getToolsCards(isLoggedIn: boolean) {
 		{
 			title: "Weblate",
 			img: "images/weblate.png",
-			text:
-				"Manage the translations of your adapters in all available languages.",
+			text: "Manage the translations of your adapters in all available languages.",
 			url: "https://weblate.iobroker.net/projects/adapters/",
 			buttons: [
 				<CardButton
