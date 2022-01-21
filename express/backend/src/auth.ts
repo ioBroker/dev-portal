@@ -24,7 +24,7 @@ router.get("/login", function (req, res) {
 		scope === "repo"
 			? env.CREATOR_GITHUB_OAUTH_CLIENT_ID
 			: env.PORTAL_GITHUB_OAUTH_CLIENT_ID;
-	const requestScope = scope === "repo" ? "repo" : "user:email";
+	const requestScope = scope === "repo" ? "repo%20workflow" : "user:email";
 	const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=${requestScope}&state=${state}`;
 	res.redirect(url);
 });
