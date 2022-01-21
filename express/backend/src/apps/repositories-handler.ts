@@ -1,6 +1,5 @@
 import { checkAdapterName } from "@iobroker/create-adapter";
 import { request } from "@octokit/request";
-import { spawn } from "child_process";
 import { mkdirp, remove } from "fs-extra";
 import path from "path";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
@@ -123,20 +122,7 @@ export abstract class RepositoriesConnectionHandler<
 	}
 
 	protected exec(cmd: string) {
-		return new Promise<void>((resolve, reject) => {
-			const child = spawn(cmd, [], {
-				cwd: path.join(this.rootDir, REPOSITORY),
-				stdio: "inherit",
-				shell: true,
-			});
-			child
-				.on("error", (err) => reject(err))
-				.on("exit", (code) =>
-					code === 0
-						? resolve()
-						: reject(new Error(`Process exited with ${code}`)),
-				);
-		});
+		return this.spawnAsync(cmd, path.join(this.rootDir, REPOSITORY));
 	}
 
 	private async findFork(username: string, requestWithAuth: typeof request) {

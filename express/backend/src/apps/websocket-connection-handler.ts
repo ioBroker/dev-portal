@@ -1,3 +1,4 @@
+import { spawn } from "child_process";
 import { IncomingMessage } from "http";
 import path from "path";
 import { env } from "process";
@@ -59,6 +60,7 @@ export abstract class WebSocketConnectionHandler<
 				}
 				this.handleMessage(message as T)
 					.catch((e) => {
+						console.error(e);
 						this.log(`${e}`, true);
 						this.sendFailureMessage(e);
 					})
@@ -88,5 +90,22 @@ export abstract class WebSocketConnectionHandler<
 
 	protected logLocal(message?: any, ...optionalParams: any[]) {
 		console.log(this.constructor.name, this.id, message, ...optionalParams);
+	}
+
+	protected spawnAsync(cmd: string, cwd: string) {
+		return new Promise<void>((resolve, reject) => {
+			const child = spawn(cmd, [], {
+				cwd,
+				stdio: "inherit",
+				shell: true,
+			});
+			child
+				.on("error", (err) => reject(err))
+				.on("exit", (code) =>
+					code === 0
+						? resolve()
+						: reject(new Error(`Process exited with ${code}`)),
+				);
+		});
 	}
 }

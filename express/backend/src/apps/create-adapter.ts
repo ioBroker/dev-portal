@@ -7,10 +7,9 @@ import {
 import createAdapter from "@iobroker/create-adapter/package.json";
 import { request } from "@octokit/request";
 import archiver from "archiver";
-import { execSync } from "child_process";
 import { createHash } from "crypto";
 import { Router } from "express";
-import { existsSync, readFile } from "fs-extra";
+import { existsSync } from "fs-extra";
 import mkdirp from "mkdirp";
 import path from "path";
 import rimraf from "rimraf";
@@ -25,6 +24,7 @@ import {
 } from "./websocket-connection-handler";
 
 const rimrafAsync = promisify(rimraf);
+const uc = encodeURIComponent;
 
 interface TreeNode {
 	name: string;
@@ -148,15 +148,16 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 		files: File[],
 		outputDir: string,
 	) {
+		const token = this.cookies[COOKIE_NAME_CREATOR_TOKEN];
 		const requestWithAuth = request.defaults({
 			headers: {
-				authorization: `token ${this.cookies[COOKIE_NAME_CREATOR_TOKEN]}`,
+				authorization: `token ${token}`,
 			},
 		});
 
 		this.log(`Connecting to GitHub...`);
-		const user = await requestWithAuth("GET /user");
-		this.log(`Connected to GitHub as ${user.data.login}`);
+		const { data: user } = await requestWithAuth("GET /user");
+		this.log(`Connected to GitHub as ${user.login}`);
 
 		const createdRepo = await requestWithAuth("POST /user/repos", {
 			name: `ioBroker.${answers.adapterName}`,
@@ -170,7 +171,7 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 		this.log(`Created repository ${createdRepo.data.full_name}`);
 
 		const options = {
-			owner: createdRepo.data.owner?.login || user.data.login,
+			owner: createdRepo.data.owner?.login || user.login,
 			repo: createdRepo.data.name,
 			branch: createdRepo.data.default_branch,
 		};
@@ -193,119 +194,32 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 			}
 		}
 
-		const treeRoot = this.buildTree(files);
+		const exec = (cmd: string) => {
+			return this.spawnAsync(cmd, outputDir);
+		};
 
 		// delay a bit because GH sometimes takes forever to create the Git repo
 		// this is a good moment to generate the package-lock.json file
 		this.log(`Generating package-lock.json`);
 		try {
-			execSync("npm install --package-lock-only", {
-				cwd: outputDir,
-				stdio: "inherit",
-			});
-			treeRoot.children.push({
-				name: "package-lock.json",
-				children: [],
-				file: {
-					name: "package-lock.json",
-					content: "",
-					noReformat: true,
-				},
-			});
+			await exec("npm install --package-lock-only");
 		} catch (error) {
 			this.log(`Couldn't generate package-lock: ${error}`, true);
 		}
 
-		/**
-		 * Recursively uploads all files and creates trees for each directory (depth-first).
-		 * @param parent The node for which to upload files and create a tree.
-		 * @returns the SHA of the uploaded tree.
-		 */
-		const uploadTree = async (
-			parent: TreeNode,
-			base_tree?: string,
-		): Promise<string> => {
-			const treeItems: GitHubTreeItem[] = [];
-			for (const node of parent.children) {
-				if (!node.file) {
-					// directory
-					const sha = await uploadTree(node);
-					treeItems.push({
-						path: node.name,
-						mode: "040000",
-						type: "tree",
-						sha,
-					});
-				} else {
-					// file
-					const filePath = path.join(outputDir, node.file.name);
-					let content: string;
-					let encoding = "utf-8";
-					if (typeof node.file.content === "string") {
-						content = await readFile(filePath, encoding);
-					} else {
-						encoding = "base64";
-						content = node.file.content.toString("base64");
-					}
-					const uploaded = await requestWithAuth(
-						"POST /repos/{owner}/{repo}/git/blobs",
-						{
-							...options,
-							content,
-							encoding,
-						},
-					);
-
-					this.log(
-						`Uploaded "${node.file.name}" as ${uploaded.data.sha}`,
-					);
-					treeItems.push({
-						path: node.name,
-						mode: "100644",
-						type: "blob",
-						sha: uploaded.data.sha,
-					});
-				}
-			}
-
-			const tree = await requestWithAuth(
-				"POST /repos/{owner}/{repo}/git/trees",
-				{
-					...options,
-					base_tree,
-					tree: treeItems,
-				},
-			);
-			this.log(`Created directory "${parent.name}" as ${tree.data.sha}`);
-			return tree.data.sha;
-		};
-
-		const sha = await uploadTree(treeRoot, lastCommit.data.commit.sha);
-
-		const commit = await requestWithAuth(
-			"POST /repos/{owner}/{repo}/git/commits",
-			{
-				...options,
-				message: "Initial commit by adapter creator",
-				author: {
-					name: "ioBroker Adapter Creator",
-					email: "noreply@iobroker.net",
-				},
-				parents: [lastCommit.data.commit.sha],
-				tree: sha,
-			},
+		this.log(`Connecting to repository on GitHub`);
+		const baseUrl = `https://${uc(user.login!)}:${uc(token)}@github.com/`;
+		await exec(`git init .`);
+		await exec(
+			`git remote add origin "${baseUrl}${options.owner}/${options.repo}.git"`,
 		);
-		this.log(`Committed ${commit.data.sha}`);
+		await exec(`git config user.email "noreply@iobroker.net"`);
+		await exec(`git config user.name "ioBroker Adapter Creator"`);
+		await exec(`git add .`);
+		await exec(`git commit -m "Initial commit by adapter creator"`);
 
-		const refUpdate = await requestWithAuth(
-			"PATCH /repos/{owner}/{repo}/git/refs/{ref}",
-			{
-				...options,
-				ref: `heads/${options.branch}`,
-				sha: commit.data.sha,
-			},
-		);
-		this.log(`${options.branch} updated to ${refUpdate.data.object.sha}`);
+		this.log(`Pushing initial commit to GitHub`);
+		await exec(`git push --force origin master:${options.branch}`);
 
 		if (secrets && Object.keys(secrets).length > 0) {
 			this.log(`Storing ${Object.keys(secrets).length} secret(s)...`);
@@ -339,32 +253,5 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 		}
 
 		return createdRepo.data.html_url;
-	}
-
-	private buildTree(files: File[]) {
-		const root: TreeNode = { name: "", children: [] };
-		for (const file of files) {
-			const pathParts = file.name.split(/[\/\\]/).filter((p) => !!p);
-			let parent = root;
-			for (let i = 0; i < pathParts.length - 1; i++) {
-				let newParent = parent.children.find(
-					(c) => c.name === pathParts[i],
-				);
-				if (!newParent) {
-					newParent = { name: pathParts[i], children: [] };
-					parent.children.push(newParent);
-				}
-				parent = newParent;
-			}
-
-			parent.children.push({
-				name: pathParts[pathParts.length - 1],
-				children: [],
-				file,
-			});
-		}
-
-		this.logLocal("tree", root);
-		return root;
 	}
 }
