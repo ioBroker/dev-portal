@@ -87,10 +87,17 @@ export const socialCards = [
 		title: "Telegram",
 		img: "images/telegram.svg",
 		squareImg: true,
-		text: "In the telegram channel for ioBroker development (German) you can exchange ideas and ask questions.",
+		text: "In the telegram channels for ioBroker development (in English and German) you can exchange ideas and ask questions.",
 		url: "https://t.me/ioBroker_development",
 		buttons: [
-			<CardButton text="Join" url="https://t.me/ioBroker_development" />,
+			<CardButton
+				text="Join (🇬🇧)"
+				url="https://t.me/+_vpz82YsJgxkMTUy"
+			/>,
+			<CardButton
+				text="Beitreten (🇩🇪)"
+				url="https://t.me/ioBroker_development"
+			/>,
 		],
 	},
 	{
