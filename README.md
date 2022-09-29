@@ -114,7 +114,7 @@ The following environment variables can be configured:
 
 ### GitHub OAuth Apps
 
-Two [OAuth App](https://github.com/settings/applications/new) are required to run this server:
+Two [OAuth App](https://github.com/settings/applications/new) are required to run this server - you need to create them in your GitHub account:
 
 -   The general portal login application will always only ask for public data (and the e-mail address) and is used to authenticate the user, find his GitHub repositories and other publicly available information. The e-mail address might be used at a later time to send information about ioBroker development to the user (after consent!). The [scope](https://docs.github.com/en/developers/apps/scopes-for-oauth-apps) the OAuth request is `user:email`.
 -   Adapter Creator application will ask the user for much more permissons than the portal OAuth app. It is used to create repositories using the Adapter Creator and allow to modify code from this application. No interaction with the repository will ever be made without the user consenting at the given moment (there are no overnight jobs or anything like that). The [scope](https://docs.github.com/en/developers/apps/scopes-for-oauth-apps) the OAuth request is `repo`.
@@ -128,6 +128,8 @@ If you wish to use the Google Translate V3 API, you can provide valid credential
 For DEV, you can put it into the directory `./express/backend`. The file will be copied by docker-compose into the `express` container and will be available to the web server.
 
 For PROD, you can put it into the root directory of the project and then add the following volume to the `express` service in your `docker-compose.override.yml`:
+
+<!-- prettier-ignore -->
 ```yml
         volumes:
             - ${PWD}/google-translate-credentials.json:/app/google-translate-credentials.json
