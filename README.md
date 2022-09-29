@@ -35,6 +35,8 @@ Note: running the backend in watch mode will not use the frontend in hot-reload!
 These instructions are only for development.
 **DO NOT USE THIS IN A PRODUCTION ENVIRONMENT!**
 
+1. Create the two required Github OAuth apps in your account - see [below](#github-oauth-apps)
+
 1. Create a file called `docker-compose.override.yml` in this root directory and configure all environment variables and the port to expose:
 
 ```yml
@@ -114,7 +116,7 @@ The following environment variables can be configured:
 
 ### GitHub OAuth Apps
 
-Two [OAuth App](https://github.com/settings/applications/new) are required to run this server - you need to create them in your GitHub account:
+Two [OAuth Apps](https://github.com/settings/applications/new) are required to run this server:
 
 -   The general portal login application will always only ask for public data (and the e-mail address) and is used to authenticate the user, find his GitHub repositories and other publicly available information. The e-mail address might be used at a later time to send information about ioBroker development to the user (after consent!). The [scope](https://docs.github.com/en/developers/apps/scopes-for-oauth-apps) the OAuth request is `user:email`.
 -   Adapter Creator application will ask the user for much more permissons than the portal OAuth app. It is used to create repositories using the Adapter Creator and allow to modify code from this application. No interaction with the repository will ever be made without the user consenting at the given moment (there are no overnight jobs or anything like that). The [scope](https://docs.github.com/en/developers/apps/scopes-for-oauth-apps) the OAuth request is `repo`.
