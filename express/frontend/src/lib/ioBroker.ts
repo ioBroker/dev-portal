@@ -22,7 +22,7 @@ import { AsyncCache, getApiUrl } from "./utils";
 const uc = encodeURIComponent;
 
 const CHECK_ADAPTER_URL =
-	"https://3jjxddo33l.execute-api.eu-west-1.amazonaws.com/default/checkAdapter";
+	"https://e7tj1cpjna.execute-api.eu-west-1.amazonaws.com/";
 
 export type TranslatedText = Record<string, string>;
 
