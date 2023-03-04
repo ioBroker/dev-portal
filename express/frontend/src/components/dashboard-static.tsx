@@ -84,7 +84,20 @@ export const socialCards = [
 		],
 	},
 	{
-		title: "Telegram",
+		title: "Telegram (Development Starters)",
+		img: "images/telegram.svg",
+		squareImg: true,
+		text: "This Telegram channel is for everyone who is just starting to develop an ioBroker adapter. Here you can ask questions and help each other.",
+		url: "https://t.me/+gsX-e8k4mLtmZjZk",
+		buttons: [
+			<CardButton
+				text="Beitreten (🇩🇪)"
+				url="https://t.me/+gsX-e8k4mLtmZjZk"
+			/>,
+		],
+	},
+	{
+		title: "Telegram (Development)",
 		img: "images/telegram.svg",
 		squareImg: true,
 		text: "In the telegram channels for ioBroker development (in English and German) you can exchange ideas and ask questions.",
