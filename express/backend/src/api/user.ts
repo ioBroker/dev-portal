@@ -1,10 +1,12 @@
 import { request } from "@octokit/request";
 import { json, Request, Router } from "express";
+import { OptionalId } from "mongodb";
 import NodeCache from "node-cache";
 import Cookies from "universal-cookie";
 import cookiesMiddleware from "universal-cookie-express";
 import { COOKIE_NAME_PORTAL_TOKEN } from "../auth";
 import { dbConnect } from "../db/utils";
+import { User } from "../global/user";
 
 const router = Router();
 
@@ -50,7 +52,7 @@ router.get("/api/user/", cookiesMiddleware(), async function (req, res) {
 			return;
 		}
 
-		let user = await users.findOne({ login });
+		let user = await users.findOne({ login }) as OptionalId<User>;
 		if (!user) {
 			user = {
 				login,
