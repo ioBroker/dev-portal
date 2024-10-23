@@ -118,9 +118,9 @@ export const socialCards = [
 		img: "images/discord.png",
 		squareImg: true,
 		text: "Get in touch with other developers and discuss features on our Discord server.",
-		url: "https://discord.gg/UctM6Gbn",
+		url: "https://discord.gg/HBKq4yAAew",
 		buttons: [
-			<CardButton text="Join" url="https://discord.gg/UctM6Gbn" />,
+			<CardButton text="Join" url="https://discord.gg/HBKq4yAAew" />,
 		],
 	},
 ];
