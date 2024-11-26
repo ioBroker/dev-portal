@@ -5,7 +5,8 @@
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"[typescript]": {
 		"editor.codeActionsOnSave": {
-			"source.organizeImports": true
+			"source.organizeImports": "explicit"
 		}
-	}
+	},
+	"cSpell.words": ["iobroker", "Weblate"]
 }

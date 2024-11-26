@@ -1,15 +1,13 @@
-import Button from "@material-ui/core/Button";
-import Snackbar from "@material-ui/core/Snackbar";
-import Alert from "@material-ui/lab/Alert";
+import { Alert, Button, Snackbar } from "@mui/material";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Version } from "../../../backend/src/global/version";
 import { getApiUrl } from "../lib/utils";
 import { GIT_BRANCH, GIT_COMMIT } from "../version";
 
 interface ReloadPageSnackbarProps {}
 
-export default function ReloadPageSnackbar(props: ReloadPageSnackbarProps) {
+export function ReloadPageSnackbar(props: ReloadPageSnackbarProps) {
 	const [open, setOpen] = useState(false);
 	const [timerRunning, setTimerRunning] = useState(false);
 
@@ -17,13 +15,17 @@ export default function ReloadPageSnackbar(props: ReloadPageSnackbarProps) {
 		let foundVersion = `${GIT_COMMIT}@${GIT_BRANCH}`;
 		setInterval(async () => {
 			const url = getApiUrl("version");
-			const {
-				data: { branch, commit },
-			} = await axios.get<Version>(url);
-			const newVersion = `${commit}@${branch}`;
-			if (newVersion !== foundVersion) {
-				setOpen(true);
-				foundVersion = newVersion;
+			try {
+				const {
+					data: { branch, commit },
+				} = await axios.get<Version>(url);
+				const newVersion = `${commit}@${branch}`;
+				if (newVersion !== foundVersion) {
+					setOpen(true);
+					foundVersion = newVersion;
+				}
+			} catch (e) {
+				console.error("Couldn't get latest website version", e);
 			}
 		}, 60 * 1000);
 	}, [timerRunning]);

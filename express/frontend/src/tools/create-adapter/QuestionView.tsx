@@ -1,24 +1,26 @@
 import {
 	CheckResult,
-	UploadedIcon,
 	Question,
 	QuestionMeta,
+	UploadedIcon,
 } from "@iobroker/create-adapter/build/core";
-import Checkbox from "@material-ui/core/Checkbox";
-import FormControl from "@material-ui/core/FormControl";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormGroup from "@material-ui/core/FormGroup";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import FormLabel from "@material-ui/core/FormLabel";
-import InputLabel from "@material-ui/core/InputLabel";
-import MenuItem from "@material-ui/core/MenuItem";
-import Paper from "@material-ui/core/Paper";
-import Radio from "@material-ui/core/Radio";
-import RadioGroup from "@material-ui/core/RadioGroup";
-import Select from "@material-ui/core/Select";
-import Switch from "@material-ui/core/Switch";
-import TextField from "@material-ui/core/TextField";
-import Tooltip from "@material-ui/core/Tooltip";
+import {
+	Checkbox,
+	FormControl,
+	FormControlLabel,
+	FormGroup,
+	FormHelperText,
+	FormLabel,
+	InputLabel,
+	MenuItem,
+	Paper,
+	Radio,
+	RadioGroup,
+	Select,
+	Switch,
+	TextField,
+	Tooltip,
+} from "@mui/material";
 import axios from "axios";
 import {
 	ArrayPromptOptions,
@@ -26,7 +28,13 @@ import {
 	SpecificPromptOptions,
 	StringPromptOptions,
 } from "enquirer";
-import React, { useEffect } from "react";
+import React, {
+	ChangeEvent,
+	Dispatch,
+	SetStateAction,
+	useEffect,
+	useState,
+} from "react";
 import Dropzone, { FileRejection } from "react-dropzone";
 import { AdapterSettingsView } from "./AdapterSettingsView";
 import { getQuestionMessage, getQuestionName } from "./common";
@@ -52,7 +60,7 @@ export function useValueState<T = any>(
 	props: QuestionViewProps,
 	defaultValue: T,
 	modify?: (value: T) => T,
-): [T, React.Dispatch<React.SetStateAction<T>>] {
+): [T, Dispatch<SetStateAction<T>>] {
 	const { question, answers, onAnswerChanged } = props;
 	const name = getQuestionName(question);
 	let originalValue = answers[name];
@@ -71,7 +79,7 @@ export function useValueState<T = any>(
 
 	originalValue = originalValue || defaultValue;
 
-	const [value, setValue] = React.useState<T>(originalValue);
+	const [value, setValue] = useState<T>(originalValue);
 
 	//console.log("originalValue", question.name, originalValue);
 	useEffect(() => {
@@ -103,7 +111,7 @@ const checkAdapterExistence = async (name: string): Promise<CheckResult> => {
 const handleValueChange = async (
 	props: QuestionViewProps,
 	value: any,
-	setError: React.Dispatch<React.SetStateAction<string>>,
+	setError: Dispatch<SetStateAction<string>>,
 ): Promise<void> => {
 	const { question, onAnswerChanged } = props;
 	try {
@@ -158,7 +166,7 @@ export const InputRenderer = (
 	const { question } = props;
 
 	const [value, setValue] = useValueState(props, "");
-	const [error, setError] = React.useState("");
+	const [error, setError] = useState("");
 
 	return (
 		<TextField
@@ -181,10 +189,10 @@ export const BooleanSelectRenderer = (
 	const { question } = props;
 
 	const [value, setValue] = useValueState(props, "no");
-	const [error, setError] = React.useState("");
+	const [error, setError] = useState("");
 
 	const handleChange = (
-		_event: React.ChangeEvent<HTMLInputElement>,
+		_event: ChangeEvent<HTMLInputElement>,
 		checked: boolean,
 	): void => {
 		const newValue = checked ? "yes" : "no";
@@ -225,10 +233,10 @@ export const RadioSelectRenderer = (
 	const { question } = props;
 
 	const [value, setValue] = useValueState(props, "");
-	const [error, setError] = React.useState("");
+	const [error, setError] = useState("");
 
 	const handleChange = (
-		_event: React.ChangeEvent<HTMLInputElement>,
+		_event: ChangeEvent<HTMLInputElement>,
 		value: string,
 	): void => {
 		setValue(value);
@@ -278,10 +286,10 @@ export const ComboBoxSelectRenderer = (
 			? v
 			: (choiceToValue(question.choices[v]) as string),
 	);
-	const [error, setError] = React.useState("");
+	const [error, setError] = useState("");
 
 	const handleChange = (
-		e: React.ChangeEvent<{
+		e: ChangeEvent<{
 			name?: string | undefined;
 			value: unknown;
 		}>,
@@ -356,10 +364,10 @@ export const MultiSelectRenderer = (
 					: (choiceToValue(question.choices[v]) as string),
 			) || [],
 	);
-	const [error, setError] = React.useState("");
+	const [error, setError] = useState("");
 
 	const handleChange = (
-		event: React.ChangeEvent<HTMLInputElement>,
+		event: ChangeEvent<HTMLInputElement>,
 		checked: boolean,
 	): void => {
 		let newValue = [...value];
@@ -432,7 +440,7 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 		props,
 		undefined,
 	);
-	const [error, setError] = React.useState("");
+	const [error, setError] = useState("");
 	const handleDropImage = async (
 		files: File[],
 		rejected: FileRejection[],

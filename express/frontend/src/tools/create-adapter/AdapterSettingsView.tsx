@@ -3,21 +3,23 @@ import {
 	AdapterSettings,
 	SelectAdapterSettings,
 } from "@iobroker/create-adapter/build/core";
-import Checkbox from "@material-ui/core/Checkbox";
-import Grid from "@material-ui/core/Grid";
-import IconButton from "@material-ui/core/IconButton";
-import Input from "@material-ui/core/Input";
-import MenuItem from "@material-ui/core/MenuItem";
-import Select from "@material-ui/core/Select";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import AddIcon from "@material-ui/icons/Add";
-import DeleteIcon from "@material-ui/icons/Delete";
-import React from "react";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import {
+	Checkbox,
+	Grid2,
+	IconButton,
+	Input,
+	MenuItem,
+	Select,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+} from "@mui/material";
+import React, { Dispatch, useState } from "react";
 import { QuestionViewProps, useValueState } from "./QuestionView";
 
 export const AdapterSettingOption = (props: {
@@ -26,27 +28,27 @@ export const AdapterSettingOption = (props: {
 	onChange: (option?: AdapterSelectOption) => void;
 }): JSX.Element => {
 	const { option, canDelete, onChange } = props;
-	const [text, setText] = React.useState(option.text);
-	const [value, setValue] = React.useState(option.value);
+	const [text, setText] = useState(option.text);
+	const [value, setValue] = useState(option.value);
 
 	const handleChange = (): void => onChange({ text, value });
 	return (
 		<>
-			<Grid item xs={5}>
+			<Grid2 item xs={5}>
 				<Input
 					value={text}
 					onChange={(e) => setText(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
-			</Grid>
-			<Grid item xs={5}>
+			</Grid2>
+			<Grid2 item xs={5}>
 				<Input
 					value={value}
 					onChange={(e) => setValue(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
-			</Grid>
-			<Grid item xs={2}>
+			</Grid2>
+			<Grid2 item xs={2}>
 				<IconButton
 					size="small"
 					aria-label="delete"
@@ -55,7 +57,7 @@ export const AdapterSettingOption = (props: {
 				>
 					<DeleteIcon fontSize="inherit" />
 				</IconButton>
-			</Grid>
+			</Grid2>
 		</>
 	);
 };
@@ -87,14 +89,14 @@ export const AdapterSettingOptions = (props: {
 	};
 
 	return (
-		<Grid container spacing={0} style={{ width: "30vw" }}>
-			<Grid item xs={5}>
+		<Grid2 container spacing={0} style={{ width: "30vw" }}>
+			<Grid2 item xs={5}>
 				Text
-			</Grid>
-			<Grid item xs={5}>
+			</Grid2>
+			<Grid2 item xs={5}>
 				Value
-			</Grid>
-			<Grid item xs={2}>
+			</Grid2>
+			<Grid2 item xs={2}>
 				<IconButton
 					size="small"
 					aria-label="add"
@@ -102,7 +104,7 @@ export const AdapterSettingOptions = (props: {
 				>
 					<AddIcon fontSize="inherit" />
 				</IconButton>
-			</Grid>
+			</Grid2>
 			{options.map((option, i) => (
 				<AdapterSettingOption
 					key={i}
@@ -111,7 +113,7 @@ export const AdapterSettingOptions = (props: {
 					onChange={(o) => handleChange(i, o)}
 				/>
 			))}
-		</Grid>
+		</Grid2>
 	);
 };
 
@@ -120,13 +122,13 @@ export const AdapterSetting = (props: {
 	onChange: (setting?: AdapterSettings) => void;
 }): JSX.Element => {
 	const { setting, onChange } = props;
-	const [key, setKey] = React.useState(setting.key);
-	const [inputType, setInputType] = React.useState(setting.inputType);
-	const [label, setLabel] = React.useState(setting.label);
-	const [options, setOptions] = React.useState(
+	const [key, setKey] = useState(setting.key);
+	const [inputType, setInputType] = useState(setting.inputType);
+	const [label, setLabel] = useState(setting.label);
+	const [options, setOptions] = useState(
 		(setting as SelectAdapterSettings).options,
 	);
-	const [defaultValue, setDefaultValue] = React.useState<any>(
+	const [defaultValue, setDefaultValue] = useState<any>(
 		(setting as SelectAdapterSettings).defaultValue,
 	);
 
@@ -134,7 +136,7 @@ export const AdapterSetting = (props: {
 		onChange({ key, label, inputType, options, defaultValue });
 	const setAndHandleChange = (
 		value: any,
-		setter: React.Dispatch<any>,
+		setter: Dispatch<any>,
 		name: keyof SelectAdapterSettings,
 	): void => {
 		setter(value);

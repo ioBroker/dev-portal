@@ -1,18 +1,20 @@
 import { Answers } from "@iobroker/create-adapter/build/core";
-import Accordion from "@material-ui/core/Accordion";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import { makeStyles } from "@material-ui/core/styles";
-import TextField from "@material-ui/core/TextField";
-import Typography from "@material-ui/core/Typography";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import React, { useEffect, useState } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	makeStyles,
+	TextField,
+	Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import {
@@ -62,7 +64,7 @@ export interface TokensDialogProps {
 	onCancel: () => void;
 }
 
-export default function TokensDialog(props: TokensDialogProps) {
+export function TokensDialog(props: TokensDialogProps) {
 	const { adapterName, tokens, open, onContinue, onCancel } = props;
 
 	const [index, setIndex] = useState(0);
@@ -308,12 +310,12 @@ export function GenerateStep(props: GenerateStepProps) {
 
 	const webSocket = useWebSocket(getWebSocketUrl("create-adapter"));
 
-	const [generator, setGenerator] = React.useState<GeneratorTarget>();
-	const [consentOpen, setConsentOpen] = React.useState(false);
-	const [tokensOpen, setTokensOpen] = React.useState(false);
-	const [consentActions, setConsentActions] = React.useState<string[]>([]);
-	const [tokens, setTokens] = React.useState<string[]>([]);
-	const [secrets, setSecrets] = React.useState<Record<string, string>>({});
+	const [generator, setGenerator] = useState<GeneratorTarget>();
+	const [consentOpen, setConsentOpen] = useState(false);
+	const [tokensOpen, setTokensOpen] = useState(false);
+	const [consentActions, setConsentActions] = useState<string[]>([]);
+	const [tokens, setTokens] = useState<string[]>([]);
+	const [secrets, setSecrets] = useState<Record<string, string>>({});
 
 	useEffect(() => {
 		if (startGenerator) {

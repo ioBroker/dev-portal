@@ -1,20 +1,15 @@
-import Breadcrumbs from "@material-ui/core/Breadcrumbs";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Link from "@material-ui/core/Link";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import NavigateNextIcon from "@material-ui/icons/NavigateNext";
-import Alert from "@material-ui/lab/Alert";
-import AlertTitle from "@material-ui/lab/AlertTitle";
-import { useEffect, useState } from "react";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import {
-	Link as RouterLink,
-	Route,
-	Switch,
-	useHistory,
-	useParams,
-	useRouteMatch,
-} from "react-router-dom";
+	Alert,
+	AlertTitle,
+	Breadcrumbs,
+	LinearProgress,
+	Link,
+	makeStyles,
+	Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { Outlet, Route, Link as RouterLink, useParams } from "react-router-dom";
 import { GitHubComm, User } from "../../lib/gitHub";
 import {
 	AdapterInfos,
@@ -27,6 +22,8 @@ import AdapterDashboard from "./AdapterDashboard";
 import AdapterRatings from "./AdapterRatings";
 import AdapterStatistics from "./AdapterStatistics";
 import Releases from "./Releases";
+import { useUserContext } from "../../contexts/UserContext";
+import { AdapterProvider } from "../../contexts/AdapterContext";
 
 const LinkRouter = (props: any) => <Link {...props} component={RouterLink} />;
 
@@ -36,8 +33,8 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
-export default function CreateAdapter(props: { user: User }) {
-	const { user } = props;
+export function AdapterDetails() {
+	const user = useUserContext();
 	const { path, url } = useRouteMatch();
 	const { name } = useParams<{ name: string }>();
 
@@ -124,20 +121,9 @@ export default function CreateAdapter(props: { user: User }) {
 					{infos}
 				</Alert>
 			) : infos?.info ? (
-				<Switch>
-					<Route exact path={path}>
-						<AdapterDashboard infos={infos} />
-					</Route>
-					<Route path={`${path}/releases`}>
-						<Releases user={user} infos={infos} />
-					</Route>
-					<Route path={`${path}/statistics`}>
-						<AdapterStatistics />
-					</Route>
-					<Route path={`${path}/ratings`}>
-						<AdapterRatings />
-					</Route>
-				</Switch>
+				<AdapterProvider infos={infos}>
+					<Outlet />
+				</AdapterProvider>
 			) : (
 				<LinearProgress />
 			)}

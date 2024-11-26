@@ -1,20 +1,21 @@
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableRow from "@material-ui/core/TableRow";
-import Alert from "@material-ui/lab/Alert";
-import AlertTitle from "@material-ui/lab/AlertTitle";
+import {
+	Alert,
+	AlertTitle,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	LinearProgress,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableRow,
+} from "@mui/material";
 import axios from "axios";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import useWebSocket from "react-use-websocket";
 import {
@@ -164,9 +165,7 @@ interface UpdateRepositoriesDialogProps {
 	open: boolean;
 	onClose: () => void;
 }
-export default function UpdateRepositoriesDialog(
-	props: UpdateRepositoriesDialogProps,
-) {
+export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
 	const { infos, user, action, open, onClose } = props;
 	const { name, version } = useParams<{ name: string; version?: string }>();
 

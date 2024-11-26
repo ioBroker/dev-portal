@@ -21,7 +21,7 @@ export interface WebsocketLogProps {
 	) => void;
 }
 
-export default function WebSocketLog(props: WebsocketLogProps) {
+export function WebSocketLog(props: WebsocketLogProps) {
 	const { webSocket, onMessageReceived } = props;
 
 	const [log, setLog] = useState<LogItem[]>([]);

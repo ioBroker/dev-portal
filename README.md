@@ -6,64 +6,14 @@ This repository contains all code used in the ioBroker Developer Portal at https
 
 ## Development
 
-### Setup
+Development is done in Visual Studio Code using DevContainers. Please make sure you have everything installed according to https://code.visualstudio.com/docs/devcontainers/containers#_installation
 
-To install the application you can run `npm install` in these directories:
+Both frontend and backend will automatically start as hot-reload server in a task in the lower part of VS Code.
 
--   `./express/frontend`
--   `./express/backend`
+You can reach the servers under:
 
-### Build
-
-To build the application you can run `npm build` in these directories:
-
--   `./express/frontend`
--   `./express/backend`
-
-### Hot-reload on code changes
-
-You may also use hot-reload of both the backend and frontend code.
-For this, you can start each applications with the respective command:
-
--   frontend: `npm run start` (open http://localhost:3000/ with your browser)
--   backend: `npm run watch` (open http://localhost:8080/ with your browser)
-
-Note: running the backend in watch mode will not use the frontend in hot-reload!
-
-### Running docker-compose (DEV)
-
-These instructions are only for development.
-**DO NOT USE THIS IN A PRODUCTION ENVIRONMENT!**
-
-1. Create the two required Github OAuth apps in your account - see [below](#github-oauth-apps)
-
-1. Create a file called `docker-compose.override.yml` in this root directory and configure all environment variables and the port to expose:
-
-```yml
-version: "3"
-services:
-    express:
-        build: express
-        ports:
-            - "8080:8080"
-        environment:
-            ALLOW_CORS: 1
-            PORTAL_GITHUB_OAUTH_CLIENT_ID: 1234567890abcdefghij
-            PORTAL_GITHUB_OAUTH_CLIENT_SECRET: 123456e0a66c140657890abcdefghij7236c1406
-            CREATOR_GITHUB_OAUTH_CLIENT_ID: abcdefghij1234567890
-            CREATOR_GITHUB_OAUTH_CLIENT_SECRET: abcdefghij7236c1406123456e0a66c140657890
-            WEBLATE_ACCESS_TOKEN: AbCdEfGhIjKlMnOpQrStUvWxYz0123456789aBcD
-            SENTRY_AUTH_TOKEN: 01234567890abcdefghij7236c1406123456e0a66c140657890abcef01234567
-    watchtower:
-        command: none
-    mongo-express:
-        image: "mongo-express:latest"
-        restart: always
-        ports:
-            - "8088:8081"
-```
-
-2. In this root directory call `docker-compose pull && docker-compose up --build`
+-   frontend: http://localhost:3000/
+-   backend: http://localhost:8080/
 
 ## Deployment
 

@@ -1,12 +1,14 @@
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import Grid from "@material-ui/core/Grid";
-import MenuItem from "@material-ui/core/MenuItem";
-import TextField from "@material-ui/core/TextField";
+import {
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	Grid2,
+	MenuItem,
+	TextField,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import useWebSocket from "react-use-websocket";
@@ -55,8 +57,8 @@ function SelectVersion(props: {
 	}, [infos]);
 
 	return (
-		<Grid container direction="column" spacing={2}>
-			<Grid item xs={8} sm={6} md={4}>
+		<Grid2 container direction="column" spacing={2}>
+			<Grid2 item xs={8} sm={6} md={4}>
 				<TextField
 					label="Current Version"
 					disabled
@@ -64,8 +66,8 @@ function SelectVersion(props: {
 					value={version || ""}
 					variant="outlined"
 				/>
-			</Grid>
-			<Grid item xs={8} sm={6} md={4}>
+			</Grid2>
+			<Grid2 item xs={8} sm={6} md={4}>
 				<TextField
 					select
 					fullWidth
@@ -81,8 +83,8 @@ function SelectVersion(props: {
 						</MenuItem>
 					))}
 				</TextField>
-			</Grid>
-		</Grid>
+			</Grid2>
+		</Grid2>
 	);
 }
 
@@ -91,7 +93,7 @@ interface CreateReleaseDialogProps {
 	open: boolean;
 	onClose: () => void;
 }
-export default function CreateReleaseDialog(props: CreateReleaseDialogProps) {
+export function CreateReleaseDialog(props: CreateReleaseDialogProps) {
 	const { infos, open, onClose } = props;
 	const { name } = useParams<{ name: string }>();
 

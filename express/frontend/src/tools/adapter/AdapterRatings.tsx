@@ -1,21 +1,23 @@
-import Typography from "@material-ui/core/Typography";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Paper from "@material-ui/core/Paper";
-import React, { useEffect, useState } from "react";
+import {
+	Divider,
+	LinearProgress,
+	List,
+	ListItem,
+	ListItemAvatar,
+	ListItemText,
+	makeStyles,
+	Paper,
+	Rating,
+	Tooltip,
+	Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
 	Rating as IoBrokerRating,
 	RatingComment,
 } from "../../../../backend/src/global/iobroker";
-import Rating from "@material-ui/lab/Rating";
 import { getAdapterRatings, getAllRatings } from "../../lib/ioBroker";
-import { makeStyles } from "@material-ui/core/styles";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import ListItemText from "@material-ui/core/ListItemText";
-import Divider from "@material-ui/core/Divider";
-import Tooltip from "@material-ui/core/Tooltip";
 
 const useStyles = makeStyles((theme) => ({
 	firstPaper: {
@@ -56,7 +58,7 @@ function GlobalRating(props: { title: string; rating: IoBrokerRating }) {
 
 export interface AdapterRatingsProps {}
 
-export default function AdapterRatings(props: AdapterRatingsProps) {
+export function AdapterRatings(props: AdapterRatingsProps) {
 	const { name } = useParams<{ name: string }>();
 
 	const [overallRating, setOverallRating] = useState<IoBrokerRating>();

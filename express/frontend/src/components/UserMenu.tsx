@@ -1,37 +1,30 @@
-import ClickAwayListener from "@material-ui/core/ClickAwayListener";
-import Grow from "@material-ui/core/Grow";
-import IconButton from "@material-ui/core/IconButton";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import MenuItem from "@material-ui/core/MenuItem";
-import MenuList from "@material-ui/core/MenuList";
-import Paper from "@material-ui/core/Paper";
-import Popper from "@material-ui/core/Popper";
-import { makeStyles } from "@material-ui/core/styles";
-import Tooltip from "@material-ui/core/Tooltip";
-import React from "react";
-import Typography from "@material-ui/core/Typography";
+import {
+	Box,
+	ClickAwayListener,
+	Grow,
+	IconButton,
+	ListItemIcon,
+	MenuItem,
+	MenuList,
+	Paper,
+	Popper,
+	Tooltip,
+	Typography,
+} from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 import { User } from "../lib/gitHub";
 import { LogoutIcon } from "./Icons";
-
-const useStyles = makeStyles((theme) => ({
-	avatar: {
-		width: "1.2em",
-		borderRadius: "50%",
-	},
-}));
 
 interface UserMenuProps {
 	user: User;
 	onLogout: () => void;
 }
 
-export default function UserMenu(props: UserMenuProps) {
+export function UserMenu(props: UserMenuProps) {
 	const { user, onLogout } = props;
 
-	const classes = useStyles();
-
-	const [open, setOpen] = React.useState(false);
-	const anchorRef = React.useRef<any>();
+	const [open, setOpen] = useState(false);
+	const anchorRef = useRef<any>();
 
 	const handleToggle = () => {
 		setOpen((prevOpen) => !prevOpen);
@@ -57,8 +50,8 @@ export default function UserMenu(props: UserMenuProps) {
 		}
 	}
 
-	const prevOpen = React.useRef(open);
-	React.useEffect(() => {
+	const prevOpen = useRef(open);
+	useEffect(() => {
 		if (prevOpen.current === true && open === false) {
 			anchorRef.current?.focus();
 		}
@@ -74,12 +67,14 @@ export default function UserMenu(props: UserMenuProps) {
 					aria-controls={open ? "menu-list-grow" : undefined}
 					aria-haspopup="true"
 					onClick={handleToggle}
+					sx={{
+						"& img": {
+							width: "1.2em",
+							borderRadius: "50%",
+						},
+					}}
 				>
-					<img
-						className={classes.avatar}
-						src={user.avatar_url}
-						alt={user.login}
-					/>
+					<img src={user.avatar_url} alt={user.login} />
 				</IconButton>
 			</Tooltip>
 			<Popper

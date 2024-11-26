@@ -1,13 +1,12 @@
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
-import ReactECharts from "echarts-for-react";
+import { makeStyles, Paper } from "@mui/material";
 import axios from "axios";
-import { AdapterStats } from "../../../../backend/src/global/adapter-stats";
-import sort from "semver/functions/sort";
-import { getApiUrl } from "../../lib/utils";
+import ReactECharts from "echarts-for-react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router";
 import { coerce } from "semver";
+import sort from "semver/functions/sort";
+import { AdapterStats } from "../../../../backend/src/global/adapter-stats";
+import { getApiUrl } from "../../lib/utils";
 
 const uc = encodeURIComponent;
 
@@ -72,7 +71,7 @@ const chartDefaults = {
 
 export interface AdapterStatisticsProps {}
 
-export default function AdapterStatistics(props: AdapterStatisticsProps) {
+export function AdapterStatistics(props: AdapterStatisticsProps) {
 	const classes = useStyles();
 	const { name } = useParams<{ name: string }>();
 	const [option, setOption] = useState<any>();

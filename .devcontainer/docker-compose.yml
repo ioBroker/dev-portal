@@ -1,0 +1,23 @@
+version: "3"
+services:
+    vscode:
+        container_name: iobroker-dev-portal-vscode
+        image: mcr.microsoft.com/devcontainers/typescript-node:22-bookworm
+        volumes:
+            - ..:/workspace/iobroker-dev-portal:cached
+        command: /bin/sh -c "while sleep 1000; do :; done"
+        environment:
+            TEMP_DIR: /tmp
+            GOOGLE_APPLICATION_CREDENTIALS: /app/google-translate-credentials.json
+            ALLOW_CORS: 1
+        env_file:
+            - ../secrets.env
+
+    mongo:
+        image: "mongo:4.4"
+        container_name: iobroker-dev-portal-mongo
+        restart: unless-stopped
+        volumes:
+            - mongo-data:/data/db
+volumes:
+    mongo-data: {}

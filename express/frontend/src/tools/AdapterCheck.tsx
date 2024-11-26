@@ -1,27 +1,29 @@
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import Divider from "@material-ui/core/Divider";
-import Grid from "@material-ui/core/Grid";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import { OverridableComponent } from "@material-ui/core/OverridableComponent";
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableRow from "@material-ui/core/TableRow";
-import TextField from "@material-ui/core/TextField";
-import Typography from "@material-ui/core/Typography";
-import WarningIcon from "@material-ui/icons/Announcement";
-import ErrorIcon from "@material-ui/icons/Cancel";
-import CheckIcon from "@material-ui/icons/DoneOutlined";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import React, { useEffect, useState } from "react";
+import WarningIcon from "@mui/icons-material/Announcement";
+import ErrorIcon from "@mui/icons-material/Cancel";
+import CheckIcon from "@mui/icons-material/DoneOutlined";
+import {
+	Autocomplete,
+	Button,
+	CircularProgress,
+	Divider,
+	Grid2,
+	InputAdornment,
+	Paper,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableRow,
+	TextField,
+	Typography,
+} from "@mui/material";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
+import { useEffect, useState } from "react";
 import Chart from "react-google-charts";
 import { useLocation } from "react-router-dom";
 import { User } from "../lib/gitHub";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
+import { useUserContext } from "../contexts/UserContext";
 
 const iconStyles = {
 	check: {
@@ -60,7 +62,10 @@ type MessageType = "check" | "warning" | "error";
 export class Message {
 	public readonly text: string;
 
-	constructor(public readonly type: MessageType, result: CheckResult) {
+	constructor(
+		public readonly type: MessageType,
+		result: CheckResult,
+	) {
 		this.text =
 			typeof result === "string" ? result : JSON.stringify(result);
 	}
@@ -100,8 +105,8 @@ export interface AdapterCheckProps {
 	user: User;
 }
 
-export default function AdapterCheck(props: AdapterCheckProps) {
-	const { user } = props;
+export function AdapterCheck() {
+	const user = useUserContext();
 	const classes = useStyles();
 	let location = useLocation();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
@@ -157,8 +162,8 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 				Adapter Check
 			</Typography>
 
-			<Grid container direction="row" alignItems="center" spacing={1}>
-				<Grid item>
+			<Grid2 container direction="row" alignItems="center" spacing={1}>
+				<Grid2 item>
 					<Autocomplete
 						freeSolo
 						disabled={busy}
@@ -183,8 +188,8 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 							/>
 						)}
 					/>
-				</Grid>
-				<Grid item>
+				</Grid2>
+				<Grid2 item>
 					<Button
 						variant="contained"
 						color="primary"
@@ -193,8 +198,8 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 					>
 						Start Check
 					</Button>
-				</Grid>
-			</Grid>
+				</Grid2>
+			</Grid2>
 
 			{busy && (
 				<>

@@ -1,58 +1,47 @@
-import Accordion from "@material-ui/core/Accordion";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import Avatar from "@material-ui/core/Avatar";
-import Badge from "@material-ui/core/Badge";
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import IconButton from "@material-ui/core/IconButton";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import ListItemText from "@material-ui/core/ListItemText";
-import TextField from "@material-ui/core/TextField";
-import Tooltip from "@material-ui/core/Tooltip";
-import Typography from "@material-ui/core/Typography";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import Autocomplete from "@material-ui/lab/Autocomplete";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
+	Avatar,
+	Badge,
+	Dialog,
+	DialogTitle,
+	IconButton,
+	List,
+	ListItem,
+	ListItemAvatar,
+	ListItemText,
+	Tooltip,
+	Typography,
+} from "@mui/material";
 import axios from "axios";
-import * as H from "history";
 import React, { useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
-import { ProjectInfo } from "../../../backend/src/global/sentry";
-import { User as DbUser } from "../../../backend/src/global/user";
-import { handleLogin } from "../App";
-import { GitHubComm, Repository, User } from "../lib/gitHub";
+import { ProjectInfo } from "../../../../backend/src/global/sentry";
+import { useAdapterList } from "../../contexts/AdapterListContext";
+import { useUserContext } from "../../contexts/UserContext";
+import { GitHubComm, Repository } from "../../lib/gitHub";
 import {
 	AdapterInfos,
-	getAdapterInfos,
 	getAllRatings,
-	getLatest,
-	getMyAdapterInfos,
 	getSentryProjectInfos,
 	getSentryStats,
-	getWatchedAdapterInfos,
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
-} from "../lib/ioBroker";
-import { equalIgnoreCase, getApiUrl } from "../lib/utils";
-import { AdapterCheckLocationState } from "../tools/AdapterCheck";
-import { CardButton } from "./CardButton";
-import { CardGrid, CardGridProps } from "./CardGrid";
-import { getToolsCards, resourcesCards, socialCards } from "./dashboard-static";
-import { DashboardCardProps } from "./DashboardCard";
+} from "../../lib/ioBroker";
+import { notEmpty } from "../../lib/utils";
 import {
 	AdapterCheckIcon,
 	DiscoveryIcon,
 	GitHubIcon,
 	SentryIcon,
 	WeblateIcon,
-} from "./Icons";
+} from "../Icons";
+import { CardButton } from "../CardButton";
+import { AddWatchDialog } from "./AddWatchDialog";
+import { CardGrid, CardGridProps } from "./CardGrid";
+import { DashboardCardProps } from "./DashboardCard";
+import { getToolsCards, resourcesCards, socialCards } from "./static";
 
 const MY_ADAPTERS_CATEGORY = "My Adapters";
 const WATCHED_ADAPTERS_CATEGORY = "Watched Adapters";
@@ -60,13 +49,16 @@ const COLLAPSED_CATEGORIES_KEY = "DASH_COLLAPSED_CATEGORIES";
 
 const uc = encodeURIComponent;
 
-function AdapterGitHubButton(props: { repo: Repository; user: User }) {
-	const { repo, user } = props;
+function AdapterGitHubButton({ repo }: { repo: Repository }) {
 	const [counts, setCounts] = useState(`${repo.open_issues} open issues/PRs`);
 	const [color, setColor] = useState<"primary" | "error">("primary");
+	const { user } = useUserContext();
 
 	useEffect(() => {
 		const loadPullRequests = async () => {
+			if (!user) {
+				return;
+			}
 			if (!repo.open_issues) {
 				setCounts("no open PRs / no open issues");
 				return;
@@ -222,7 +214,6 @@ function AdapterSentryButton(props: { projects: ProjectInfo[] }) {
 					<List>
 						{projects.map((project, index) => (
 							<ListItem
-								button
 								onClick={() => openProject(project)}
 								key={index}
 							>
@@ -233,7 +224,7 @@ function AdapterSentryButton(props: { projects: ProjectInfo[] }) {
 												? [
 														errorCounts[0][index],
 														errorCounts[1][index],
-												  ]
+													]
 												: []
 										}
 									>
@@ -250,121 +241,6 @@ function AdapterSentryButton(props: { projects: ProjectInfo[] }) {
 			</>
 		);
 	}
-}
-
-interface AddWatchDialogProps {
-	user: User;
-	open?: boolean;
-	onClose: (repo?: string) => void;
-}
-
-function AddWatchDialog(props: AddWatchDialogProps) {
-	const { user, open, onClose } = props;
-
-	const [repoNames, setRepoNames] = useState<string[]>([]);
-	const [repoName, setRepoName] = useState("");
-	const [error, setError] = useState("");
-	const [validating, setValidating] = useState(false);
-
-	useEffect(() => {
-		if (!open) {
-			return;
-		}
-		const loadData = async () => {
-			const latest = await getLatest();
-			const names = Object.keys(latest).map((adapterName) =>
-				latest[adapterName].meta.replace(
-					/^\w+:\/\/[^/]+\/([^/]+\/[^/]+)\/.+$/,
-					"$1",
-				),
-			);
-			setRepoNames(names);
-		};
-		loadData().catch(console.error);
-	}, [open]);
-
-	const validate = async () => {
-		setValidating(true);
-		try {
-			const gitHub = GitHubComm.forToken(user.token);
-			const [owner, repo] = repoName.split("/", 2);
-			const latest = await getLatest();
-			const infos = await getAdapterInfos(
-				await gitHub.getRepo(owner, repo).getRepo(),
-				latest,
-			);
-			if (!infos.info) {
-				throw new Error("This is not an ioBroker adapter");
-			}
-			onClose(repoName);
-		} catch (error: any) {
-			setError(error.message || error);
-		} finally {
-			setValidating(false);
-		}
-	};
-
-	return (
-		<Dialog
-			open={!!open}
-			onClose={() => onClose()}
-			aria-labelledby="add-watch-dialog-title"
-		>
-			<DialogTitle id="add-watch-dialog-title">
-				Add an adapter
-			</DialogTitle>
-			<DialogContent>
-				<DialogContentText>
-					Please choose a GitHub repository of an ioBroker adapter to
-					add to your list of watched adapters.
-				</DialogContentText>
-				<Autocomplete
-					freeSolo
-					options={repoNames}
-					getOptionLabel={(option) => option}
-					inputValue={repoName}
-					onInputChange={(_e, value) => {
-						setRepoName(value);
-						setError("");
-					}}
-					renderInput={(params) => (
-						<TextField
-							{...params}
-							disabled={validating}
-							error={!!error}
-							helperText={error}
-							label="Adapter Repository"
-							variant="outlined"
-							InputProps={{
-								...params.InputProps,
-								startAdornment: (
-									<InputAdornment position="start">
-										https://github.com/
-									</InputAdornment>
-								),
-							}}
-						/>
-					)}
-				/>
-			</DialogContent>
-			<DialogActions>
-				<Button
-					onClick={() => onClose()}
-					disabled={validating}
-					color="primary"
-				>
-					Cancel
-				</Button>
-				<Button
-					onClick={validate}
-					disabled={validating}
-					color="primary"
-				>
-					Add
-				</Button>
-			</DialogActions>
-		</Dialog>
-	);
 }
 
 async function getDiscoveryLink(adapterName: string) {
@@ -400,8 +276,6 @@ async function getSentryProjects(adapterName: string) {
 
 async function getAdapterCard(
 	infos: AdapterInfos,
-	history: H.History<AdapterCheckLocationState>,
-	user: User,
 	onClose?: () => void,
 ): Promise<DashboardCardProps | undefined> {
 	const { repo, info } = infos;
@@ -415,11 +289,6 @@ async function getAdapterCard(
 			getSentryProjects(info.name),
 			getAllRatings(),
 		]);
-	const openAdapterCheck = () => {
-		history.push("/adapter-check", {
-			repoFullName: repo.full_name,
-		});
-	};
 
 	return {
 		title: repo.name,
@@ -434,14 +303,14 @@ async function getAdapterCard(
 		squareImg: true,
 		to: `/adapter/${info.name}`,
 		buttons: [
-			<AdapterGitHubButton repo={repo} user={user} />,
+			<AdapterGitHubButton repo={repo} />,
 			<CardButton
 				icon={
 					<Tooltip title="Start Adapter Check">
 						<AdapterCheckIcon />
 					</Tooltip>
 				}
-				onClick={openAdapterCheck}
+				to={`/adapter-check?repo=${repo.full_name}`}
 			/>,
 			<Tooltip
 				title={`${
@@ -474,15 +343,10 @@ async function getAdapterCard(
 	};
 }
 
-interface DashboardProps {
-	user?: User;
-	onAdapterListChanged: () => void;
-}
+export function Dashboard() {
+	const { user, login } = useUserContext();
+	const { own, watched, addWatched, removeWatched } = useAdapterList();
 
-export default function Dashboard(props: DashboardProps) {
-	const { user, onAdapterListChanged } = props;
-
-	const history = useHistory<AdapterCheckLocationState>();
 	const [categories, setCategories] = useState<Record<string, CardGridProps>>(
 		{
 			Resources: { cards: resourcesCards },
@@ -491,16 +355,16 @@ export default function Dashboard(props: DashboardProps) {
 			[MY_ADAPTERS_CATEGORY]: { cards: [] },
 		},
 	);
-	let storedCollapsed;
-	try {
-		storedCollapsed = JSON.parse(
-			localStorage.getItem(COLLAPSED_CATEGORIES_KEY) || "[]",
-		);
-	} catch {
-		storedCollapsed = [];
-	}
-	const [collapsed, setCollapsed] = useState<boolean[]>(storedCollapsed);
-	const [showAddWatch, setShowAddWatch] = useState(false);
+	const [collapsed, setCollapsed] = useState<boolean[]>(() => {
+		try {
+			return JSON.parse(
+				localStorage.getItem(COLLAPSED_CATEGORIES_KEY) || "[]",
+			);
+		} catch {
+			return [];
+		}
+	});
+	const [showAddWatchDialog, setShowAddWatchDialog] = useState(false);
 
 	const handleAccordion = (index: number) => {
 		setCollapsed((old) => {
@@ -514,58 +378,58 @@ export default function Dashboard(props: DashboardProps) {
 		});
 	};
 
-	const loadWatchedAdapters = async (user: User) => {
-		setCategories((old) => ({
-			...old,
-			[WATCHED_ADAPTERS_CATEGORY]: { cards: [] },
-		})); // clear the list (and show the spinner)
-
-		let adapters: DashboardCardProps[] = [];
-		try {
-			const infos = await getWatchedAdapterInfos(user.token);
-			const cards = await Promise.all(
-				infos.map((info) =>
-					getAdapterCard(info, history, user, () =>
-						handleRemoveWatch(info).catch(console.error),
-					).catch(console.error),
-				),
-			);
-
-			adapters = cards
-				.filter((c) => !!c)
-				.map((c) => c as DashboardCardProps);
-		} catch (error) {
-			console.error(error);
-		}
-
-		setCategories((old) => ({
-			...old,
-			[WATCHED_ADAPTERS_CATEGORY]: {
-				cards: [...adapters],
-				onAdd: () => setShowAddWatch(true),
-			},
-		}));
-	};
-
 	useEffect(() => {
-		const loadMyAdapters = async (user: User) => {
+		const load = async () => {
+			if (!user) {
+				const loginCard = {
+					title: "Login Required",
+					img: "images/github.png",
+					text: `You must be logged in to see your adapters.`,
+					buttons: [<CardButton text="Login" onClick={login} />],
+				};
+
+				setCategories((old) => {
+					const categories = { ...old };
+					categories.Tools = { cards: getToolsCards(false) };
+					categories[MY_ADAPTERS_CATEGORY] = {
+						cards: [loginCard],
+					};
+					delete categories[WATCHED_ADAPTERS_CATEGORY];
+					return categories;
+				});
+				return;
+			}
+
 			setCategories((old) => ({
 				...old,
+				Tools: { cards: getToolsCards(true) },
 				[MY_ADAPTERS_CATEGORY]: { cards: [] },
-			})); // clear the list (and show the spinner)
+				[WATCHED_ADAPTERS_CATEGORY]: { cards: [] },
+			})); // clear the list (and show the spinners)
 
-			const infos = await getMyAdapterInfos(user.token);
-			const cards = await Promise.all(
-				infos.map((info) =>
-					getAdapterCard(info, history, user).catch(console.error),
-				),
-			);
+			let adapters: DashboardCardProps[] = [];
+			try {
+				const cards = await Promise.all([
+					...watched.map((info) =>
+						getAdapterCard(info, () => removeWatched(info)).catch(
+							console.error,
+						),
+					),
+					...own.map((info) =>
+						getAdapterCard(info).catch(console.error),
+					),
+				]);
 
-			const adapters = cards
-				.filter((c) => !!c)
-				.map((c) => c as DashboardCardProps);
-			if (adapters.length === 0) {
-				adapters.push({
+				adapters = cards.filter(notEmpty);
+			} catch (error) {
+				console.error(error);
+			}
+
+			const ownAdapters = adapters.filter((a) => !a.onClose);
+			const watchedAdapters = adapters.filter((a) => a.onClose);
+
+			if (ownAdapters.length === 0) {
+				ownAdapters.push({
 					title: "No adapters found",
 					img: "images/adapter-creator.png",
 					text: "You can create your first ioBroker adapter by answering questions in the Adapter Creator.",
@@ -577,37 +441,24 @@ export default function Dashboard(props: DashboardProps) {
 					],
 				});
 			}
+
 			setCategories((old) => ({
 				...old,
 				Tools: { cards: getToolsCards(true) },
-				[MY_ADAPTERS_CATEGORY]: { cards: [...adapters] },
+				[MY_ADAPTERS_CATEGORY]: {
+					cards: ownAdapters,
+				},
+				[WATCHED_ADAPTERS_CATEGORY]: {
+					cards: watchedAdapters,
+					onAdd: () => setShowAddWatchDialog(true),
+				},
 			}));
 		};
-
-		if (user) {
-			loadMyAdapters(user).catch(console.error);
-			loadWatchedAdapters(user).catch(console.error);
-		} else {
-			const loginCard = (type: string) => ({
-				title: "Login Required",
-				img: "images/github.png",
-				text: `You must be logged in to see your ${type}.`,
-				buttons: [<CardButton text="Login" onClick={handleLogin} />],
-			});
-			setCategories((old) => {
-				const result = { ...old };
-				result.Tools = { cards: getToolsCards(false) };
-				result[MY_ADAPTERS_CATEGORY] = {
-					cards: [loginCard("adapters")],
-				};
-				delete result[WATCHED_ADAPTERS_CATEGORY];
-				return result;
-			});
-		}
-	}, [user]);
+		load().catch(console.error);
+	}, [removeWatched, user, own, watched, login]);
 
 	useEffect(() => {
-		const updateBlogIcon = async () => {
+		const updateBlogCard = async () => {
 			const url =
 				"https://raw.githubusercontent.com/ioBroker/ioBroker.docs/master/engine/front-end/public/blog.json";
 			const { data: blog } = await axios.get<{
@@ -625,67 +476,40 @@ export default function Dashboard(props: DashboardProps) {
 			setCategories((old) => {
 				const res = old.Resources;
 				const index = res.cards.findIndex((c) => c.title === "Blog");
-				if (index >= 0) {
-					const card = res.cards[index];
-					const date = page.date.replace(
-						/^(\d{4})\.(\d{2})\.(\d{2})$/,
-						"$3.$2.$1",
-					);
-					res.cards[index] = {
-						...card,
-						img: `https://www.iobroker.net/${page.logo}`,
-						text: `${card.text}\n \nLatest entry: ${page.title.en} (${date})`,
-					};
+				if (index < 0) {
+					return old;
 				}
+				const card = res.cards[index];
+				if (card.text.includes("\n")) {
+					return old;
+				}
+				const date = page.date.replace(
+					/^(\d{4})\.(\d{2})\.(\d{2})$/,
+					"$3.$2.$1",
+				);
+				res.cards[index] = {
+					...card,
+					img: `https://www.iobroker.net/${page.logo}`,
+					text: `${card.text}\n \nLatest entry: ${page.title.en} (${date})`,
+				};
+
 				return { ...old };
 			});
 		};
-		updateBlogIcon().catch(console.error);
+		updateBlogCard().catch(console.error);
 	}, []);
-
-	const handleAddWatch = async (repo?: string) => {
-		setShowAddWatch(false);
-		if (!repo) {
-			return;
-		}
-		try {
-			setCategories((old) => ({
-				...old,
-				[WATCHED_ADAPTERS_CATEGORY]: { cards: [] },
-			})); // show spinner
-			const url = getApiUrl("user");
-			const { data: dbUser } = await axios.get<DbUser>(url);
-			dbUser.watches.push(repo);
-			await axios.put(url, dbUser);
-			onAdapterListChanged();
-			await loadWatchedAdapters(user!);
-		} catch (error) {
-			console.error(error);
-		}
-	};
-
-	const handleRemoveWatch = async (info: AdapterInfos) => {
-		setCategories((old) => ({
-			...old,
-			[WATCHED_ADAPTERS_CATEGORY]: { cards: [] },
-		})); // show spinner
-		const url = getApiUrl("user");
-		const { data: dbUser } = await axios.get<DbUser>(url);
-		dbUser.watches = dbUser.watches.filter(
-			(w) => !equalIgnoreCase(w, info.repo.full_name),
-		);
-		await axios.put(url, dbUser);
-		onAdapterListChanged();
-		await loadWatchedAdapters(user!);
-	};
 
 	return (
 		<>
 			{user && (
 				<AddWatchDialog
-					user={user}
-					open={showAddWatch}
-					onClose={handleAddWatch}
+					open={showAddWatchDialog}
+					onClose={(repo) => {
+						setShowAddWatchDialog(false);
+						if (repo) {
+							addWatched(repo);
+						}
+					}}
 				/>
 			)}
 			{Object.keys(categories).map((title, index) => {

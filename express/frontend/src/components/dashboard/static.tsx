@@ -1,6 +1,4 @@
-import React from "react";
-import { handleLogin } from "../App";
-import { CardButton } from "./CardButton";
+import { CardButton } from "../CardButton";
 
 export const resourcesCards = [
 	{
@@ -145,7 +143,7 @@ export function getToolsCards(isLoggedIn: boolean) {
 				isLoggedIn ? (
 					<CardButton text="Open" to="/adapter-check" />
 				) : (
-					<CardButton text="Login" onClick={handleLogin} />
+					<CardButton text="Login" onClick={() => {}} /> // TODO: migrate
 				),
 			],
 		},

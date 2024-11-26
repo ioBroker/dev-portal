@@ -1,21 +1,23 @@
-import Button from "@material-ui/core/Button";
-import Hidden from "@material-ui/core/Hidden";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Link from "@material-ui/core/Link";
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import Tooltip from "@material-ui/core/Tooltip";
-import Alert from "@material-ui/lab/Alert";
-import AlertTitle from "@material-ui/lab/AlertTitle";
+import {
+	Alert,
+	AlertTitle,
+	Button,
+	Hidden,
+	LinearProgress,
+	Link,
+	makeStyles,
+	Paper,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	Tooltip,
+} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Route, useHistory, useParams, useRouteMatch } from "react-router-dom";
+import { Route, useParams } from "react-router-dom";
 import { coerce } from "semver";
 import AuthConsentDialog from "../../components/AuthConsentDialog";
 import {
@@ -31,6 +33,8 @@ import CreateReleaseDialog from "./CreateReleaseDialog";
 import UpdateRepositoriesDialog, {
 	RepositoriesAction,
 } from "./UpdateRepositoriesDialog";
+import { useUserContext } from "../../contexts/UserContext";
+import { useAdapter } from "../../contexts/AdapterContext";
 
 type ReleaseAction = "release" | RepositoriesAction;
 
@@ -127,8 +131,9 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
-export default function Releases(props: { user: User; infos: AdapterInfos }) {
-	const { user, infos } = props;
+export function Releases() {
+	const user = useUserContext();
+	const { infos } = useAdapter();
 	const { path, url } = useRouteMatch();
 	const history = useHistory();
 	const { name } = useParams<{ name: string }>();
