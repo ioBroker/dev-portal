@@ -28,17 +28,6 @@ import { GIT_BRANCH, GIT_COMMIT } from "./version";
 
 const drawerWidth = 240;
 
-export function handleLogin() {
-	if (window.location.port === "3000") {
-		alert(
-			"Login is not supported in local development mode, please use docker-compose to test login",
-		);
-	} else {
-		const url = encodeURIComponent(window.location.pathname);
-		window.location.href = `/login?redirect=${url}`;
-	}
-}
-
 const openedMixin = (theme: Theme): CSSObject => ({
 	width: drawerWidth,
 	transition: theme.transitions.create("width", {
@@ -110,7 +99,7 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 export function Root() {
-	const { user, isReady, logout } = useUserContext();
+	const { user, isReady, login, logout } = useUserContext();
 	const { isOpen, toggle } = useDrawerContext();
 
 	return (
@@ -153,7 +142,7 @@ export function Root() {
 						<Button
 							color="inherit"
 							startIcon={<GitHubIcon />}
-							onClick={handleLogin}
+							onClick={login}
 						>
 							Login
 						</Button>

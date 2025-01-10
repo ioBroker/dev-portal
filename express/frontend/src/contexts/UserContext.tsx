@@ -57,13 +57,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 	}, [cookies, user, isReady, removeCookie]);
 
 	const login = useCallback(() => {
+		const redirect = encodeURIComponent(window.location.pathname);
 		if (window.location.port === "3000") {
-			alert(
-				"Login is not supported in local development mode, please use docker-compose to test login",
-			);
+			window.location.href = `http://localhost:8080/login?redirect=${redirect}`;
 		} else {
-			const url = encodeURIComponent(window.location.pathname);
-			window.location.href = `/login?redirect=${url}`;
+			window.location.href = `/login?redirect=${redirect}`;
 		}
 	}, []);
 
