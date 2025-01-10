@@ -308,6 +308,7 @@ export const ComboBoxSelectRenderer = (
 				{getQuestionMessage(question)}
 			</InputLabel>
 			<Select
+				label={getQuestionMessage(question)}
 				labelId={`label_${name}`}
 				value={value}
 				onChange={handleChange}
