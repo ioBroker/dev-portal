@@ -56,7 +56,7 @@ export abstract class RepositoriesConnectionHandler<
 		const { data: user } = await requestWithAuth("GET /user");
 		this.log(`Connected to GitHub as ${user.login}`);
 
-		let forkName = await this.findFork(user.login!, requestWithAuth);
+		let forkName = await this.findFork(user.login, requestWithAuth);
 		if (forkName) {
 			this.log(`Found fork ${user.login}/${forkName}`);
 		} else {
@@ -75,7 +75,7 @@ export abstract class RepositoriesConnectionHandler<
 		const baseDir = path.join(this.rootDir, REPOSITORY);
 		await remove(baseDir);
 		await mkdirp(baseDir);
-		const baseUrl = `https://${uc(user.login!)}:${uc(token)}@github.com/`;
+		const baseUrl = `https://${uc(user.login)}:${uc(token)}@github.com/`;
 		await this.exec(
 			`git clone "${baseUrl}${uc(user.login)}/${uc(forkName)}.git" .`,
 		);
@@ -152,7 +152,7 @@ export abstract class RepositoriesConnectionHandler<
 				const { data: details } = await requestWithAuth(
 					"GET /repos/{owner}/{repo}",
 					{
-						owner: repo.owner?.login!,
+						owner: repo.owner.login,
 						repo: repo.name,
 					},
 				);
