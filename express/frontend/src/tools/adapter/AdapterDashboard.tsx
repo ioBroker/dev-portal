@@ -6,10 +6,10 @@ import {
 	Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import { CardButton } from "../../components/CardButton";
 import { CardGrid, CardGridProps } from "../../components/dashboard/CardGrid";
 import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
+import { useAdapter } from "../../contexts/AdapterContext";
 import { getAllRatings, getLatest } from "../../lib/ioBroker";
 
 const CATEGORY_GENERAL = "General";
@@ -20,7 +20,7 @@ const EMPTY_CARDS = {
 };
 
 export function AdapterDashboard() {
-	const { name } = useParams<{ name: string }>();
+	const { name } = useAdapter();
 	const [categories, setCategories] =
 		useState<Record<string, CardGridProps>>(EMPTY_CARDS);
 	const [collapsed, setCollapsed] = useState<boolean[]>([]);
@@ -28,12 +28,11 @@ export function AdapterDashboard() {
 	useEffect(() => {
 		setCategories(EMPTY_CARDS);
 		const loadCards = async () => {
-			const latest = await getLatest();
-			const ratings = await getAllRatings();
+			const [latest, ratings] = await Promise.all([
+				getLatest(),
+				getAllRatings(),
+			]);
 			const generalCards: DashboardCardProps[] = [];
-			if (!name) {
-				throw new Error("No adapter name provided");
-			}
 			generalCards.push({
 				title: "Releases",
 				text: "Manage releases of your adapter.",

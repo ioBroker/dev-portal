@@ -13,11 +13,11 @@ import {
 	Typography,
 } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import {
 	Rating as IoBrokerRating,
 	RatingComment,
 } from "../../../../backend/src/global/iobroker";
+import { useAdapter } from "../../contexts/AdapterContext";
 import { getAdapterRatings, getAllRatings } from "../../lib/ioBroker";
 
 const sxList: SxProps<Theme> = {
@@ -52,8 +52,7 @@ function GlobalRating(props: { title: string; rating: IoBrokerRating }) {
 }
 
 export function AdapterRatings() {
-	const { name } = useParams<{ name: string }>();
-
+	const { name } = useAdapter();
 	const [overallRating, setOverallRating] = useState<IoBrokerRating>();
 	const [currentRating, setCurrentRating] = useState<
 		IoBrokerRating & { version: string }
@@ -62,9 +61,6 @@ export function AdapterRatings() {
 
 	useEffect(() => {
 		const loadRatings = async () => {
-			if (!name) {
-				return;
-			}
 			try {
 				const [allRatings, adapterRatings] = await Promise.all([
 					getAllRatings(),

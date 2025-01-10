@@ -1,14 +1,10 @@
 import { Box, Paper } from "@mui/material";
-import axios from "axios";
 import ReactECharts from "echarts-for-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
 import { coerce } from "semver";
 import sort from "semver/functions/sort";
-import { AdapterStats } from "../../../../backend/src/global/adapter-stats";
-import { getApiUrl } from "../../lib/utils";
-
-const uc = encodeURIComponent;
+import { useAdapter } from "../../contexts/AdapterContext";
+import { getStatistics } from "../../lib/ioBroker";
 
 const chartDefaults = {
 	title: {
@@ -63,21 +59,15 @@ const chartDefaults = {
 export interface AdapterStatisticsProps {}
 
 export function AdapterStatistics(props: AdapterStatisticsProps) {
-	const { name } = useParams<"name">();
+	const { name } = useAdapter();
 	const [option, setOption] = useState<any>();
 	const [showLoading, setShowLoading] = useState(true);
 
 	useEffect(() => {
-		if (!name) {
-			return;
-		}
-
 		setOption(undefined);
 		setShowLoading(true);
 		const loadStatistics = async () => {
-			const url = getApiUrl(`adapter/${uc(name)}/stats`);
-			const { data: stats } = await axios.get<AdapterStats>(url);
-
+			const stats = await getStatistics(name);
 			const versions = new Set<string>();
 			for (const date of Object.keys(stats.counts)) {
 				Object.keys(stats.counts[date].versions)

@@ -1,7 +1,3 @@
-import { useEffect, useState } from "react";
-import { useUserContext } from "../../contexts/UserContext";
-import { getAdapterInfos, getLatest } from "../../lib/ioBroker";
-import { GitHubComm } from "../../lib/gitHub";
 import {
 	Autocomplete,
 	Button,
@@ -13,6 +9,10 @@ import {
 	InputAdornment,
 	TextField,
 } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useUserToken } from "../../contexts/UserContext";
+import { GitHubComm } from "../../lib/gitHub";
+import { getAdapterInfos, getLatest } from "../../lib/ioBroker";
 
 export function AddWatchDialog({
 	open,
@@ -21,7 +21,7 @@ export function AddWatchDialog({
 	open?: boolean;
 	onClose: (repo?: string) => void;
 }) {
-	const { user } = useUserContext();
+	const token = useUserToken();
 
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
@@ -48,7 +48,7 @@ export function AddWatchDialog({
 	const validate = async () => {
 		setValidating(true);
 		try {
-			const gitHub = GitHubComm.forToken(user!.token);
+			const gitHub = GitHubComm.forToken(token);
 			const [owner, repo] = repoName.split("/", 2);
 			const latest = await getLatest();
 			const infos = await getAdapterInfos(

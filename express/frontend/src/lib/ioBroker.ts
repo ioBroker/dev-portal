@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AdapterStats } from "../../../backend/src/global/adapter-stats";
 import {
 	AdapterRatings,
 	AllRatings,
@@ -177,6 +178,13 @@ export const getWeblateAdapterComponents = AsyncCache.of(async () => {
 	return result.data;
 });
 
+export async function getStatistics(adapterName: string) {
+	const result = await axios.get<AdapterStats>(
+		getApiUrl(`adapter/${uc(adapterName)}/stats`),
+	);
+	return result.data;
+}
+
 const discoverySupports = new Map<string, Promise<boolean>>();
 export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 	if (!discoverySupports.has(adapterName)) {
@@ -184,7 +192,7 @@ export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 			try {
 				await axios.get(
 					`https://cdn.jsdelivr.net/npm/iobroker.discovery/lib/adapters/` +
-						`${encodeURIComponent(adapterName)}.js`,
+						`${uc(adapterName)}.js`,
 				);
 				return true;
 			} catch {

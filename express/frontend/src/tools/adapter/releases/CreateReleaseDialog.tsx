@@ -8,7 +8,6 @@ import {
 	TextField,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import useWebSocket from "react-use-websocket";
 import * as semver from "semver";
 import {
@@ -93,8 +92,7 @@ function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 }
 
 export function CreateReleaseDialog() {
-	const { name } = useParams<{ name: string }>();
-	const { infos } = useAdapter();
+	const { name, infos } = useAdapter();
 
 	const webSocket = useWebSocket(getWebSocketUrl("release"));
 

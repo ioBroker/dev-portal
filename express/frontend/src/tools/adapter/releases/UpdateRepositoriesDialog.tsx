@@ -28,7 +28,7 @@ import {
 	WebSocketLog,
 } from "../../../components/WebSocketLog";
 import { useAdapter } from "../../../contexts/AdapterContext";
-import { useUserContext } from "../../../contexts/UserContext";
+import { useUserContext, useUserToken } from "../../../contexts/UserContext";
 import { GitHubComm } from "../../../lib/gitHub";
 import { checkAdapter } from "../../../lib/ioBroker";
 import { getWebSocketUrl } from "../../../lib/utils";
@@ -42,11 +42,10 @@ function AdapterCheckStep(props: {
 	onSuccess: () => void;
 }) {
 	const { action, onSuccess } = props;
-	const { name } = useParams<{ name: string }>();
 	const [errors, setErrors] = useState<Message[]>();
 	const [pullRequestUrl, setPullRequestUrl] = useState<string>();
-	const { user } = useUserContext();
-	const { infos } = useAdapter();
+	const token = useUserToken();
+	const { name, infos } = useAdapter();
 
 	useEffect(() => {
 		// check the diffs for an add (line starts with "+") of this adapter
@@ -68,10 +67,6 @@ function AdapterCheckStep(props: {
 							),
 						);
 		const findPullRequest = async () => {
-			const token = user?.token;
-			if (!token) {
-				return;
-			}
 			const gitHub = GitHubComm.forToken(token);
 			const repo = gitHub.getRepo("ioBroker", "ioBroker.repositories");
 			const prs = await repo.getPullRequests("open");
@@ -95,7 +90,7 @@ function AdapterCheckStep(props: {
 			}
 		};
 		runAdapterCheck().catch(console.error);
-	}, [infos, user, action, name]);
+	}, [infos, token, action, name]);
 
 	useEffect(() => {
 		if (errors && errors.length === 0 && !pullRequestUrl) {
@@ -161,9 +156,9 @@ interface UpdateRepositoriesDialogProps {
 }
 export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
 	const { action } = props;
-	const { name, version } = useParams<{ name: string; version?: string }>();
+	const { version } = useParams<"version">();
 	const { user } = useUserContext();
-	const { infos } = useAdapter();
+	const { name, infos } = useAdapter();
 
 	const webSocket = useWebSocket(getWebSocketUrl(action));
 

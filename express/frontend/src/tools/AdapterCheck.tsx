@@ -23,8 +23,7 @@ import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { useEffect, useState } from "react";
 import Chart from "react-google-charts";
 import { useLocation } from "react-router-dom";
-import { useUserContext } from "../contexts/UserContext";
-import { User } from "../lib/gitHub";
+import { useUserToken } from "../contexts/UserContext";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
 
 const iconStyles = {
@@ -91,12 +90,8 @@ export interface AdapterCheckLocationState {
 	repoFullName?: string;
 }
 
-export interface AdapterCheckProps {
-	user: User;
-}
-
 export function AdapterCheck() {
-	const { user } = useUserContext();
+	const token = useUserToken();
 	let location = useLocation();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
@@ -104,15 +99,11 @@ export function AdapterCheck() {
 	const [messages, setMessages] = useState<Message[]>([]);
 	useEffect(() => {
 		const loadData = async () => {
-			const token = user?.token;
-			if (!token) {
-				return;
-			}
 			const repos = await getMyAdapterRepos(token);
 			setRepoNames(repos.map((r) => r.full_name));
 		};
 		loadData().catch(console.error);
-	}, [user]);
+	}, [token]);
 
 	const incomingState = location.state as
 		| AdapterCheckLocationState

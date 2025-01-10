@@ -27,6 +27,15 @@ export function useUserContext() {
 	return context;
 }
 
+export function useUserToken() {
+	const { user } = useUserContext();
+	const token = user?.token;
+	if (!token) {
+		throw new Error("User token missing");
+	}
+	return token;
+}
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
 	const [cookies, , removeCookie] = useCookies([gitHubTokenCookie]);
 	const [user, setUser] = useState<User>();

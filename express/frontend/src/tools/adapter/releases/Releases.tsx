@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Outlet, useLocation, useParams } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { coerce } from "semver";
 import { AuthConsentDialog } from "../../../components/AuthConsentDialog";
 import {
@@ -27,7 +27,7 @@ import {
 	NpmIcon,
 } from "../../../components/Icons";
 import { useAdapter } from "../../../contexts/AdapterContext";
-import { useUserContext } from "../../../contexts/UserContext";
+import { useUserToken } from "../../../contexts/UserContext";
 import { GitHubComm } from "../../../lib/gitHub";
 import { getLatest } from "../../../lib/ioBroker";
 import { getPackage as getPackageMetaData } from "../../../lib/npm";
@@ -121,9 +121,8 @@ const sxButton: SxProps = {
 };
 
 export function Releases() {
-	const { user } = useUserContext();
-	const { infos } = useAdapter();
-	const { name } = useParams<"name">();
+	const token = useUserToken();
+	const { name, infos } = useAdapter();
 	const location = useLocation();
 	const [canPush, setCanPush] = useState<boolean>();
 	const [rows, setRows] = useState<ReleaseInfo[]>();
@@ -142,10 +141,6 @@ export function Releases() {
 			}
 		};
 		const loadReleases = async () => {
-			const token = user?.token;
-			if (!token || !name) {
-				return;
-			}
 			const gitHub = GitHubComm.forToken(token);
 			const repo = gitHub.getRepo(infos.repo);
 			const [npm, fullRepo, tags, latest, defaultHead] =
@@ -221,7 +216,7 @@ export function Releases() {
 			console.error(e);
 			setRows([]);
 		});
-	}, [name, user, infos]);
+	}, [name, token, infos]);
 
 	useEffect(() => {
 		const checkPackageInfo = async () => {

@@ -15,7 +15,7 @@ import {
 	useParams,
 } from "react-router-dom";
 import { AdapterProvider } from "../../contexts/AdapterContext";
-import { useUserContext } from "../../contexts/UserContext";
+import { useUserToken } from "../../contexts/UserContext";
 import { GitHubComm } from "../../lib/gitHub";
 import {
 	AdapterInfos,
@@ -28,7 +28,7 @@ import {
 const LinkRouter = (props: any) => <Link {...props} component={RouterLink} />;
 
 export function AdapterDetails() {
-	const { user } = useUserContext();
+	const token = useUserToken();
 	const matches = useMatches();
 	const pathNames = matches[matches.length - 1].pathname
 		.split("/")
@@ -40,8 +40,7 @@ export function AdapterDetails() {
 
 	useEffect(() => {
 		const loadInfos = async () => {
-			const token = user?.token;
-			if (!token || !name) {
+			if (!name) {
 				return;
 			}
 			const myAdapters = await getMyAdapterInfos(token);
@@ -76,7 +75,7 @@ export function AdapterDetails() {
 			setInfos(`Couldn't find ioBroker.${name}`);
 		};
 		loadInfos().catch(console.error);
-	}, [name, user]);
+	}, [name, token]);
 
 	const toText = (value: string) => {
 		const sentence = value.replace(/([A-Z])/g, " $1");
@@ -112,8 +111,8 @@ export function AdapterDetails() {
 					<AlertTitle>Error</AlertTitle>
 					{infos}
 				</Alert>
-			) : infos?.info ? (
-				<AdapterProvider infos={infos}>
+			) : infos?.info && name ? (
+				<AdapterProvider name={name} infos={infos}>
 					<Outlet />
 				</AdapterProvider>
 			) : (
