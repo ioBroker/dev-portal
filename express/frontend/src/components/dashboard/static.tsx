@@ -1,4 +1,5 @@
 import { CardButton } from "../CardButton";
+import { LoginButton } from "./LoginButton";
 
 export const resourcesCards = [
 	{
@@ -143,7 +144,7 @@ export function getToolsCards(isLoggedIn: boolean) {
 				isLoggedIn ? (
 					<CardButton text="Open" to="/adapter-check" />
 				) : (
-					<CardButton text="Login" onClick={() => {}} /> // TODO: migrate
+					<LoginButton />
 				),
 			],
 		},

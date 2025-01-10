@@ -30,6 +30,7 @@ import {
 	hasDiscoverySupport,
 } from "../../lib/ioBroker";
 import { notEmpty } from "../../lib/utils";
+import { CardButton } from "../CardButton";
 import {
 	AdapterCheckIcon,
 	DiscoveryIcon,
@@ -37,10 +38,10 @@ import {
 	SentryIcon,
 	WeblateIcon,
 } from "../Icons";
-import { CardButton } from "../CardButton";
 import { AddWatchDialog } from "./AddWatchDialog";
 import { CardGrid, CardGridProps } from "./CardGrid";
 import { DashboardCardProps } from "./DashboardCard";
+import { LoginButton } from "./LoginButton";
 import { getToolsCards, resourcesCards, socialCards } from "./static";
 
 const MY_ADAPTERS_CATEGORY = "My Adapters";
@@ -385,7 +386,7 @@ export function Dashboard() {
 					title: "Login Required",
 					img: "images/github.png",
 					text: `You must be logged in to see your adapters.`,
-					buttons: [<CardButton text="Login" onClick={login} />],
+					buttons: [<LoginButton />],
 				};
 
 				setCategories((old) => {
