@@ -43,12 +43,13 @@ export function Wizard() {
 			STORAGE_KEY_CURRENT_ANSWERS,
 		);
 		if (currentAnswers) {
+			console.log("Loaded current answers", currentAnswers);
 			setAnswers(JSON.parse(currentAnswers));
 		}
 	}, []);
 
 	useEffect(() => {
-		console.log(answers);
+		console.log("Storing current answers", answers);
 		window.localStorage.setItem(
 			STORAGE_KEY_CURRENT_ANSWERS,
 			JSON.stringify(answers),
@@ -93,7 +94,12 @@ export function Wizard() {
 				STORAGE_KEY_ANSWERS_AFTER_LOGIN,
 			);
 			if (loadedAnswers) {
+				console.log("Loaded answers after login", loadedAnswers);
 				window.localStorage.removeItem(STORAGE_KEY_ANSWERS_AFTER_LOGIN);
+				window.localStorage.setItem(
+					STORAGE_KEY_CURRENT_ANSWERS,
+					loadedAnswers,
+				);
 				setAnswers(JSON.parse(loadedAnswers));
 				setStartGenerator(true);
 				setActiveStep(questionGroups.length);

@@ -209,6 +209,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		if (state === "idle" && target) {
 			//console.log(state, target, "--> sendMessage", startMessage);
 			webSocket.sendMessage(startMessage);
+			setState("generating");
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [target, state]);
