@@ -9,21 +9,23 @@ import {
 	Grid2,
 	InputAdornment,
 	Paper,
+	SxProps,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
 	TableRow,
 	TextField,
+	Theme,
 	Typography,
 } from "@mui/material";
 import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { useEffect, useState } from "react";
 import Chart from "react-google-charts";
 import { useLocation } from "react-router-dom";
+import { useUserContext } from "../contexts/UserContext";
 import { User } from "../lib/gitHub";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
-import { useUserContext } from "../contexts/UserContext";
 
 const iconStyles = {
 	check: {
@@ -37,27 +39,16 @@ const iconStyles = {
 	},
 };
 
-export const useStyles = makeStyles((theme) => ({
-	title: {
-		marginBottom: theme.spacing(1),
-	},
-	comboBox: {
-		width: "500px",
-	},
-	divider: {
-		marginTop: theme.spacing(1),
-		marginBottom: theme.spacing(1),
-	},
-	chartArea: {
-		marginBottom: theme.spacing(1),
-	},
-	tableIcon: {
-		maxWidth: theme.spacing(4),
-	},
-	...iconStyles,
-}));
+const sxDivider: SxProps = {
+	marginTop: 1,
+	marginBottom: 1,
+};
 
-type MessageType = "check" | "warning" | "error";
+export const sxTableIcon: SxProps<Theme> = {
+	maxWidth: (theme) => theme.spacing(4),
+};
+
+type MessageType = keyof typeof iconStyles;
 
 export class Message {
 	public readonly text: string;
@@ -77,7 +68,6 @@ export interface MessageIconProps {
 
 export function MessageIcon(props: MessageIconProps) {
 	const { type } = props;
-	const classes = useStyles();
 	let Icon: OverridableComponent<any>;
 	switch (type) {
 		case "check":
@@ -94,7 +84,7 @@ export function MessageIcon(props: MessageIconProps) {
 			break;
 	}
 
-	return <Icon className={classes[type]} />;
+	return <Icon sx={{ color: iconStyles[type].color }} />;
 }
 
 export interface AdapterCheckLocationState {
@@ -106,8 +96,7 @@ export interface AdapterCheckProps {
 }
 
 export function AdapterCheck() {
-	const user = useUserContext();
-	const classes = useStyles();
+	const { user } = useUserContext();
 	let location = useLocation();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
@@ -115,7 +104,11 @@ export function AdapterCheck() {
 	const [messages, setMessages] = useState<Message[]>([]);
 	useEffect(() => {
 		const loadData = async () => {
-			const repos = await getMyAdapterRepos(user.token);
+			const token = user?.token;
+			if (!token) {
+				return;
+			}
+			const repos = await getMyAdapterRepos(token);
 			setRepoNames(repos.map((r) => r.full_name));
 		};
 		loadData().catch(console.error);
@@ -158,18 +151,23 @@ export function AdapterCheck() {
 
 	return (
 		<>
-			<Typography variant="h4" className={classes.title}>
+			<Typography
+				variant="h4"
+				sx={{
+					marginBottom: 1,
+				}}
+			>
 				Adapter Check
 			</Typography>
 
 			<Grid2 container direction="row" alignItems="center" spacing={1}>
-				<Grid2 item>
+				<Grid2>
 					<Autocomplete
 						freeSolo
 						disabled={busy}
 						options={repoNames}
 						getOptionLabel={(option) => option}
-						className={classes.comboBox}
+						sx={{ width: 500 }}
 						inputValue={repoName}
 						onInputChange={(_e, value) => setRepoName(value)}
 						renderInput={(params) => (
@@ -189,7 +187,7 @@ export function AdapterCheck() {
 						)}
 					/>
 				</Grid2>
-				<Grid2 item>
+				<Grid2>
 					<Button
 						variant="contained"
 						color="primary"
@@ -203,7 +201,7 @@ export function AdapterCheck() {
 
 			{busy && (
 				<>
-					<Divider className={classes.divider} />
+					<Divider sx={sxDivider} />
 					<Typography variant="h5">
 						<CircularProgress /> {`Checking ${repoName}...`}
 					</Typography>
@@ -212,8 +210,8 @@ export function AdapterCheck() {
 
 			{messages.length > 0 && (
 				<>
-					<Divider className={classes.divider} />
-					<Paper className={classes.chartArea}>
+					<Divider sx={sxDivider} />
+					<Paper sx={{ marginBottom: 1 }}>
 						<Chart
 							width="400px"
 							height="200px"
@@ -236,10 +234,7 @@ export function AdapterCheck() {
 							<TableBody>
 								{messages.map((message, i) => (
 									<TableRow key={i}>
-										<TableCell
-											scope="row"
-											className={classes.tableIcon}
-										>
+										<TableCell scope="row" sx={sxTableIcon}>
 											<MessageIcon type={message.type} />
 										</TableCell>
 										<TableCell>{message.text}</TableCell>
