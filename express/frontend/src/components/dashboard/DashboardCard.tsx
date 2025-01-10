@@ -124,7 +124,11 @@ export function DashboardCard({
 				))}
 			</CardContent>
 			{buttons && buttons.length > 0 && (
-				<CardActions>{buttons}</CardActions>
+				<CardActions>
+					{buttons.map((b, i) => (
+						<Fragment key={i}>{b}</Fragment>
+					))}
+				</CardActions>
 			)}
 		</Card>
 	);
