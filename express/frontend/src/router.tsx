@@ -1,7 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import { App } from "./App";
-import { UserProvider } from "./contexts/UserContext";
 import { Dashboard } from "./components/dashboard/Dashboard";
+import { UserProvider } from "./contexts/UserContext";
+import { AdapterDashboard } from "./tools/adapter/AdapterDashboard";
+import { AdapterDetails } from "./tools/adapter/AdapterDetails";
+import { AdapterRatings } from "./tools/adapter/AdapterRatings";
+import { AdapterStatistics } from "./tools/adapter/AdapterStatistics";
 
 export const router = createBrowserRouter([
 	{
@@ -29,7 +33,7 @@ export const router = createBrowserRouter([
 			{
 				path: "/adapter-check",
 				element: <AdapterCheck />,
-			},
+			},*/
 			{
 				path: "/adapter/:name",
 				element: <AdapterDetails />,
@@ -38,10 +42,10 @@ export const router = createBrowserRouter([
 						index: true,
 						element: <AdapterDashboard />,
 					},
-					{
+					/*{
 						path: "releases",
 						element: <Releases />,
-					},
+					},*/
 					{
 						path: "statistics",
 						element: <AdapterStatistics />,
@@ -51,7 +55,7 @@ export const router = createBrowserRouter([
 						element: <AdapterRatings />,
 					},
 				],
-			},*/
+			},
 			{
 				index: true,
 				element: <Dashboard />,

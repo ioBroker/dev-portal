@@ -6,12 +6,12 @@ import {
 	Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useMatch, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { CardButton } from "../../components/CardButton";
-import { CardGrid, CardGridProps } from "../../components/CardGrid";
-import { DashboardCardProps } from "../../components/DashboardCard";
-import { AdapterInfos, getAllRatings, getLatest } from "../../lib/ioBroker";
+import { CardGrid, CardGridProps } from "../../components/dashboard/CardGrid";
+import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
 import { useAdapter } from "../../contexts/AdapterContext";
+import { getAllRatings, getLatest } from "../../lib/ioBroker";
 
 const CATEGORY_GENERAL = "General";
 const CATEGORY_FEATURES = "Features";

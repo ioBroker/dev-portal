@@ -1,4 +1,4 @@
-import { makeStyles, Paper } from "@mui/material";
+import { Box, Paper } from "@mui/material";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
 import { useEffect, useState } from "react";
@@ -9,15 +9,6 @@ import { AdapterStats } from "../../../../backend/src/global/adapter-stats";
 import { getApiUrl } from "../../lib/utils";
 
 const uc = encodeURIComponent;
-
-const useStyles = makeStyles((theme) => ({
-	root: {
-		padding: theme.spacing(2),
-	},
-	chart: {
-		marginTop: theme.spacing(2),
-	},
-}));
 
 const chartDefaults = {
 	title: {
@@ -72,12 +63,15 @@ const chartDefaults = {
 export interface AdapterStatisticsProps {}
 
 export function AdapterStatistics(props: AdapterStatisticsProps) {
-	const classes = useStyles();
-	const { name } = useParams<{ name: string }>();
+	const { name } = useParams<"name">();
 	const [option, setOption] = useState<any>();
 	const [showLoading, setShowLoading] = useState(true);
 
 	useEffect(() => {
+		if (!name) {
+			return;
+		}
+
 		setOption(undefined);
 		setShowLoading(true);
 		const loadStatistics = async () => {
@@ -170,17 +164,18 @@ export function AdapterStatistics(props: AdapterStatisticsProps) {
 		});
 	}, [name]);
 	return (
-		<Paper className={classes.root}>
+		<Paper sx={{ padding: (theme) => theme.spacing(2) }}>
 			{(option || showLoading) && (
-				<ReactECharts
-					className={classes.chart}
-					style={{ height: "400px" }}
-					loadingOption={{
-						type: "default",
-					}}
-					showLoading={showLoading}
-					option={option || { ...chartDefaults }}
-				/>
+				<Box sx={{ marginTop: (theme) => theme.spacing(2) }}>
+					<ReactECharts
+						style={{ height: "400px" }}
+						loadingOption={{
+							type: "default",
+						}}
+						showLoading={showLoading}
+						option={option || { ...chartDefaults }}
+					/>
+				</Box>
 			)}
 		</Paper>
 	);

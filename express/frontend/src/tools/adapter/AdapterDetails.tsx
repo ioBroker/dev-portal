@@ -5,12 +5,18 @@ import {
 	Breadcrumbs,
 	LinearProgress,
 	Link,
-	makeStyles,
 	Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { Outlet, Route, Link as RouterLink, useParams } from "react-router-dom";
-import { GitHubComm, User } from "../../lib/gitHub";
+import {
+	Outlet,
+	Link as RouterLink,
+	useMatches,
+	useParams,
+} from "react-router-dom";
+import { AdapterProvider } from "../../contexts/AdapterContext";
+import { useUserContext } from "../../contexts/UserContext";
+import { GitHubComm } from "../../lib/gitHub";
 import {
 	AdapterInfos,
 	getAdapterInfos,
@@ -18,48 +24,37 @@ import {
 	getMyAdapterInfos,
 	getWatchedAdapterInfos,
 } from "../../lib/ioBroker";
-import AdapterDashboard from "./AdapterDashboard";
-import AdapterRatings from "./AdapterRatings";
-import AdapterStatistics from "./AdapterStatistics";
-import Releases from "./Releases";
-import { useUserContext } from "../../contexts/UserContext";
-import { AdapterProvider } from "../../contexts/AdapterContext";
 
 const LinkRouter = (props: any) => <Link {...props} component={RouterLink} />;
 
-const useStyles = makeStyles((theme) => ({
-	breadcrumbs: {
-		paddingBottom: theme.spacing(1),
-	},
-}));
-
 export function AdapterDetails() {
-	const user = useUserContext();
-	const { path, url } = useRouteMatch();
-	const { name } = useParams<{ name: string }>();
-
-	const history = useHistory();
-	const pathNames = history.location.pathname
-		.replace(url, "")
-		.replace(/~.+$/, "")
+	const { user } = useUserContext();
+	const matches = useMatches();
+	const pathNames = matches[matches.length - 1].pathname
 		.split("/")
-		.filter((x) => x);
+		.slice(3)
+		.filter(Boolean);
+	const { name } = useParams<"name">();
 
 	const [infos, setInfos] = useState<AdapterInfos | string>();
 
 	useEffect(() => {
 		const loadInfos = async () => {
-			const myAdapters = await getMyAdapterInfos(user.token);
+			const token = user?.token;
+			if (!token || !name) {
+				return;
+			}
+			const myAdapters = await getMyAdapterInfos(token);
 			let found = myAdapters.find((a) => a.info?.name === name);
 			if (found) {
 				return setInfos(found);
 			}
-			const watchedAdapters = await getWatchedAdapterInfos(user.token);
+			const watchedAdapters = await getWatchedAdapterInfos(token);
 			found = watchedAdapters.find((a) => a.info?.name === name);
 			if (found) {
 				return setInfos(found);
 			}
-			const gitHub = GitHubComm.forToken(user.token);
+			const gitHub = GitHubComm.forToken(token);
 			const latest = await getLatest();
 			if (latest[name]) {
 				// meta: https://raw.githubusercontent.com/misanorot/ioBroker.alarm/master/io-package.json
@@ -88,21 +83,18 @@ export function AdapterDetails() {
 		return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 	};
 
-	const classes = useStyles();
 	return (
 		<>
 			<Breadcrumbs
 				separator={<NavigateNextIcon fontSize="small" />}
-				className={classes.breadcrumbs}
+				sx={{ paddingBottom: (theme) => theme.spacing(1) }}
 			>
-				<LinkRouter color="inherit" to={url}>
+				<LinkRouter color="inherit" to={"."}>
 					ioBroker.{name}
 				</LinkRouter>
 				{pathNames.map((value, index) => {
 					const last = index === pathNames.length - 1;
-					const to = `${url}/${pathNames
-						.slice(0, index + 1)
-						.join("/")}`;
+					const to = `${pathNames.slice(0, index + 1).join("/")}`;
 
 					return last ? (
 						<Typography color="textPrimary" key={to}>

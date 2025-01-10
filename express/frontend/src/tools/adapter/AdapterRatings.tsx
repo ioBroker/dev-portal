@@ -5,13 +5,14 @@ import {
 	ListItem,
 	ListItemAvatar,
 	ListItemText,
-	makeStyles,
 	Paper,
 	Rating,
+	SxProps,
+	Theme,
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
 	Rating as IoBrokerRating,
@@ -19,26 +20,20 @@ import {
 } from "../../../../backend/src/global/iobroker";
 import { getAdapterRatings, getAllRatings } from "../../lib/ioBroker";
 
-const useStyles = makeStyles((theme) => ({
-	firstPaper: {
-		marginBottom: theme.spacing(),
-	},
-	list: {
-		width: "100%",
-	},
-	avatar: {
-		paddingRight: theme.spacing(2),
-	},
-}));
+const sxList: SxProps<Theme> = {
+	width: "100%",
+};
+const sxAvatar: SxProps<Theme> = {
+	paddingRight: (theme) => theme.spacing(2),
+};
 
 function GlobalRating(props: { title: string; rating: IoBrokerRating }) {
 	const { title, rating } = props;
-	const classes = useStyles();
 	return (
 		<ListItem>
 			<ListItemAvatar>
 				<Tooltip title={`Rating: ${rating.r}`}>
-					<Typography className={classes.avatar}>
+					<Typography sx={sxAvatar}>
 						<Rating
 							size="large"
 							value={rating.r}
@@ -56,9 +51,7 @@ function GlobalRating(props: { title: string; rating: IoBrokerRating }) {
 	);
 }
 
-export interface AdapterRatingsProps {}
-
-export function AdapterRatings(props: AdapterRatingsProps) {
+export function AdapterRatings() {
 	const { name } = useParams<{ name: string }>();
 
 	const [overallRating, setOverallRating] = useState<IoBrokerRating>();
@@ -69,6 +62,9 @@ export function AdapterRatings(props: AdapterRatingsProps) {
 
 	useEffect(() => {
 		const loadRatings = async () => {
+			if (!name) {
+				return;
+			}
 			try {
 				const [allRatings, adapterRatings] = await Promise.all([
 					getAllRatings(),
@@ -94,14 +90,13 @@ export function AdapterRatings(props: AdapterRatingsProps) {
 		loadRatings().catch(console.error);
 	}, [name]);
 
-	const classes = useStyles();
 	return (
 		<>
 			<Paper
-				className={classes.firstPaper}
+				sx={{ marginBottom: (theme) => theme.spacing(1) }}
 				hidden={!currentRating && !overallRating}
 			>
-				<List className={classes.list}>
+				<List sx={sxList}>
 					{currentRating && (
 						<>
 							<GlobalRating
@@ -117,7 +112,7 @@ export function AdapterRatings(props: AdapterRatingsProps) {
 				</List>
 			</Paper>
 			<Paper hidden={comments?.length === 0}>
-				<List className={classes.list}>
+				<List sx={sxList}>
 					{!comments && (
 						<ListItem>
 							<ListItemText primary={<LinearProgress />} />
@@ -125,19 +120,15 @@ export function AdapterRatings(props: AdapterRatingsProps) {
 					)}
 					{comments &&
 						comments.map((c, i) => (
-							<>
+							<Fragment key={c.ts}>
 								{!!i && (
-									<Divider
-										key={i}
-										variant="middle"
-										component="li"
-									/>
+									<Divider variant="middle" component="li" />
 								)}
-								<ListItem key={i} alignItems="flex-start">
+								<ListItem alignItems="flex-start">
 									<ListItemAvatar>
 										<Typography>
 											<Rating
-												className={classes.avatar}
+												sx={sxAvatar}
 												value={c.rating}
 												readOnly
 											/>
@@ -152,7 +143,7 @@ export function AdapterRatings(props: AdapterRatingsProps) {
 										}`}
 									/>
 								</ListItem>
-							</>
+							</Fragment>
 						))}
 				</List>
 			</Paper>
