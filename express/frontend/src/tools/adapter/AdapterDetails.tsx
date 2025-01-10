@@ -87,7 +87,7 @@ export function AdapterDetails() {
 		<>
 			<Breadcrumbs
 				separator={<NavigateNextIcon fontSize="small" />}
-				sx={{ paddingBottom: (theme) => theme.spacing(1) }}
+				sx={{ paddingBottom: 1 }}
 			>
 				<LinkRouter color="inherit" to={"."}>
 					ioBroker.{name}

@@ -164,9 +164,9 @@ export function AdapterStatistics(props: AdapterStatisticsProps) {
 		});
 	}, [name]);
 	return (
-		<Paper sx={{ padding: (theme) => theme.spacing(2) }}>
+		<Paper sx={{ padding: 2 }}>
 			{(option || showLoading) && (
-				<Box sx={{ marginTop: (theme) => theme.spacing(2) }}>
+				<Box sx={{ marginTop: 2 }}>
 					<ReactECharts
 						style={{ height: "400px" }}
 						loadingOption={{

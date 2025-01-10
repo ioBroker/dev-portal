@@ -24,7 +24,7 @@ const sxList: SxProps<Theme> = {
 	width: "100%",
 };
 const sxAvatar: SxProps<Theme> = {
-	paddingRight: (theme) => theme.spacing(2),
+	paddingRight: 2,
 };
 
 function GlobalRating(props: { title: string; rating: IoBrokerRating }) {
@@ -93,7 +93,7 @@ export function AdapterRatings() {
 	return (
 		<>
 			<Paper
-				sx={{ marginBottom: (theme) => theme.spacing(1) }}
+				sx={{ marginBottom: 1 }}
 				hidden={!currentRating && !overallRating}
 			>
 				<List sx={sxList}>

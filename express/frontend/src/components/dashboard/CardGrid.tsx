@@ -21,11 +21,7 @@ const itemSizes = {
 export function CardGrid(props: CardGridProps) {
 	const { cards, onAdd } = props;
 	return (
-		<Grid2
-			container
-			spacing={4}
-			sx={{ marginBottom: (theme) => theme.spacing(1) }}
-		>
+		<Grid2 container spacing={4} sx={{ marginBottom: 1 }}>
 			{cards.length > 0 &&
 				cards.map((card) => (
 					<Grid2 key={card.title} size={itemSizes}>
