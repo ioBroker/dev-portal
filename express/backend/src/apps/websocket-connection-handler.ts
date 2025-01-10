@@ -35,7 +35,7 @@ export abstract class WebSocketConnectionHandler<
 			);
 		this.rootDir = path.join(tempDir, this.id);
 
-		this.logLocal("Client connected");
+		this.logLocal("Client connected, using temp dir", this.rootDir);
 
 		client.on("error", (e) => this.logLocal("Client error", e));
 		client.on("close", (code, reason) => {
