@@ -1,5 +1,3 @@
-import { useCookies } from "react-cookie";
-import { Outlet, Link as RouterLink, useLocation } from "react-router-dom";
 import {
 	Divider,
 	ListItem,
@@ -7,11 +5,12 @@ import {
 	ListItemText,
 	Tooltip,
 } from "@mui/material";
-import { AdapterCheckIcon, CreateAdapterIcon, DashboardIcon } from "./Icons";
-import { useUserContext } from "../contexts/UserContext";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import { useAdapterList } from "../contexts/AdapterListContext";
-import { notEmpty } from "../lib/utils";
 import { useDrawerContext } from "../contexts/DrawerContext";
+import { useUserContext } from "../contexts/UserContext";
+import { notEmpty } from "../lib/utils";
+import { AdapterCheckIcon, CreateAdapterIcon, DashboardIcon } from "./Icons";
 
 function NavListItem({
 	link,

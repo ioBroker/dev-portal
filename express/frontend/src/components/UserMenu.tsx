@@ -1,5 +1,4 @@
 import {
-	Box,
 	ClickAwayListener,
 	Grow,
 	IconButton,

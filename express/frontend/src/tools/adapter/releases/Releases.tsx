@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router-dom";
 import { coerce } from "semver";
 import { AuthConsentDialog } from "../../../components/AuthConsentDialog";
 import {
@@ -125,7 +125,6 @@ export function Releases() {
 	const { infos } = useAdapter();
 	const { name } = useParams<"name">();
 	const location = useLocation();
-	const navigate = useNavigate();
 	const [canPush, setCanPush] = useState<boolean>();
 	const [rows, setRows] = useState<ReleaseInfo[]>();
 	const [hasReleaseScript, setHasReleaseScript] = useState<boolean>();

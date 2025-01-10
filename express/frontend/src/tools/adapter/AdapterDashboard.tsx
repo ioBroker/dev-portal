@@ -10,7 +10,6 @@ import { useParams } from "react-router-dom";
 import { CardButton } from "../../components/CardButton";
 import { CardGrid, CardGridProps } from "../../components/dashboard/CardGrid";
 import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
-import { useAdapter } from "../../contexts/AdapterContext";
 import { getAllRatings, getLatest } from "../../lib/ioBroker";
 
 const CATEGORY_GENERAL = "General";
@@ -21,7 +20,6 @@ const EMPTY_CARDS = {
 };
 
 export function AdapterDashboard() {
-	const { infos } = useAdapter();
 	const { name } = useParams<{ name: string }>();
 	const [categories, setCategories] =
 		useState<Record<string, CardGridProps>>(EMPTY_CARDS);
