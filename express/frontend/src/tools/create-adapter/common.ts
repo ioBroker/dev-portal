@@ -1,7 +1,9 @@
-import { Question } from "@iobroker/create-adapter/build/core";
+import { Answers, Question } from "@iobroker/create-adapter/build/core";
 
 export const STORAGE_KEY_ANSWERS_AFTER_LOGIN = "creator-answers-after-login";
 export const STORAGE_KEY_CURRENT_ANSWERS = "creator-current-answers";
+
+export type AnswersWithoutTarget = Omit<Answers, "target">;
 
 export function getQuestionName(question: Question): string {
 	return typeof question.name === "function"

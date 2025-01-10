@@ -6,6 +6,7 @@ import { AdapterDashboard } from "./tools/adapter/AdapterDashboard";
 import { AdapterDetails } from "./tools/adapter/AdapterDetails";
 import { AdapterRatings } from "./tools/adapter/AdapterRatings";
 import { AdapterStatistics } from "./tools/adapter/AdapterStatistics";
+import { StartCreateAdapter } from "./tools/create-adapter/StartCreateAdapter";
 
 export const router = createBrowserRouter([
 	{
@@ -17,20 +18,20 @@ export const router = createBrowserRouter([
 		),
 
 		children: [
-			/*{
+			{
 				path: "/create-adapter",
 				children: [
 					{
 						index: true,
 						element: <StartCreateAdapter />,
 					},
-					{
+					/*{
 						path: "wizard",
 						element: <Wizard />,
-					},
+					},*/
 				],
 			},
-			{
+			/*{
 				path: "/adapter-check",
 				element: <AdapterCheck />,
 			},*/
