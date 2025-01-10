@@ -10,10 +10,7 @@ Development is done in Visual Studio Code using DevContainers. Please make sure 
 
 Both frontend and backend will automatically start as hot-reload server in a task in the lower part of VS Code.
 
-You can reach the servers under:
-
--   frontend: http://localhost:3000/
--   backend: http://localhost:8080/
+You can reach the application (through a proxy) under http://localhost:8080/
 
 ## Deployment
 
