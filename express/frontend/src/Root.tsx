@@ -117,20 +117,7 @@ export function Root() {
 		<Box sx={{ display: "flex" }}>
 			<CssBaseline />
 			<ReloadPageSnackbar />
-			<AppBar
-				position="fixed"
-				/*sx={{
-					zIndex: (theme) => theme.zIndex.drawer + 1,
-					transition: (theme) =>
-						theme.transitions.create(["width", "margin"], {
-							easing: theme.transitions.easing.sharp,
-							duration: theme.transitions.duration.leavingScreen,
-						}),
-					marginLeft: drawerWidth,
-					width: open ? `calc(100% - ${drawerWidth})` : undefined,
-				}}*/
-				open={isOpen}
-			>
+			<AppBar position="fixed" open={isOpen}>
 				<Toolbar>
 					<IconButton
 						edge="start"
@@ -176,30 +163,7 @@ export function Root() {
 			</AppBar>
 			{isReady && (
 				<>
-					<Drawer
-						variant="permanent"
-						sx={
-							{
-								/*position: "relative",
-							whiteSpace: "nowrap",
-							width: (theme) =>
-								open ? drawerWidth : theme.spacing(7),
-							overflowX: "hidden",
-							transition: (theme) =>
-								theme.transitions.create("width", {
-									easing: theme.transitions.easing.sharp,
-									duration:
-										theme.transitions.duration
-											.enteringScreen,
-								}),
-							display: {
-								xs: "none",
-								sm: "block",
-							},*/
-							}
-						}
-						open={isOpen}
-					>
+					<Drawer variant="permanent" open={isOpen}>
 						<Box
 							sx={(theme) => ({
 								display: "flex",
