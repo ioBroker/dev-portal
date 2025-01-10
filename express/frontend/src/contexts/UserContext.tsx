@@ -56,6 +56,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 		}
 	}, [cookies, user, isReady, removeCookie]);
 
+	const login = useCallback(() => {
+		if (window.location.port === "3000") {
+			alert(
+				"Login is not supported in local development mode, please use docker-compose to test login",
+			);
+		} else {
+			const url = encodeURIComponent(window.location.pathname);
+			window.location.href = `/login?redirect=${url}`;
+		}
+	}, []);
+
 	const logout = useCallback(() => {
 		removeCookie(gitHubTokenCookie);
 		delete cookies[gitHubTokenCookie];
@@ -63,7 +74,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 	}, [cookies, removeCookie]);
 
 	return (
-		<UserContext.Provider value={{ user, logout, isReady }}>
+		<UserContext.Provider value={{ user, login, logout, isReady }}>
 			{children}
 		</UserContext.Provider>
 	);
