@@ -10,7 +10,7 @@ import { CardButton } from "../../components/CardButton";
 import { CardGrid, CardGridProps } from "../../components/dashboard/CardGrid";
 import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
 import { useAdapter } from "../../contexts/AdapterContext";
-import { getAllRatings, getLatest } from "../../lib/ioBroker";
+import { getAllRatings, getLatest, getStatistics } from "../../lib/ioBroker";
 
 const CATEGORY_GENERAL = "General";
 const CATEGORY_FEATURES = "Features";
@@ -32,6 +32,14 @@ export function AdapterDashboard() {
 				getLatest(),
 				getAllRatings(),
 			]);
+			let hasStatistics = !!latest[name];
+			if (!hasStatistics) {
+				// check if statistics are available
+				try {
+					await getStatistics(name);
+					hasStatistics = true;
+				} catch {}
+			}
 			const generalCards: DashboardCardProps[] = [];
 			generalCards.push({
 				title: "Releases",
@@ -43,7 +51,7 @@ export function AdapterDashboard() {
 				to: "releases",
 				buttons: [<CardButton text="Manage" to="releases" />],
 			});
-			if (latest[name]) {
+			if (hasStatistics) {
 				generalCards.push({
 					title: "Statistics",
 					text: "Learn more about the usage and distribution of your adapter.",
