@@ -19,8 +19,12 @@ import {
 	TableHead,
 	TableRow,
 } from "@mui/material";
-import React, { Dispatch, useState } from "react";
+import { Dispatch, useState } from "react";
 import { QuestionViewProps, useValueState } from "./QuestionView";
+
+const textSize = 5;
+const valueSize = 5;
+const buttonSize = 2;
 
 export const AdapterSettingOption = (props: {
 	option: AdapterSelectOption;
@@ -34,21 +38,21 @@ export const AdapterSettingOption = (props: {
 	const handleChange = (): void => onChange({ text, value });
 	return (
 		<>
-			<Grid2 item xs={5}>
+			<Grid2 size={textSize}>
 				<Input
 					value={text}
 					onChange={(e) => setText(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
 			</Grid2>
-			<Grid2 item xs={5}>
+			<Grid2 size={valueSize}>
 				<Input
 					value={value}
 					onChange={(e) => setValue(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
 			</Grid2>
-			<Grid2 item xs={2}>
+			<Grid2 size={buttonSize}>
 				<IconButton
 					size="small"
 					aria-label="delete"
@@ -90,13 +94,9 @@ export const AdapterSettingOptions = (props: {
 
 	return (
 		<Grid2 container spacing={0} style={{ width: "30vw" }}>
-			<Grid2 item xs={5}>
-				Text
-			</Grid2>
-			<Grid2 item xs={5}>
-				Value
-			</Grid2>
-			<Grid2 item xs={2}>
+			<Grid2 size={textSize}>Text</Grid2>
+			<Grid2 size={valueSize}>Value</Grid2>
+			<Grid2 size={buttonSize}>
 				<IconButton
 					size="small"
 					aria-label="add"

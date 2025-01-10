@@ -29,7 +29,7 @@ export function Group({ group, answers, onAnswerChanged }: GroupProps) {
 
 	return (
 		<Grid2 container spacing={1}>
-			<Grid2 item xs={12}>
+			<Grid2 size={12}>
 				<Typography variant="h6">{group.headline}</Typography>
 			</Grid2>
 			{group.questions.map((question, i) => {
@@ -40,7 +40,7 @@ export function Group({ group, answers, onAnswerChanged }: GroupProps) {
 					return null;
 				}
 				return (
-					<Grid2 item xs={12} key={i}>
+					<Grid2 key={i} size={12}>
 						<QuestionView
 							question={question}
 							answers={answers}

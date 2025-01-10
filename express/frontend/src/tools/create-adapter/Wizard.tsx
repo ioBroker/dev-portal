@@ -6,7 +6,6 @@ import {
 	Divider,
 	Grid2,
 	Hidden,
-	makeStyles,
 	MobileStepper,
 	Paper,
 	Step,
@@ -22,34 +21,16 @@ import {
 	STORAGE_KEY_ANSWERS_AFTER_LOGIN,
 	STORAGE_KEY_CURRENT_ANSWERS,
 } from "./common";
-import { Group } from "./Group";
 import { AnswersWithoutTarget, GenerateStep } from "./GenerateStep";
+import { Group } from "./Group";
 
 const initialAnswers: Record<string, any> = {
 	expert: "yes",
 	cli: false,
 };
 
-const useStyles = makeStyles((theme) => ({
-	root: {
-		padding: theme.spacing(2),
-	},
-	stepper: {
-		padding: theme.spacing(1),
-	},
-	divider: {
-		marginTop: theme.spacing(1),
-		marginBottom: theme.spacing(1),
-	},
-	version: {
-		marginLeft: "auto",
-		color: "#ccc",
-	},
-}));
-
 export function Wizard() {
-	const user = useUserContext();
-	const classes = useStyles();
+	const { user } = useUserContext();
 
 	const [version, setVersion] = useState("");
 	const [activeStep, setActiveStep] = useState(0);
@@ -75,29 +56,31 @@ export function Wizard() {
 	}, [answers]);
 
 	useEffect(() => {
-		if (user) {
-			const author: Record<string, string> = {
-				authorName: user.name || user.login,
-				authorGithub: user.login,
+		if (!user) {
+			return;
+		}
+
+		const author: Record<string, string> = {
+			authorName: user.name || user.login,
+			authorGithub: user.login,
+		};
+		if (user.email) {
+			author.authorEmail = user.email;
+			setAnswers((a) => ({ ...a, ...author }));
+		} else {
+			setAnswers((a) => ({ ...a, ...author }));
+			const getEmails = async () => {
+				const emails = await GitHubComm.forToken(
+					user.token,
+				).getEmails();
+				const email =
+					emails.find((e) => e.visibility === "public") ||
+					emails.find((e) => e.primary);
+				if (email) {
+					setAnswers((a) => ({ ...a, authorEmail: email.email }));
+				}
 			};
-			if (user.email) {
-				author.authorEmail = user.email;
-				setAnswers((a) => ({ ...a, ...author }));
-			} else {
-				setAnswers((a) => ({ ...a, ...author }));
-				const getEmails = async () => {
-					const emails = await GitHubComm.forToken(
-						user.token,
-					).getEmails();
-					const email =
-						emails.find((e) => e.visibility === "public") ||
-						emails.find((e) => e.primary);
-					if (email) {
-						setAnswers((a) => ({ ...a, authorEmail: email.email }));
-					}
-				};
-				getEmails().catch(console.error);
-			}
+			getEmails().catch(console.error);
 		}
 	}, [user]);
 
@@ -150,11 +133,11 @@ export function Wizard() {
 	const handleNext = () => setActiveStep(activeStep + 1);
 
 	return (
-		<Paper className={classes.root}>
+		<Paper sx={{ padding: 2 }}>
 			<Hidden xsDown>
 				<Stepper
 					activeStep={activeStep}
-					className={classes.stepper}
+					sx={{ padding: 1 }}
 					alternativeLabel
 				>
 					{questionGroups.map((group, index) => (
@@ -172,7 +155,12 @@ export function Wizard() {
 						</StepButton>
 					</Step>
 				</Stepper>
-				<Divider className={classes.divider} />
+				<Divider
+					sx={{
+						marginTop: 1,
+						marginBottom: 1,
+					}}
+				/>
 			</Hidden>
 			{questionGroups[activeStep] ? (
 				<Group
@@ -200,7 +188,7 @@ export function Wizard() {
 			)}
 			<Hidden xsDown>
 				<Grid2 container spacing={1}>
-					<Grid2 item>
+					<Grid2>
 						<Button
 							variant="contained"
 							disabled={!hasPrevious}
@@ -209,7 +197,7 @@ export function Wizard() {
 							Previous
 						</Button>
 					</Grid2>
-					<Grid2 item>
+					<Grid2>
 						<Button
 							color="primary"
 							variant="contained"
@@ -219,7 +207,12 @@ export function Wizard() {
 							Next
 						</Button>
 					</Grid2>
-					<Grid2 item className={classes.version}>
+					<Grid2
+						sx={{
+							marginLeft: "auto",
+							color: "#ccc",
+						}}
+					>
 						<br />
 						{version}
 					</Grid2>

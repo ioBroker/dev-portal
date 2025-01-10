@@ -17,6 +17,7 @@ import {
 	Radio,
 	RadioGroup,
 	Select,
+	SelectChangeEvent,
 	Switch,
 	TextField,
 	Tooltip,
@@ -28,7 +29,7 @@ import {
 	SpecificPromptOptions,
 	StringPromptOptions,
 } from "enquirer";
-import React, {
+import {
 	ChangeEvent,
 	Dispatch,
 	SetStateAction,
@@ -208,7 +209,9 @@ export const BooleanSelectRenderer = (
 			error={!!error}
 			required={isRequired(question)}
 		>
-			<FormLabel component="legend">{question.message}</FormLabel>
+			<FormLabel component="legend">
+				{getQuestionMessage(question)}
+			</FormLabel>
 			<FormGroup>
 				<FormControlLabel
 					control={
@@ -249,7 +252,9 @@ export const RadioSelectRenderer = (
 			error={!!error}
 			required={isRequired(question)}
 		>
-			<FormLabel component="legend">{question.message}</FormLabel>
+			<FormLabel component="legend">
+				{getQuestionMessage(question)}
+			</FormLabel>
 			<RadioGroup value={value} onChange={handleChange} row>
 				{question.choices.map((c: string | Choice, i: number) =>
 					typeof c === "string" ? (
@@ -288,13 +293,8 @@ export const ComboBoxSelectRenderer = (
 	);
 	const [error, setError] = useState("");
 
-	const handleChange = (
-		e: ChangeEvent<{
-			name?: string | undefined;
-			value: unknown;
-		}>,
-	): void => {
-		setValue(e.target.value as string);
+	const handleChange = (e: SelectChangeEvent<string>): void => {
+		setValue(e.target.value);
 		handleValueChange(props, e.target.value, setError);
 	};
 	return (
@@ -304,7 +304,9 @@ export const ComboBoxSelectRenderer = (
 			error={!!error}
 			required={isRequired(question)}
 		>
-			<InputLabel id={`label_${name}`}>{question.message}</InputLabel>
+			<InputLabel id={`label_${name}`}>
+				{getQuestionMessage(question)}
+			</InputLabel>
 			<Select
 				labelId={`label_${name}`}
 				value={value}
@@ -388,7 +390,9 @@ export const MultiSelectRenderer = (
 			error={!!error}
 			required={isRequired(question)}
 		>
-			<FormLabel component="legend">{question.message}</FormLabel>
+			<FormLabel component="legend">
+				{getQuestionMessage(question)}
+			</FormLabel>
 			<FormGroup row>
 				{question.choices.map((c: string | Choice, i: number) =>
 					typeof c === "string" ? (
@@ -426,11 +430,11 @@ export const MultiSelectRenderer = (
 	);
 };
 
-const SUPPORTED_IMAGE_TYPES: Record<string, string> = {
-	"image/jpeg": "jpg",
-	"image/png": "png",
-	"image/gif": "gif",
-	"image/svg+xml": "svg",
+const SUPPORTED_IMAGE_TYPES: Record<string, string[]> = {
+	"image/jpeg": ["jpg"],
+	"image/png": ["png"],
+	"image/gif": ["gif"],
+	"image/svg+xml": ["svg"],
 };
 
 export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
@@ -486,7 +490,7 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 					`Unknown media type in ${base64.substring(0, 25)}`,
 				);
 			}
-			const extension = SUPPORTED_IMAGE_TYPES[match[1]];
+			const extension = SUPPORTED_IMAGE_TYPES[match[1]]?.[0];
 			if (!extension) {
 				throw new Error(`Unsupported media type: ${match[1]}`);
 			}
@@ -507,7 +511,7 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 		<Dropzone
 			onDrop={(files, rejected) => handleDropImage(files, rejected)}
 			maxSize={300000}
-			accept={Object.keys(SUPPORTED_IMAGE_TYPES).join(", ")}
+			accept={SUPPORTED_IMAGE_TYPES}
 		>
 			{({ getRootProps, getInputProps, isDragActive }) => {
 				return (
@@ -518,7 +522,7 @@ export const IconUploadRenderer = (props: QuestionViewProps): JSX.Element => {
 						required={isRequired(question)}
 					>
 						<FormLabel component="legend">
-							{question.message}
+							{getQuestionMessage(question)}
 						</FormLabel>
 						<Paper
 							elevation={3}

@@ -11,6 +11,7 @@ import { Releases } from "./tools/adapter/releases/Releases";
 import { UpdateRepositoriesDialog } from "./tools/adapter/releases/UpdateRepositoriesDialog";
 import { AdapterCheck } from "./tools/AdapterCheck";
 import { StartCreateAdapter } from "./tools/create-adapter/StartCreateAdapter";
+import { Wizard } from "./tools/create-adapter/Wizard";
 
 export const router = createBrowserRouter([
 	{
@@ -29,10 +30,10 @@ export const router = createBrowserRouter([
 						index: true,
 						element: <StartCreateAdapter />,
 					},
-					/*{
+					{
 						path: "wizard",
 						element: <Wizard />,
-					},*/
+					},
 				],
 			},
 			{
