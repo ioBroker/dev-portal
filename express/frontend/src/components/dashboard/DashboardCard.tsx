@@ -11,6 +11,7 @@ import {
 	Rating,
 	Typography,
 } from "@mui/material";
+import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { Rating as IoBrokerRating } from "../../../../backend/src/global/iobroker";
 import { AddCardIcon, CloseIcon } from "../Icons";
@@ -100,10 +101,10 @@ export function DashboardCard({
 				{badges && (
 					<Typography>
 						{Object.keys(badges).map((name) => (
-							<>
+							<Fragment key={name}>
 								<img src={badges[name]} alt={name} />
 								&nbsp;
-							</>
+							</Fragment>
 						))}
 					</Typography>
 				)}
