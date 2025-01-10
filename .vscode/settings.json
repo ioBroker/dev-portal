@@ -8,5 +8,7 @@
 			"source.organizeImports": "explicit"
 		}
 	},
-	"cSpell.words": ["iobroker", "Weblate"]
+	"cSpell.words": ["iobroker", "Weblate"],
+	"editor.foldingImportsByDefault": true,
+	"editor.pasteAs.preferences": ["text.updateImports"]
 }
