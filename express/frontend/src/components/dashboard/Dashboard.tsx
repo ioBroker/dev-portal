@@ -245,10 +245,18 @@ function AdapterSentryButton(props: { projects: ProjectInfo[] }) {
 }
 
 async function getDiscoveryLink(adapterName: string) {
-	return (await hasDiscoverySupport(adapterName))
-		? `https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
+	try {
+		if (await hasDiscoverySupport(adapterName)) {
+			return (
+				`https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
 				`${uc(adapterName)}.js`
-		: "";
+			);
+		}
+		return "";
+	} catch (error) {
+		console.error(error);
+		return "";
+	}
 }
 
 async function getWeblateLink(adapterName: string) {
@@ -322,11 +330,11 @@ async function getAdapterCard(
 					<CardButton
 						disabled={!discoveryLink}
 						icon={<DiscoveryIcon />}
-						url={discoveryLink}
+						url={discoveryLink ?? undefined}
 					/>
 				</span>
 			</Tooltip>,
-			<AdapterSentryButton projects={sentryProjects} />,
+			<AdapterSentryButton projects={sentryProjects ?? []} />,
 			<Tooltip
 				title={`Translations ${
 					weblateLink ? "" : "not "
@@ -336,7 +344,7 @@ async function getAdapterCard(
 					<CardButton
 						disabled={!weblateLink}
 						icon={<WeblateIcon />}
-						url={weblateLink}
+						url={weblateLink ?? undefined}
 					/>
 				</span>
 			</Tooltip>,

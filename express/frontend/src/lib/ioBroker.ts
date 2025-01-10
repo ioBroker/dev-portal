@@ -41,17 +41,30 @@ export const getStable = AsyncCache.of(async () => {
 });
 
 export const getAllRatings = AsyncCache.of(async () => {
-	const result = await axios.get<AllRatings>(
-		"https://rating.iobroker.net/rating?uuid=iobroker.dev",
-	);
-	return result.data;
+	try {
+		const result = await axios.get<AllRatings>(
+			"https://rating.iobroker.net/rating?uuid=iobroker.dev",
+		);
+		return result.data;
+	} catch (error) {
+		console.error(error);
+		return {};
+	}
 });
 
-export async function getAdapterRatings(name: string) {
-	const result = await axios.get<AdapterRatings>(
-		`https://rating.iobroker.net/adapter/${uc(name)}?uuid=iobroker.dev`,
-	);
-	return result.data;
+export async function getAdapterRatings(name: string): Promise<AdapterRatings> {
+	try {
+		const result = await axios.get<AdapterRatings>(
+			`https://rating.iobroker.net/adapter/${uc(name)}?uuid=iobroker.dev`,
+		);
+		return result.data;
+	} catch (error) {
+		console.error(error);
+		return {
+			rating: {},
+			comments: [],
+		};
+	}
 }
 
 export async function getMyAdapterRepos(
@@ -184,10 +197,15 @@ export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 }
 
 export const getSentryProjectInfos = AsyncCache.of(async () => {
-	const result = await axios.get<ProjectInfo[]>(
-		getApiUrl("sentry/projects/"),
-	);
-	return result.data;
+	try {
+		const result = await axios.get<ProjectInfo[]>(
+			getApiUrl("sentry/projects/"),
+		);
+		return result.data;
+	} catch (error) {
+		console.error(error);
+		return [];
+	}
 });
 
 export async function getSentryStats(ids: string[], statsPeriod?: string) {
