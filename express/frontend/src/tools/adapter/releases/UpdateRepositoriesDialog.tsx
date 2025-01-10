@@ -2,8 +2,6 @@ import {
 	Alert,
 	AlertTitle,
 	Button,
-	Dialog,
-	DialogActions,
 	DialogContent,
 	DialogContentText,
 	DialogTitle,
@@ -22,33 +20,33 @@ import {
 	ServerClientMessage,
 	ToLatestMessage,
 	ToStableMessage,
-} from "../../../../backend/src/global/websocket";
-import { GitHubIcon } from "../../components/Icons";
-import WebSocketLog, {
+} from "../../../../../backend/src/global/websocket";
+import { GitHubIcon } from "../../../components/Icons";
+import {
 	isLogMessage,
 	LogHandler,
-} from "../../components/WebSocketLog";
-import { GitHubComm, User } from "../../lib/gitHub";
-import { AdapterInfos, checkAdapter } from "../../lib/ioBroker";
-import { getWebSocketUrl } from "../../lib/utils";
-import {
-	Message,
-	MessageIcon,
-	useStyles as useAdapterCheckStyles,
-} from "../AdapterCheck";
+	WebSocketLog,
+} from "../../../components/WebSocketLog";
+import { useAdapter } from "../../../contexts/AdapterContext";
+import { useUserContext } from "../../../contexts/UserContext";
+import { GitHubComm } from "../../../lib/gitHub";
+import { checkAdapter } from "../../../lib/ioBroker";
+import { getWebSocketUrl } from "../../../lib/utils";
+import { Message, MessageIcon, sxTableIcon } from "../../AdapterCheck";
+import { BaseReleaseDialog } from "./BaseReleaseDialog";
 
 export type RepositoriesAction = "to-stable" | "to-latest";
 
 function AdapterCheckStep(props: {
-	infos: AdapterInfos;
-	user: User;
 	action: RepositoriesAction;
 	onSuccess: () => void;
 }) {
-	const { infos, user, action, onSuccess } = props;
+	const { action, onSuccess } = props;
 	const { name } = useParams<{ name: string }>();
 	const [errors, setErrors] = useState<Message[]>();
 	const [pullRequestUrl, setPullRequestUrl] = useState<string>();
+	const { user } = useUserContext();
+	const { infos } = useAdapter();
 
 	useEffect(() => {
 		// check the diffs for an add (line starts with "+") of this adapter
@@ -70,7 +68,11 @@ function AdapterCheckStep(props: {
 							),
 						);
 		const findPullRequest = async () => {
-			const gitHub = GitHubComm.forToken(user.token);
+			const token = user?.token;
+			if (!token) {
+				return;
+			}
+			const gitHub = GitHubComm.forToken(token);
 			const repo = gitHub.getRepo("ioBroker", "ioBroker.repositories");
 			const prs = await repo.getPullRequests("open");
 			const diffs = await Promise.all(
@@ -101,7 +103,6 @@ function AdapterCheckStep(props: {
 		}
 	}, [errors, pullRequestUrl, onSuccess]);
 
-	const classes = useAdapterCheckStyles();
 	if (pullRequestUrl) {
 		const text =
 			action === "to-latest"
@@ -142,10 +143,7 @@ function AdapterCheckStep(props: {
 					<TableBody>
 						{errors.map((error, i) => (
 							<TableRow key={i}>
-								<TableCell
-									scope="row"
-									className={classes.tableIcon}
-								>
+								<TableCell scope="row" sx={sxTableIcon}>
 									<MessageIcon type={error.type} />
 								</TableCell>
 								<TableCell>{error.text}</TableCell>
@@ -159,15 +157,13 @@ function AdapterCheckStep(props: {
 }
 
 interface UpdateRepositoriesDialogProps {
-	infos: AdapterInfos;
-	user: User;
 	action: RepositoriesAction;
-	open: boolean;
-	onClose: () => void;
 }
 export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
-	const { infos, user, action, open, onClose } = props;
+	const { action } = props;
 	const { name, version } = useParams<{ name: string; version?: string }>();
+	const { user } = useUserContext();
+	const { infos } = useAdapter();
 
 	const webSocket = useWebSocket(getWebSocketUrl(action));
 
@@ -221,22 +217,36 @@ export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
 			? `Add ioBroker.${name} to beta/latest`
 			: `Update ioBroker.${name} to ${version} in stable`;
 	return (
-		<Dialog
-			open={open}
-			onClose={onClose}
-			scroll="paper"
-			maxWidth="md"
-			fullWidth
-			disableBackdropClick={busy}
-			disableEscapeKeyDown={busy}
+		<BaseReleaseDialog
+			busy={busy}
+			renderButtons={(onClose) => (
+				<>
+					{step === "add" && (
+						<Button
+							href={resultLink || ""}
+							target="_blank"
+							disabled={busy || !resultLink}
+							color="primary"
+							startIcon={<GitHubIcon />}
+						>
+							Show Pull Request
+						</Button>
+					)}
+					<Button
+						onClick={() => onClose()}
+						disabled={busy}
+						color="primary"
+					>
+						{step === "check" ? "Cancel" : "Close"}
+					</Button>
+				</>
+			)}
 		>
 			<DialogTitle>{title} repository</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText style={{ minHeight: "60vh" }}>
 					{step === "check" && (
 						<AdapterCheckStep
-							infos={infos}
-							user={user}
 							action={action}
 							onSuccess={() => setStep("add")}
 						/>
@@ -249,26 +259,6 @@ export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
 					)}
 				</DialogContentText>
 			</DialogContent>
-			<DialogActions>
-				{step === "add" && (
-					<Button
-						href={resultLink || ""}
-						target="_blank"
-						disabled={busy || !resultLink}
-						color="primary"
-						startIcon={<GitHubIcon />}
-					>
-						Show Pull Request
-					</Button>
-				)}
-				<Button
-					onClick={() => onClose()}
-					disabled={busy}
-					color="primary"
-				>
-					{step === "check" ? "Cancel" : "Close"}
-				</Button>
-			</DialogActions>
-		</Dialog>
+		</BaseReleaseDialog>
 	);
 }

@@ -1,7 +1,5 @@
 import {
 	Button,
-	Dialog,
-	DialogActions,
 	DialogContent,
 	DialogContentText,
 	DialogTitle,
@@ -16,23 +14,29 @@ import * as semver from "semver";
 import {
 	ReleaseType,
 	ServerClientMessage,
-} from "../../../../backend/src/global/websocket";
-import { GitHubIcon } from "../../components/Icons";
-import WebSocketLog, {
+} from "../../../../../backend/src/global/websocket";
+import { GitHubIcon } from "../../../components/Icons";
+import {
 	isLogMessage,
 	LogHandler,
-} from "../../components/WebSocketLog";
-import { AdapterInfos } from "../../lib/ioBroker";
-import { getWebSocketUrl } from "../../lib/utils";
+	WebSocketLog,
+} from "../../../components/WebSocketLog";
+import { useAdapter } from "../../../contexts/AdapterContext";
+import { getWebSocketUrl } from "../../../lib/utils";
+import { BaseReleaseDialog } from "./BaseReleaseDialog";
 
 const releaseTypes: ReleaseType[] = ["patch", "minor", "major"];
 
-function SelectVersion(props: {
-	infos: AdapterInfos;
-	onSelected: (type?: ReleaseType) => void;
-}) {
-	const { infos, onSelected } = props;
+const gridSizes = {
+	xs: 8,
+	sm: 6,
+	md: 4,
+};
+
+function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
+	const { onSelected } = props;
 	const [type, setType] = useState<ReleaseType>();
+	const { infos } = useAdapter();
 	const [version, setVersion] = useState<string>();
 	const [versions, setVersions] = useState<
 		{ value: ReleaseType; label: string }[]
@@ -58,7 +62,7 @@ function SelectVersion(props: {
 
 	return (
 		<Grid2 container direction="column" spacing={2}>
-			<Grid2 item xs={8} sm={6} md={4}>
+			<Grid2 size={gridSizes}>
 				<TextField
 					label="Current Version"
 					disabled
@@ -67,7 +71,7 @@ function SelectVersion(props: {
 					variant="outlined"
 				/>
 			</Grid2>
-			<Grid2 item xs={8} sm={6} md={4}>
+			<Grid2 size={gridSizes}>
 				<TextField
 					select
 					fullWidth
@@ -88,14 +92,9 @@ function SelectVersion(props: {
 	);
 }
 
-interface CreateReleaseDialogProps {
-	infos: AdapterInfos;
-	open: boolean;
-	onClose: () => void;
-}
-export function CreateReleaseDialog(props: CreateReleaseDialogProps) {
-	const { infos, open, onClose } = props;
+export function CreateReleaseDialog() {
 	const { name } = useParams<{ name: string }>();
+	const { infos } = useAdapter();
 
 	const webSocket = useWebSocket(getWebSocketUrl("release"));
 
@@ -133,23 +132,45 @@ export function CreateReleaseDialog(props: CreateReleaseDialogProps) {
 	};
 
 	return (
-		<Dialog
-			open={open}
-			onClose={onClose}
-			scroll="paper"
-			maxWidth="md"
-			fullWidth
-			disableBackdropClick={busy}
-			disableEscapeKeyDown={busy}
+		<BaseReleaseDialog
+			busy={busy}
+			renderButtons={(onClose) => (
+				<>
+					{step === "create" && (
+						<Button
+							href={resultLink || ""}
+							target="_blank"
+							disabled={busy || !resultLink}
+							color="primary"
+							startIcon={<GitHubIcon />}
+						>
+							Show Workflow
+						</Button>
+					)}
+					<Button
+						onClick={() => onClose()}
+						disabled={busy}
+						color="primary"
+					>
+						{step === "choose" ? "Cancel" : "Close"}
+					</Button>
+					{step === "choose" && (
+						<Button
+							onClick={() => setStep("create")}
+							disabled={!type}
+							color="primary"
+						>
+							Start
+						</Button>
+					)}
+				</>
+			)}
 		>
 			<DialogTitle>Create new release of ioBroker.{name}</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText style={{ minHeight: "60vh" }}>
 					{step === "choose" && (
-						<SelectVersion
-							infos={infos}
-							onSelected={(type) => setType(type)}
-						/>
+						<SelectVersion onSelected={(type) => setType(type)} />
 					)}
 					{step === "create" && (
 						<WebSocketLog
@@ -159,35 +180,6 @@ export function CreateReleaseDialog(props: CreateReleaseDialogProps) {
 					)}
 				</DialogContentText>
 			</DialogContent>
-			<DialogActions>
-				{step === "create" && (
-					<Button
-						href={resultLink || ""}
-						target="_blank"
-						disabled={busy || !resultLink}
-						color="primary"
-						startIcon={<GitHubIcon />}
-					>
-						Show Workflow
-					</Button>
-				)}
-				<Button
-					onClick={() => onClose()}
-					disabled={busy}
-					color="primary"
-				>
-					{step === "choose" ? "Cancel" : "Close"}
-				</Button>
-				{step === "choose" && (
-					<Button
-						onClick={() => setStep("create")}
-						disabled={!type}
-						color="primary"
-					>
-						Start
-					</Button>
-				)}
-			</DialogActions>
-		</Dialog>
+		</BaseReleaseDialog>
 	);
 }

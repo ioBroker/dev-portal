@@ -5,8 +5,8 @@ import {
 	Hidden,
 	LinearProgress,
 	Link,
-	makeStyles,
 	Paper,
+	SxProps,
 	Table,
 	TableBody,
 	TableCell,
@@ -17,24 +17,21 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Route, useParams } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { coerce } from "semver";
-import AuthConsentDialog from "../../components/AuthConsentDialog";
+import { AuthConsentDialog } from "../../../components/AuthConsentDialog";
 import {
 	GitHubIcon,
 	IoBrokerIcon,
 	LatestIcon,
 	NpmIcon,
-} from "../../components/Icons";
-import { GitHubComm, User } from "../../lib/gitHub";
-import { AdapterInfos, getLatest } from "../../lib/ioBroker";
-import { getPackage as getPackageMetaData } from "../../lib/npm";
-import CreateReleaseDialog from "./CreateReleaseDialog";
-import UpdateRepositoriesDialog, {
-	RepositoriesAction,
-} from "./UpdateRepositoriesDialog";
-import { useUserContext } from "../../contexts/UserContext";
-import { useAdapter } from "../../contexts/AdapterContext";
+} from "../../../components/Icons";
+import { useAdapter } from "../../../contexts/AdapterContext";
+import { useUserContext } from "../../../contexts/UserContext";
+import { GitHubComm } from "../../../lib/gitHub";
+import { getLatest } from "../../../lib/ioBroker";
+import { getPackage as getPackageMetaData } from "../../../lib/npm";
+import { RepositoriesAction } from "./UpdateRepositoriesDialog";
 
 type ReleaseAction = "release" | RepositoriesAction;
 
@@ -66,15 +63,12 @@ function setDates(release: ReleaseInfo, time: string) {
 	});
 }
 
-const useIconStyles = makeStyles((theme) => ({
-	icon: {
-		paddingRight: 2,
-	},
-}));
+const sxIcon: SxProps = {
+	paddingRight: "2px",
+};
 
 function Icons(props: { icons: ReleaseIcon[] }) {
 	const { icons } = props;
-	const classes = useIconStyles();
 	return (
 		<>
 			{icons.map((icon) => {
@@ -82,15 +76,13 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 					case "github":
 						return (
 							<Tooltip title="Current state on GitHub" key={icon}>
-								<GitHubIcon className={classes.icon} />
+								<GitHubIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					case "npm":
 						return (
 							<Tooltip title="Latest version on npm" key={icon}>
-								<span className={classes.icon}>
-									<NpmIcon className={classes.icon} />
-								</span>
+								<NpmIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					case "beta":
@@ -99,7 +91,7 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 								title="In ioBroker beta/latest repository"
 								key={icon}
 							>
-								<LatestIcon className={classes.icon} />
+								<LatestIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					case "stable":
@@ -108,9 +100,7 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 								title="In ioBroker stable repository"
 								key={icon}
 							>
-								<span className={classes.icon}>
-									<IoBrokerIcon />
-								</span>
+								<IoBrokerIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					default:
@@ -121,22 +111,21 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 	);
 }
 
-const useStyles = makeStyles((theme) => ({
-	icons: {
-		width: "1%",
-		whiteSpace: "nowrap",
-	},
-	button: {
-		whiteSpace: "nowrap",
-	},
-}));
+const sxIcons: SxProps = {
+	width: "1%",
+	whiteSpace: "nowrap",
+};
+
+const sxButton: SxProps = {
+	whiteSpace: "nowrap",
+};
 
 export function Releases() {
-	const user = useUserContext();
+	const { user } = useUserContext();
 	const { infos } = useAdapter();
-	const { path, url } = useRouteMatch();
-	const history = useHistory();
-	const { name } = useParams<{ name: string }>();
+	const { name } = useParams<"name">();
+	const location = useLocation();
+	const navigate = useNavigate();
 	const [canPush, setCanPush] = useState<boolean>();
 	const [rows, setRows] = useState<ReleaseInfo[]>();
 	const [hasReleaseScript, setHasReleaseScript] = useState<boolean>();
@@ -154,7 +143,11 @@ export function Releases() {
 			}
 		};
 		const loadReleases = async () => {
-			const gitHub = GitHubComm.forToken(user.token);
+			const token = user?.token;
+			if (!token || !name) {
+				return;
+			}
+			const gitHub = GitHubComm.forToken(token);
 			const repo = gitHub.getRepo(infos.repo);
 			const [npm, fullRepo, tags, latest, defaultHead] =
 				await Promise.all([
@@ -282,7 +275,9 @@ export function Releases() {
 	const handleConsent = (ok: boolean) => {
 		setAuthReason(undefined);
 		if (ok) {
-			let redirect = encodeURIComponent(`${url}/~${releaseAction}`);
+			let redirect = encodeURIComponent(
+				`${location.pathname}/~${releaseAction}`,
+			);
 			if (releaseVersion) {
 				redirect += `/${releaseVersion}`;
 			}
@@ -299,14 +294,12 @@ export function Releases() {
 	const handleToLatest = () => setReleaseInfo("to-latest");
 	const handleToStable = (version: string) =>
 		setReleaseInfo("to-stable", version);
-	const handleCloseDialog = () => history.replace(url.replace(/\/~.+$/, ""));
 
-	const classes = useStyles();
 	const DataRow = (props: { row: ReleaseInfo }) => {
 		const { row } = props;
 		return (
 			<TableRow>
-				<TableCell className={classes.icons}>
+				<TableCell sx={sxIcons}>
 					<Icons icons={row.icons} />
 				</TableCell>
 				<TableCell>{row.version}</TableCell>
@@ -379,31 +372,7 @@ export function Releases() {
 				onCancel={() => handleConsent(false)}
 				onContinue={() => handleConsent(true)}
 			/>
-			<Route path={`${path}/~release`}>
-				<CreateReleaseDialog
-					infos={infos}
-					open={true}
-					onClose={handleCloseDialog}
-				/>
-			</Route>
-			<Route path={`${path}/~to-latest`}>
-				<UpdateRepositoriesDialog
-					infos={infos}
-					user={user}
-					action="to-latest"
-					open={true}
-					onClose={handleCloseDialog}
-				/>
-			</Route>
-			<Route path={`${path}/~to-stable/:version`}>
-				<UpdateRepositoriesDialog
-					infos={infos}
-					user={user}
-					action="to-stable"
-					open={true}
-					onClose={handleCloseDialog}
-				/>
-			</Route>
+			<Outlet />
 			{canPush && rows?.length === 0 && (
 				<Alert
 					severity="error"
@@ -412,7 +381,7 @@ export function Releases() {
 							color="inherit"
 							size="small"
 							disabled={!hasReleaseScript}
-							className={classes.button}
+							sx={sxButton}
 							onClick={handleCreateRelease}
 						>
 							Create initial release
@@ -430,7 +399,7 @@ export function Releases() {
 						<Button
 							color="inherit"
 							size="small"
-							className={classes.button}
+							sx={sxButton}
 							href="https://github.com/AlCalzone/release-script#installation"
 							target="_blank"
 						>
@@ -456,9 +425,7 @@ export function Releases() {
 					<Table size="small" stickyHeader>
 						<TableHead>
 							<TableRow>
-								<TableCell
-									className={classes.icons}
-								></TableCell>
+								<TableCell sx={sxIcons}></TableCell>
 								<TableCell>Release</TableCell>
 								<TableCell>Date</TableCell>
 								<TableCell>Commit</TableCell>
