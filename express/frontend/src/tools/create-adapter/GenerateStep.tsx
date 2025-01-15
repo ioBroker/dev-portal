@@ -1,18 +1,19 @@
 import { Answers } from "@iobroker/create-adapter/build/core";
-import Accordion from "@material-ui/core/Accordion";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import { makeStyles } from "@material-ui/core/styles";
-import TextField from "@material-ui/core/TextField";
-import Typography from "@material-ui/core/Typography";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import React, { useEffect, useState } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	TextField,
+	Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WebSocketHook } from "react-use-websocket/dist/lib/types";
 import {
@@ -20,31 +21,17 @@ import {
 	LogMessage,
 	ServerClientMessage,
 } from "../../../../backend/src/global/websocket";
-import AuthConsentDialog from "../../components/AuthConsentDialog";
+import { AuthConsentDialog } from "../../components/AuthConsentDialog";
 import { CardButton } from "../../components/CardButton";
-import { CardGrid } from "../../components/CardGrid";
-import { DashboardCardProps } from "../../components/DashboardCard";
+import { CardGrid } from "../../components/dashboard/CardGrid";
+import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
 import { DownloadIcon, GitHubIcon } from "../../components/Icons";
-import WebSocketLog, { LogHandler } from "../../components/WebSocketLog";
+import { LogHandler, WebSocketLog } from "../../components/WebSocketLog";
 import { User } from "../../lib/gitHub";
 import { getWebSocketUrl } from "../../lib/utils";
 
 const STORAGE_KEY_SECRETS_AFTER_LOGIN = "creator-secrets-after-login";
 
-const useStyles = makeStyles((theme) => ({
-	configPreview: {
-		overflowX: "hidden",
-	},
-	log: {
-		flexFlow: "column",
-		maxHeight: "400px",
-		overflowY: "scroll",
-		overflowX: "auto",
-	},
-	accordion: {
-		margin: `${theme.spacing(2)}px 0 !important`,
-	},
-}));
 function isLogMessage(obj: unknown): obj is LogMessage {
 	return Object.prototype.hasOwnProperty.call(obj, "log");
 }
@@ -62,7 +49,7 @@ export interface TokensDialogProps {
 	onCancel: () => void;
 }
 
-export default function TokensDialog(props: TokensDialogProps) {
+export function TokensDialog(props: TokensDialogProps) {
 	const { adapterName, tokens, open, onContinue, onCancel } = props;
 
 	const [index, setIndex] = useState(0);
@@ -153,14 +140,18 @@ export default function TokensDialog(props: TokensDialogProps) {
 						Please follow these steps:
 						<ol>
 							<li>
-								Open the{" "}
+								Open the tokens settings of your{" "}
 								<a
-									href="https://www.npmjs.com/settings/unclesamswiss/tokens"
+									href="https://www.npmjs.com/"
 									target="tokens"
 								>
-									tokens settings
+									npmjs
 								</a>{" "}
-								of your npmjs account
+								account (
+								<code>
+									https://www.npmjs.com/settings/&lt;username&gt;/tokens
+								</code>
+								)
 							</li>
 							<li>Click on "Generate New Token"</li>
 							<li>
@@ -218,6 +209,7 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 		if (state === "idle" && target) {
 			//console.log(state, target, "--> sendMessage", startMessage);
 			webSocket.sendMessage(startMessage);
+			setState("generating");
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [target, state]);
@@ -244,7 +236,6 @@ export function GeneratorDialog(props: GeneratorDialogProps) {
 			scroll="paper"
 			maxWidth="md"
 			fullWidth
-			disableBackdropClick={!canClose}
 			disableEscapeKeyDown={!canClose}
 			aria-labelledby="scroll-dialog-title"
 			aria-describedby="scroll-dialog-description"
@@ -304,16 +295,15 @@ export interface GenerateStepProps {
 
 export function GenerateStep(props: GenerateStepProps) {
 	const { answers, user, startGenerator, onRequestLogin } = props;
-	const classes = useStyles();
 
 	const webSocket = useWebSocket(getWebSocketUrl("create-adapter"));
 
-	const [generator, setGenerator] = React.useState<GeneratorTarget>();
-	const [consentOpen, setConsentOpen] = React.useState(false);
-	const [tokensOpen, setTokensOpen] = React.useState(false);
-	const [consentActions, setConsentActions] = React.useState<string[]>([]);
-	const [tokens, setTokens] = React.useState<string[]>([]);
-	const [secrets, setSecrets] = React.useState<Record<string, string>>({});
+	const [generator, setGenerator] = useState<GeneratorTarget>();
+	const [consentOpen, setConsentOpen] = useState(false);
+	const [tokensOpen, setTokensOpen] = useState(false);
+	const [consentActions, setConsentActions] = useState<string[]>([]);
+	const [tokens, setTokens] = useState<string[]>([]);
+	const [secrets, setSecrets] = useState<Record<string, string>>({});
 
 	useEffect(() => {
 		if (startGenerator) {
@@ -427,11 +417,15 @@ export function GenerateStep(props: GenerateStepProps) {
 					onClose={() => setGenerator(undefined)}
 				/>
 			)}
-			<Accordion className={classes.accordion}>
+			<Accordion sx={{ marginTop: 2 }}>
 				<AccordionSummary expandIcon={<ExpandMoreIcon />}>
 					<Typography>Your adapter configuration</Typography>
 				</AccordionSummary>
-				<AccordionDetails className={classes.configPreview}>
+				<AccordionDetails
+					sx={{
+						overflowX: "hidden",
+					}}
+				>
 					<pre>{JSON.stringify(answers, null, 2)}</pre>
 				</AccordionDetails>
 			</Accordion>

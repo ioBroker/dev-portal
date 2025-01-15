@@ -1,26 +1,29 @@
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import Divider from "@material-ui/core/Divider";
-import Grid from "@material-ui/core/Grid";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import { OverridableComponent } from "@material-ui/core/OverridableComponent";
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableRow from "@material-ui/core/TableRow";
-import TextField from "@material-ui/core/TextField";
-import Typography from "@material-ui/core/Typography";
-import WarningIcon from "@material-ui/icons/Announcement";
-import ErrorIcon from "@material-ui/icons/Cancel";
-import CheckIcon from "@material-ui/icons/DoneOutlined";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import React, { useEffect, useState } from "react";
+import WarningIcon from "@mui/icons-material/Announcement";
+import ErrorIcon from "@mui/icons-material/Cancel";
+import CheckIcon from "@mui/icons-material/DoneOutlined";
+import {
+	Autocomplete,
+	Button,
+	CircularProgress,
+	Divider,
+	Grid2,
+	InputAdornment,
+	Paper,
+	SxProps,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableRow,
+	TextField,
+	Theme,
+	Typography,
+} from "@mui/material";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
+import { useEffect, useState } from "react";
 import Chart from "react-google-charts";
 import { useLocation } from "react-router-dom";
-import { User } from "../lib/gitHub";
+import { useUserToken } from "../contexts/UserContext";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
 
 const iconStyles = {
@@ -35,32 +38,24 @@ const iconStyles = {
 	},
 };
 
-export const useStyles = makeStyles((theme) => ({
-	title: {
-		marginBottom: theme.spacing(1),
-	},
-	comboBox: {
-		width: "500px",
-	},
-	divider: {
-		marginTop: theme.spacing(1),
-		marginBottom: theme.spacing(1),
-	},
-	chartArea: {
-		marginBottom: theme.spacing(1),
-	},
-	tableIcon: {
-		maxWidth: theme.spacing(4),
-	},
-	...iconStyles,
-}));
+const sxDivider: SxProps = {
+	marginTop: 1,
+	marginBottom: 1,
+};
 
-type MessageType = "check" | "warning" | "error";
+export const sxTableIcon: SxProps<Theme> = {
+	maxWidth: (theme) => theme.spacing(4),
+};
+
+type MessageType = keyof typeof iconStyles;
 
 export class Message {
 	public readonly text: string;
 
-	constructor(public readonly type: MessageType, result: CheckResult) {
+	constructor(
+		public readonly type: MessageType,
+		result: CheckResult,
+	) {
 		this.text =
 			typeof result === "string" ? result : JSON.stringify(result);
 	}
@@ -72,7 +67,6 @@ export interface MessageIconProps {
 
 export function MessageIcon(props: MessageIconProps) {
 	const { type } = props;
-	const classes = useStyles();
 	let Icon: OverridableComponent<any>;
 	switch (type) {
 		case "check":
@@ -89,20 +83,15 @@ export function MessageIcon(props: MessageIconProps) {
 			break;
 	}
 
-	return <Icon className={classes[type]} />;
+	return <Icon sx={{ color: iconStyles[type].color }} />;
 }
 
 export interface AdapterCheckLocationState {
 	repoFullName?: string;
 }
 
-export interface AdapterCheckProps {
-	user: User;
-}
-
-export default function AdapterCheck(props: AdapterCheckProps) {
-	const { user } = props;
-	const classes = useStyles();
+export function AdapterCheck() {
+	const token = useUserToken();
 	let location = useLocation();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
@@ -110,11 +99,11 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 	const [messages, setMessages] = useState<Message[]>([]);
 	useEffect(() => {
 		const loadData = async () => {
-			const repos = await getMyAdapterRepos(user.token);
+			const repos = await getMyAdapterRepos(token);
 			setRepoNames(repos.map((r) => r.full_name));
 		};
 		loadData().catch(console.error);
-	}, [user]);
+	}, [token]);
 
 	const incomingState = location.state as
 		| AdapterCheckLocationState
@@ -153,18 +142,23 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 
 	return (
 		<>
-			<Typography variant="h4" className={classes.title}>
+			<Typography
+				variant="h4"
+				sx={{
+					marginBottom: 1,
+				}}
+			>
 				Adapter Check
 			</Typography>
 
-			<Grid container direction="row" alignItems="center" spacing={1}>
-				<Grid item>
+			<Grid2 container direction="row" alignItems="center" spacing={1}>
+				<Grid2>
 					<Autocomplete
 						freeSolo
 						disabled={busy}
 						options={repoNames}
 						getOptionLabel={(option) => option}
-						className={classes.comboBox}
+						sx={{ width: 500 }}
 						inputValue={repoName}
 						onInputChange={(_e, value) => setRepoName(value)}
 						renderInput={(params) => (
@@ -183,8 +177,8 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 							/>
 						)}
 					/>
-				</Grid>
-				<Grid item>
+				</Grid2>
+				<Grid2>
 					<Button
 						variant="contained"
 						color="primary"
@@ -193,12 +187,12 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 					>
 						Start Check
 					</Button>
-				</Grid>
-			</Grid>
+				</Grid2>
+			</Grid2>
 
 			{busy && (
 				<>
-					<Divider className={classes.divider} />
+					<Divider sx={sxDivider} />
 					<Typography variant="h5">
 						<CircularProgress /> {`Checking ${repoName}...`}
 					</Typography>
@@ -207,8 +201,8 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 
 			{messages.length > 0 && (
 				<>
-					<Divider className={classes.divider} />
-					<Paper className={classes.chartArea}>
+					<Divider sx={sxDivider} />
+					<Paper sx={{ marginBottom: 1 }}>
 						<Chart
 							width="400px"
 							height="200px"
@@ -231,10 +225,7 @@ export default function AdapterCheck(props: AdapterCheckProps) {
 							<TableBody>
 								{messages.map((message, i) => (
 									<TableRow key={i}>
-										<TableCell
-											scope="row"
-											className={classes.tableIcon}
-										>
+										<TableCell scope="row" sx={sxTableIcon}>
 											<MessageIcon type={message.type} />
 										</TableCell>
 										<TableCell>{message.text}</TableCell>

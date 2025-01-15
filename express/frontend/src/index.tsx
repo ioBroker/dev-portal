@@ -1,20 +1,31 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
 import "./index.css";
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { BrowserRouter } from "react-router-dom";
+import { router } from "./router";
 import { GIT_BRANCH, GIT_COMMIT } from "./version";
+import { createTheme, ThemeProvider } from "@mui/material";
 
 console.log(`ioBroker developer portal ${GIT_COMMIT}@${GIT_BRANCH}`);
 
-ReactDOM.render(
+const theme = createTheme({
+	palette: {
+		primary: {
+			main: "#3f51b5",
+		},
+	},
+});
+
+const root = ReactDOM.createRoot(
+	document.getElementById("root") as HTMLElement,
+);
+root.render(
 	<React.StrictMode>
-		<BrowserRouter>
-			<App />
-		</BrowserRouter>
+		<ThemeProvider theme={theme}>
+			<RouterProvider router={router} />
+		</ThemeProvider>
 	</React.StrictMode>,
-	document.getElementById("root"),
 );
 
 // If you want to start measuring performance in your app, pass a function

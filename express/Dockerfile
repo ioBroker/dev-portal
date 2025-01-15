@@ -1,4 +1,4 @@
-FROM node:14-buster AS build-frontend
+FROM node:22-bookworm AS build-frontend
 
 RUN mkdir -p /app/frontend
 WORKDIR /app/frontend
@@ -15,7 +15,7 @@ RUN npm run build
 
 
 
-FROM node:14-buster AS build-backend
+FROM node:22-bookworm AS build-backend
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -30,7 +30,7 @@ RUN npm run build
 
 
 
-FROM node:14-buster-slim
+FROM node:22-bookworm-slim
 
 RUN apt update && apt install -y git
 

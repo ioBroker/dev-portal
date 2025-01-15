@@ -1,36 +1,37 @@
-import Button from "@material-ui/core/Button";
-import Hidden from "@material-ui/core/Hidden";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Link from "@material-ui/core/Link";
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import Tooltip from "@material-ui/core/Tooltip";
-import Alert from "@material-ui/lab/Alert";
-import AlertTitle from "@material-ui/lab/AlertTitle";
+import {
+	Alert,
+	AlertTitle,
+	Button,
+	Hidden,
+	LinearProgress,
+	Link,
+	Paper,
+	SxProps,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	Tooltip,
+} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Route, useHistory, useParams, useRouteMatch } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { coerce } from "semver";
-import AuthConsentDialog from "../../components/AuthConsentDialog";
+import { AuthConsentDialog } from "../../../components/AuthConsentDialog";
 import {
 	GitHubIcon,
 	IoBrokerIcon,
 	LatestIcon,
 	NpmIcon,
-} from "../../components/Icons";
-import { GitHubComm, User } from "../../lib/gitHub";
-import { AdapterInfos, getLatest } from "../../lib/ioBroker";
-import { getPackage as getPackageMetaData } from "../../lib/npm";
-import CreateReleaseDialog from "./CreateReleaseDialog";
-import UpdateRepositoriesDialog, {
-	RepositoriesAction,
-} from "./UpdateRepositoriesDialog";
+} from "../../../components/Icons";
+import { useAdapter } from "../../../contexts/AdapterContext";
+import { useUserToken } from "../../../contexts/UserContext";
+import { GitHubComm } from "../../../lib/gitHub";
+import { getLatest } from "../../../lib/ioBroker";
+import { getPackage as getPackageMetaData } from "../../../lib/npm";
+import { RepositoriesAction } from "./UpdateRepositoriesDialog";
 
 type ReleaseAction = "release" | RepositoriesAction;
 
@@ -62,15 +63,12 @@ function setDates(release: ReleaseInfo, time: string) {
 	});
 }
 
-const useIconStyles = makeStyles((theme) => ({
-	icon: {
-		paddingRight: 2,
-	},
-}));
+const sxIcon: SxProps = {
+	paddingRight: "2px",
+};
 
 function Icons(props: { icons: ReleaseIcon[] }) {
 	const { icons } = props;
-	const classes = useIconStyles();
 	return (
 		<>
 			{icons.map((icon) => {
@@ -78,15 +76,13 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 					case "github":
 						return (
 							<Tooltip title="Current state on GitHub" key={icon}>
-								<GitHubIcon className={classes.icon} />
+								<GitHubIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					case "npm":
 						return (
 							<Tooltip title="Latest version on npm" key={icon}>
-								<span className={classes.icon}>
-									<NpmIcon className={classes.icon} />
-								</span>
+								<NpmIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					case "beta":
@@ -95,7 +91,7 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 								title="In ioBroker beta/latest repository"
 								key={icon}
 							>
-								<LatestIcon className={classes.icon} />
+								<LatestIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					case "stable":
@@ -104,9 +100,7 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 								title="In ioBroker stable repository"
 								key={icon}
 							>
-								<span className={classes.icon}>
-									<IoBrokerIcon />
-								</span>
+								<IoBrokerIcon sx={sxIcon} />
 							</Tooltip>
 						);
 					default:
@@ -117,21 +111,19 @@ function Icons(props: { icons: ReleaseIcon[] }) {
 	);
 }
 
-const useStyles = makeStyles((theme) => ({
-	icons: {
-		width: "1%",
-		whiteSpace: "nowrap",
-	},
-	button: {
-		whiteSpace: "nowrap",
-	},
-}));
+const sxIcons: SxProps = {
+	width: "1%",
+	whiteSpace: "nowrap",
+};
 
-export default function Releases(props: { user: User; infos: AdapterInfos }) {
-	const { user, infos } = props;
-	const { path, url } = useRouteMatch();
-	const history = useHistory();
-	const { name } = useParams<{ name: string }>();
+const sxButton: SxProps = {
+	whiteSpace: "nowrap",
+};
+
+export function Releases() {
+	const token = useUserToken();
+	const { name, infos } = useAdapter();
+	const location = useLocation();
 	const [canPush, setCanPush] = useState<boolean>();
 	const [rows, setRows] = useState<ReleaseInfo[]>();
 	const [hasReleaseScript, setHasReleaseScript] = useState<boolean>();
@@ -149,7 +141,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 			}
 		};
 		const loadReleases = async () => {
-			const gitHub = GitHubComm.forToken(user.token);
+			const gitHub = GitHubComm.forToken(token);
 			const repo = gitHub.getRepo(infos.repo);
 			const [npm, fullRepo, tags, latest, defaultHead] =
 				await Promise.all([
@@ -224,7 +216,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 			console.error(e);
 			setRows([]);
 		});
-	}, [name, user, infos]);
+	}, [name, token, infos]);
 
 	useEffect(() => {
 		const checkPackageInfo = async () => {
@@ -277,7 +269,9 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	const handleConsent = (ok: boolean) => {
 		setAuthReason(undefined);
 		if (ok) {
-			let redirect = encodeURIComponent(`${url}/~${releaseAction}`);
+			let redirect = encodeURIComponent(
+				`${location.pathname}/~${releaseAction}`,
+			);
 			if (releaseVersion) {
 				redirect += `/${releaseVersion}`;
 			}
@@ -294,14 +288,12 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 	const handleToLatest = () => setReleaseInfo("to-latest");
 	const handleToStable = (version: string) =>
 		setReleaseInfo("to-stable", version);
-	const handleCloseDialog = () => history.replace(url.replace(/\/~.+$/, ""));
 
-	const classes = useStyles();
 	const DataRow = (props: { row: ReleaseInfo }) => {
 		const { row } = props;
 		return (
 			<TableRow>
-				<TableCell className={classes.icons}>
+				<TableCell sx={sxIcons}>
 					<Icons icons={row.icons} />
 				</TableCell>
 				<TableCell>{row.version}</TableCell>
@@ -374,31 +366,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 				onCancel={() => handleConsent(false)}
 				onContinue={() => handleConsent(true)}
 			/>
-			<Route path={`${path}/~release`}>
-				<CreateReleaseDialog
-					infos={infos}
-					open={true}
-					onClose={handleCloseDialog}
-				/>
-			</Route>
-			<Route path={`${path}/~to-latest`}>
-				<UpdateRepositoriesDialog
-					infos={infos}
-					user={user}
-					action="to-latest"
-					open={true}
-					onClose={handleCloseDialog}
-				/>
-			</Route>
-			<Route path={`${path}/~to-stable/:version`}>
-				<UpdateRepositoriesDialog
-					infos={infos}
-					user={user}
-					action="to-stable"
-					open={true}
-					onClose={handleCloseDialog}
-				/>
-			</Route>
+			<Outlet />
 			{canPush && rows?.length === 0 && (
 				<Alert
 					severity="error"
@@ -407,7 +375,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 							color="inherit"
 							size="small"
 							disabled={!hasReleaseScript}
-							className={classes.button}
+							sx={sxButton}
 							onClick={handleCreateRelease}
 						>
 							Create initial release
@@ -425,7 +393,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 						<Button
 							color="inherit"
 							size="small"
-							className={classes.button}
+							sx={sxButton}
 							href="https://github.com/AlCalzone/release-script#installation"
 							target="_blank"
 						>
@@ -451,9 +419,7 @@ export default function Releases(props: { user: User; infos: AdapterInfos }) {
 					<Table size="small" stickyHeader>
 						<TableHead>
 							<TableRow>
-								<TableCell
-									className={classes.icons}
-								></TableCell>
+								<TableCell sx={sxIcons}></TableCell>
 								<TableCell>Release</TableCell>
 								<TableCell>Date</TableCell>
 								<TableCell>Commit</TableCell>

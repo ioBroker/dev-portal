@@ -112,3 +112,5 @@ build
 
 # TernJS port file
 .tern-port
+
+secrets.env

@@ -1,21 +1,22 @@
-import Breadcrumbs from "@material-ui/core/Breadcrumbs";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Link from "@material-ui/core/Link";
-import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import NavigateNextIcon from "@material-ui/icons/NavigateNext";
-import Alert from "@material-ui/lab/Alert";
-import AlertTitle from "@material-ui/lab/AlertTitle";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import {
+	Alert,
+	AlertTitle,
+	Breadcrumbs,
+	LinearProgress,
+	Link,
+	Typography,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import {
+	Outlet,
 	Link as RouterLink,
-	Route,
-	Switch,
-	useHistory,
+	useMatches,
 	useParams,
-	useRouteMatch,
 } from "react-router-dom";
-import { GitHubComm, User } from "../../lib/gitHub";
+import { AdapterProvider } from "../../contexts/AdapterContext";
+import { useUserToken } from "../../contexts/UserContext";
+import { GitHubComm } from "../../lib/gitHub";
 import {
 	AdapterInfos,
 	getAdapterInfos,
@@ -23,46 +24,36 @@ import {
 	getMyAdapterInfos,
 	getWatchedAdapterInfos,
 } from "../../lib/ioBroker";
-import AdapterDashboard from "./AdapterDashboard";
-import AdapterRatings from "./AdapterRatings";
-import AdapterStatistics from "./AdapterStatistics";
-import Releases from "./Releases";
 
 const LinkRouter = (props: any) => <Link {...props} component={RouterLink} />;
 
-const useStyles = makeStyles((theme) => ({
-	breadcrumbs: {
-		paddingBottom: theme.spacing(1),
-	},
-}));
-
-export default function CreateAdapter(props: { user: User }) {
-	const { user } = props;
-	const { path, url } = useRouteMatch();
-	const { name } = useParams<{ name: string }>();
-
-	const history = useHistory();
-	const pathNames = history.location.pathname
-		.replace(url, "")
-		.replace(/~.+$/, "")
+export function AdapterDetails() {
+	const token = useUserToken();
+	const matches = useMatches();
+	const pathNames = matches[matches.length - 1].pathname
 		.split("/")
-		.filter((x) => x);
+		.slice(3)
+		.filter(Boolean);
+	const { name } = useParams<"name">();
 
 	const [infos, setInfos] = useState<AdapterInfos | string>();
 
 	useEffect(() => {
 		const loadInfos = async () => {
-			const myAdapters = await getMyAdapterInfos(user.token);
+			if (!name) {
+				return;
+			}
+			const myAdapters = await getMyAdapterInfos(token);
 			let found = myAdapters.find((a) => a.info?.name === name);
 			if (found) {
 				return setInfos(found);
 			}
-			const watchedAdapters = await getWatchedAdapterInfos(user.token);
+			const watchedAdapters = await getWatchedAdapterInfos(token);
 			found = watchedAdapters.find((a) => a.info?.name === name);
 			if (found) {
 				return setInfos(found);
 			}
-			const gitHub = GitHubComm.forToken(user.token);
+			const gitHub = GitHubComm.forToken(token);
 			const latest = await getLatest();
 			if (latest[name]) {
 				// meta: https://raw.githubusercontent.com/misanorot/ioBroker.alarm/master/io-package.json
@@ -84,28 +75,25 @@ export default function CreateAdapter(props: { user: User }) {
 			setInfos(`Couldn't find ioBroker.${name}`);
 		};
 		loadInfos().catch(console.error);
-	}, [name, user]);
+	}, [name, token]);
 
 	const toText = (value: string) => {
 		const sentence = value.replace(/([A-Z])/g, " $1");
 		return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 	};
 
-	const classes = useStyles();
 	return (
 		<>
 			<Breadcrumbs
 				separator={<NavigateNextIcon fontSize="small" />}
-				className={classes.breadcrumbs}
+				sx={{ paddingBottom: 1 }}
 			>
-				<LinkRouter color="inherit" to={url}>
+				<LinkRouter color="inherit" to={"."}>
 					ioBroker.{name}
 				</LinkRouter>
 				{pathNames.map((value, index) => {
 					const last = index === pathNames.length - 1;
-					const to = `${url}/${pathNames
-						.slice(0, index + 1)
-						.join("/")}`;
+					const to = `${pathNames.slice(0, index + 1).join("/")}`;
 
 					return last ? (
 						<Typography color="textPrimary" key={to}>
@@ -123,21 +111,10 @@ export default function CreateAdapter(props: { user: User }) {
 					<AlertTitle>Error</AlertTitle>
 					{infos}
 				</Alert>
-			) : infos?.info ? (
-				<Switch>
-					<Route exact path={path}>
-						<AdapterDashboard infos={infos} />
-					</Route>
-					<Route path={`${path}/releases`}>
-						<Releases user={user} infos={infos} />
-					</Route>
-					<Route path={`${path}/statistics`}>
-						<AdapterStatistics />
-					</Route>
-					<Route path={`${path}/ratings`}>
-						<AdapterRatings />
-					</Route>
-				</Switch>
+			) : infos?.info && name ? (
+				<AdapterProvider name={name} infos={infos}>
+					<Outlet />
+				</AdapterProvider>
 			) : (
 				<LinearProgress />
 			)}

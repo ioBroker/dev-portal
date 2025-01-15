@@ -1,53 +1,51 @@
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableRow from "@material-ui/core/TableRow";
-import Alert from "@material-ui/lab/Alert";
-import AlertTitle from "@material-ui/lab/AlertTitle";
+import {
+	Alert,
+	AlertTitle,
+	Button,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	LinearProgress,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableRow,
+} from "@mui/material";
 import axios from "axios";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import useWebSocket from "react-use-websocket";
 import {
 	ServerClientMessage,
 	ToLatestMessage,
 	ToStableMessage,
-} from "../../../../backend/src/global/websocket";
-import { GitHubIcon } from "../../components/Icons";
-import WebSocketLog, {
+} from "../../../../../backend/src/global/websocket";
+import { GitHubIcon } from "../../../components/Icons";
+import {
 	isLogMessage,
 	LogHandler,
-} from "../../components/WebSocketLog";
-import { GitHubComm, User } from "../../lib/gitHub";
-import { AdapterInfos, checkAdapter } from "../../lib/ioBroker";
-import { getWebSocketUrl } from "../../lib/utils";
-import {
-	Message,
-	MessageIcon,
-	useStyles as useAdapterCheckStyles,
-} from "../AdapterCheck";
+	WebSocketLog,
+} from "../../../components/WebSocketLog";
+import { useAdapter } from "../../../contexts/AdapterContext";
+import { useUserContext, useUserToken } from "../../../contexts/UserContext";
+import { GitHubComm } from "../../../lib/gitHub";
+import { checkAdapter } from "../../../lib/ioBroker";
+import { getWebSocketUrl } from "../../../lib/utils";
+import { Message, MessageIcon, sxTableIcon } from "../../AdapterCheck";
+import { BaseReleaseDialog } from "./BaseReleaseDialog";
 
 export type RepositoriesAction = "to-stable" | "to-latest";
 
 function AdapterCheckStep(props: {
-	infos: AdapterInfos;
-	user: User;
 	action: RepositoriesAction;
 	onSuccess: () => void;
 }) {
-	const { infos, user, action, onSuccess } = props;
-	const { name } = useParams<{ name: string }>();
+	const { action, onSuccess } = props;
 	const [errors, setErrors] = useState<Message[]>();
 	const [pullRequestUrl, setPullRequestUrl] = useState<string>();
+	const token = useUserToken();
+	const { name, infos } = useAdapter();
 
 	useEffect(() => {
 		// check the diffs for an add (line starts with "+") of this adapter
@@ -69,7 +67,7 @@ function AdapterCheckStep(props: {
 							),
 						);
 		const findPullRequest = async () => {
-			const gitHub = GitHubComm.forToken(user.token);
+			const gitHub = GitHubComm.forToken(token);
 			const repo = gitHub.getRepo("ioBroker", "ioBroker.repositories");
 			const prs = await repo.getPullRequests("open");
 			const diffs = await Promise.all(
@@ -92,7 +90,7 @@ function AdapterCheckStep(props: {
 			}
 		};
 		runAdapterCheck().catch(console.error);
-	}, [infos, user, action, name]);
+	}, [infos, token, action, name]);
 
 	useEffect(() => {
 		if (errors && errors.length === 0 && !pullRequestUrl) {
@@ -100,7 +98,6 @@ function AdapterCheckStep(props: {
 		}
 	}, [errors, pullRequestUrl, onSuccess]);
 
-	const classes = useAdapterCheckStyles();
 	if (pullRequestUrl) {
 		const text =
 			action === "to-latest"
@@ -141,10 +138,7 @@ function AdapterCheckStep(props: {
 					<TableBody>
 						{errors.map((error, i) => (
 							<TableRow key={i}>
-								<TableCell
-									scope="row"
-									className={classes.tableIcon}
-								>
+								<TableCell scope="row" sx={sxTableIcon}>
 									<MessageIcon type={error.type} />
 								</TableCell>
 								<TableCell>{error.text}</TableCell>
@@ -158,17 +152,13 @@ function AdapterCheckStep(props: {
 }
 
 interface UpdateRepositoriesDialogProps {
-	infos: AdapterInfos;
-	user: User;
 	action: RepositoriesAction;
-	open: boolean;
-	onClose: () => void;
 }
-export default function UpdateRepositoriesDialog(
-	props: UpdateRepositoriesDialogProps,
-) {
-	const { infos, user, action, open, onClose } = props;
-	const { name, version } = useParams<{ name: string; version?: string }>();
+export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
+	const { action } = props;
+	const { version } = useParams<"version">();
+	const { user } = useUserContext();
+	const { name, infos } = useAdapter();
 
 	const webSocket = useWebSocket(getWebSocketUrl(action));
 
@@ -222,22 +212,36 @@ export default function UpdateRepositoriesDialog(
 			? `Add ioBroker.${name} to beta/latest`
 			: `Update ioBroker.${name} to ${version} in stable`;
 	return (
-		<Dialog
-			open={open}
-			onClose={onClose}
-			scroll="paper"
-			maxWidth="md"
-			fullWidth
-			disableBackdropClick={busy}
-			disableEscapeKeyDown={busy}
+		<BaseReleaseDialog
+			busy={busy}
+			renderButtons={(onClose) => (
+				<>
+					{step === "add" && (
+						<Button
+							href={resultLink || ""}
+							target="_blank"
+							disabled={busy || !resultLink}
+							color="primary"
+							startIcon={<GitHubIcon />}
+						>
+							Show Pull Request
+						</Button>
+					)}
+					<Button
+						onClick={() => onClose()}
+						disabled={busy}
+						color="primary"
+					>
+						{step === "check" ? "Cancel" : "Close"}
+					</Button>
+				</>
+			)}
 		>
 			<DialogTitle>{title} repository</DialogTitle>
 			<DialogContent dividers>
 				<DialogContentText style={{ minHeight: "60vh" }}>
 					{step === "check" && (
 						<AdapterCheckStep
-							infos={infos}
-							user={user}
 							action={action}
 							onSuccess={() => setStep("add")}
 						/>
@@ -250,26 +254,6 @@ export default function UpdateRepositoriesDialog(
 					)}
 				</DialogContentText>
 			</DialogContent>
-			<DialogActions>
-				{step === "add" && (
-					<Button
-						href={resultLink || ""}
-						target="_blank"
-						disabled={busy || !resultLink}
-						color="primary"
-						startIcon={<GitHubIcon />}
-					>
-						Show Pull Request
-					</Button>
-				)}
-				<Button
-					onClick={() => onClose()}
-					disabled={busy}
-					color="primary"
-				>
-					{step === "check" ? "Cancel" : "Close"}
-				</Button>
-			</DialogActions>
-		</Dialog>
+		</BaseReleaseDialog>
 	);
 }

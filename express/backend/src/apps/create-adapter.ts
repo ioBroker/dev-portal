@@ -46,7 +46,6 @@ router.get("/api/create-adapter/version", async (_req, res) => {
 	res.send({
 		name: createAdapter.name,
 		version: createAdapter.version,
-		integrity: createAdapter._integrity,
 	});
 });
 

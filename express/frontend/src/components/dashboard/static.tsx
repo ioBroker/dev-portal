@@ -1,6 +1,5 @@
-import React from "react";
-import { handleLogin } from "../App";
-import { CardButton } from "./CardButton";
+import { CardButton } from "../CardButton";
+import { LoginButton } from "./LoginButton";
 
 export const resourcesCards = [
 	{
@@ -145,7 +144,7 @@ export function getToolsCards(isLoggedIn: boolean) {
 				isLoggedIn ? (
 					<CardButton text="Open" to="/adapter-check" />
 				) : (
-					<CardButton text="Login" onClick={handleLogin} />
+					<LoginButton />
 				),
 			],
 		},

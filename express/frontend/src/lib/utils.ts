@@ -38,3 +38,8 @@ export function getWebSocketUrl(path: string) {
 export function equalIgnoreCase(str1: string, str2: string) {
 	return str1.localeCompare(str2, undefined, { sensitivity: "accent" }) === 0;
 }
+
+export function notEmpty<T>(value: T | null | undefined | void): value is T {
+	if (value === null || value === undefined) return false;
+	return true;
+}

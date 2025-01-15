@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AdapterStats } from "../../../backend/src/global/adapter-stats";
 import {
 	AdapterRatings,
 	AllRatings,
@@ -41,17 +42,30 @@ export const getStable = AsyncCache.of(async () => {
 });
 
 export const getAllRatings = AsyncCache.of(async () => {
-	const result = await axios.get<AllRatings>(
-		"https://rating.iobroker.net/rating?uuid=iobroker.dev",
-	);
-	return result.data;
+	try {
+		const result = await axios.get<AllRatings>(
+			"https://rating.iobroker.net/rating?uuid=iobroker.dev",
+		);
+		return result.data;
+	} catch (error) {
+		console.error(error);
+		return {};
+	}
 });
 
-export async function getAdapterRatings(name: string) {
-	const result = await axios.get<AdapterRatings>(
-		`https://rating.iobroker.net/adapter/${uc(name)}?uuid=iobroker.dev`,
-	);
-	return result.data;
+export async function getAdapterRatings(name: string): Promise<AdapterRatings> {
+	try {
+		const result = await axios.get<AdapterRatings>(
+			`https://rating.iobroker.net/adapter/${uc(name)}?uuid=iobroker.dev`,
+		);
+		return result.data;
+	} catch (error) {
+		console.error(error);
+		return {
+			rating: {},
+			comments: [],
+		};
+	}
 }
 
 export async function getMyAdapterRepos(
@@ -164,6 +178,13 @@ export const getWeblateAdapterComponents = AsyncCache.of(async () => {
 	return result.data;
 });
 
+export async function getStatistics(adapterName: string) {
+	const result = await axios.get<AdapterStats>(
+		getApiUrl(`adapter/${uc(adapterName)}/stats`),
+	);
+	return result.data;
+}
+
 const discoverySupports = new Map<string, Promise<boolean>>();
 export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 	if (!discoverySupports.has(adapterName)) {
@@ -171,7 +192,7 @@ export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 			try {
 				await axios.get(
 					`https://cdn.jsdelivr.net/npm/iobroker.discovery/lib/adapters/` +
-						`${encodeURIComponent(adapterName)}.js`,
+						`${uc(adapterName)}.js`,
 				);
 				return true;
 			} catch {
@@ -184,10 +205,15 @@ export function hasDiscoverySupport(adapterName: string): Promise<boolean> {
 }
 
 export const getSentryProjectInfos = AsyncCache.of(async () => {
-	const result = await axios.get<ProjectInfo[]>(
-		getApiUrl("sentry/projects/"),
-	);
-	return result.data;
+	try {
+		const result = await axios.get<ProjectInfo[]>(
+			getApiUrl("sentry/projects/"),
+		);
+		return result.data;
+	} catch (error) {
+		console.error(error);
+		return [];
+	}
 });
 
 export async function getSentryStats(ids: string[], statsPeriod?: string) {

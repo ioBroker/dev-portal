@@ -1,0 +1,37 @@
+version: "3"
+services:
+    vscode:
+        container_name: iobroker-dev-portal-vscode
+        image: mcr.microsoft.com/devcontainers/typescript-node:22-bookworm
+        volumes:
+            - ..:/workspace/iobroker-dev-portal:cached
+        command: /bin/sh -c "while sleep 1000; do :; done"
+        environment:
+            TEMP_DIR: /tmp
+            GOOGLE_APPLICATION_CREDENTIALS: /app/google-translate-credentials.json
+            ALLOW_CORS: 1
+        env_file:
+            - ../secrets.env
+
+    nginx:
+        image: nginx:1.27
+        container_name: iobroker-dev-portal-proxy
+        restart: unless-stopped
+        volumes:
+            - ./proxy/nginx.conf:/etc/nginx/nginx.conf
+            - ./proxy/proxy-shared.conf:/etc/nginx/proxy-shared.conf
+        ports:
+            - "8080:80"
+        depends_on:
+            - vscode
+
+    mongo:
+        image: "mongo:4.4"
+        container_name: iobroker-dev-portal-mongo
+        restart: unless-stopped
+        volumes:
+            - mongo-data:/data/db
+        ports:
+            - "27017:27017"
+volumes:
+    mongo-data: {}

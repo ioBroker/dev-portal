@@ -1,24 +1,10 @@
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from "@material-ui/core/styles";
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Box, Paper } from "@mui/material";
 import ReactECharts from "echarts-for-react";
-import axios from "axios";
-import { AdapterStats } from "../../../../backend/src/global/adapter-stats";
-import sort from "semver/functions/sort";
-import { getApiUrl } from "../../lib/utils";
+import { useEffect, useState } from "react";
 import { coerce } from "semver";
-
-const uc = encodeURIComponent;
-
-const useStyles = makeStyles((theme) => ({
-	root: {
-		padding: theme.spacing(2),
-	},
-	chart: {
-		marginTop: theme.spacing(2),
-	},
-}));
+import sort from "semver/functions/sort";
+import { useAdapter } from "../../contexts/AdapterContext";
+import { getStatistics } from "../../lib/ioBroker";
 
 const chartDefaults = {
 	title: {
@@ -72,9 +58,8 @@ const chartDefaults = {
 
 export interface AdapterStatisticsProps {}
 
-export default function AdapterStatistics(props: AdapterStatisticsProps) {
-	const classes = useStyles();
-	const { name } = useParams<{ name: string }>();
+export function AdapterStatistics(props: AdapterStatisticsProps) {
+	const { name } = useAdapter();
 	const [option, setOption] = useState<any>();
 	const [showLoading, setShowLoading] = useState(true);
 
@@ -82,9 +67,7 @@ export default function AdapterStatistics(props: AdapterStatisticsProps) {
 		setOption(undefined);
 		setShowLoading(true);
 		const loadStatistics = async () => {
-			const url = getApiUrl(`adapter/${uc(name)}/stats`);
-			const { data: stats } = await axios.get<AdapterStats>(url);
-
+			const stats = await getStatistics(name);
 			const versions = new Set<string>();
 			for (const date of Object.keys(stats.counts)) {
 				Object.keys(stats.counts[date].versions)
@@ -171,17 +154,18 @@ export default function AdapterStatistics(props: AdapterStatisticsProps) {
 		});
 	}, [name]);
 	return (
-		<Paper className={classes.root}>
+		<Paper sx={{ padding: 2 }}>
 			{(option || showLoading) && (
-				<ReactECharts
-					className={classes.chart}
-					style={{ height: "400px" }}
-					loadingOption={{
-						type: "default",
-					}}
-					showLoading={showLoading}
-					option={option || { ...chartDefaults }}
-				/>
+				<Box sx={{ marginTop: 2 }}>
+					<ReactECharts
+						style={{ height: "400px" }}
+						loadingOption={{
+							type: "default",
+						}}
+						showLoading={showLoading}
+						option={option || { ...chartDefaults }}
+					/>
+				</Box>
 			)}
 		</Paper>
 	);

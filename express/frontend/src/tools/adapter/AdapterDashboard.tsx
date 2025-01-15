@@ -1,15 +1,16 @@
-import Accordion from "@material-ui/core/Accordion";
-import AccordionSummary from "@material-ui/core/AccordionSummary";
-import { useState } from "react";
-import { CardGrid, CardGridProps } from "../../components/CardGrid";
-import { DashboardCardProps } from "../../components/DashboardCard";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import Typography from "@material-ui/core/Typography";
-import AccordionDetails from "@material-ui/core/AccordionDetails";
-import { useParams, useRouteMatch } from "react-router-dom";
-import { useEffect } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {
+	Accordion,
+	AccordionDetails,
+	AccordionSummary,
+	Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import { CardButton } from "../../components/CardButton";
-import { AdapterInfos, getAllRatings, getLatest } from "../../lib/ioBroker";
+import { CardGrid, CardGridProps } from "../../components/dashboard/CardGrid";
+import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
+import { useAdapter } from "../../contexts/AdapterContext";
+import { getAllRatings, getLatest, getStatistics } from "../../lib/ioBroker";
 
 const CATEGORY_GENERAL = "General";
 const CATEGORY_FEATURES = "Features";
@@ -18,10 +19,8 @@ const EMPTY_CARDS = {
 	[CATEGORY_FEATURES]: { cards: [] },
 };
 
-export default function AdapterDashboard(props: { infos: AdapterInfos }) {
-	// const { infos } = props;
-	const { name } = useParams<{ name: string }>();
-	const { url } = useRouteMatch();
+export function AdapterDashboard() {
+	const { name } = useAdapter();
 	const [categories, setCategories] =
 		useState<Record<string, CardGridProps>>(EMPTY_CARDS);
 	const [collapsed, setCollapsed] = useState<boolean[]>([]);
@@ -29,8 +28,18 @@ export default function AdapterDashboard(props: { infos: AdapterInfos }) {
 	useEffect(() => {
 		setCategories(EMPTY_CARDS);
 		const loadCards = async () => {
-			const latest = await getLatest();
-			const ratings = await getAllRatings();
+			const [latest, ratings] = await Promise.all([
+				getLatest(),
+				getAllRatings(),
+			]);
+			let hasStatistics = !!latest[name];
+			if (!hasStatistics) {
+				// check if statistics are available
+				try {
+					await getStatistics(name);
+					hasStatistics = true;
+				} catch {}
+			}
 			const generalCards: DashboardCardProps[] = [];
 			generalCards.push({
 				title: "Releases",
@@ -39,17 +48,15 @@ export default function AdapterDashboard(props: { infos: AdapterInfos }) {
 					"npm version": `https://img.shields.io/npm/v/iobroker.${name}.svg`,
 					"Stable version": `https://iobroker.live/badges/${name}-stable.svg`,
 				},
-				to: `${url}/releases`,
-				buttons: [<CardButton text="Manage" to={`${url}/releases`} />],
+				to: "releases",
+				buttons: [<CardButton text="Manage" to="releases" />],
 			});
-			if (latest[name]) {
+			if (hasStatistics) {
 				generalCards.push({
 					title: "Statistics",
 					text: "Learn more about the usage and distribution of your adapter.",
-					to: `${url}/statistics`,
-					buttons: [
-						<CardButton text="Show" to={`${url}/statistics`} />,
-					],
+					to: "statistics",
+					buttons: [<CardButton text="Show" to="statistics" />],
 				});
 			}
 			if (ratings[name]) {
@@ -57,8 +64,8 @@ export default function AdapterDashboard(props: { infos: AdapterInfos }) {
 					title: "Ratings",
 					text: "Have a look at how users are rating your adapter.",
 					rating: ratings[name].rating,
-					to: `${url}/ratings`,
-					buttons: [<CardButton text="Show" to={`${url}/ratings`} />],
+					to: "ratings",
+					buttons: [<CardButton text="Show" to="ratings" />],
 				});
 			}
 			//const featureCards: DashboardCardProps[] = [];
@@ -69,7 +76,7 @@ export default function AdapterDashboard(props: { infos: AdapterInfos }) {
 			});
 		};
 		loadCards().catch(console.error);
-	}, [name, url]);
+	}, [name]);
 
 	const handleAccordion = (index: number) => {
 		setCollapsed((old) => {

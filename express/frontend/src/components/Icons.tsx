@@ -1,16 +1,15 @@
-import SvgIcon from "@material-ui/core/SvgIcon";
-import React from "react";
+import { SvgIcon } from "@mui/material";
 
-export { default as AddCardIcon } from "@material-ui/icons/AddCircleOutline";
-export { default as CloseIcon } from "@material-ui/icons/Close";
-export { default as DownloadIcon } from "@material-ui/icons/CloudDownloadOutlined";
-export { default as DashboardIcon } from "@material-ui/icons/Dashboard";
-export { default as LogoutIcon } from "@material-ui/icons/ExitToApp";
-export { default as GitHubIcon } from "@material-ui/icons/GitHub";
-export { default as LatestIcon } from "@material-ui/icons/NewReleases";
-export { default as CreateAdapterIcon } from "@material-ui/icons/LibraryAdd";
-export { default as DiscoveryIcon } from "@material-ui/icons/SettingsInputAntenna";
-export { default as AdapterCheckIcon } from "@material-ui/icons/Spellcheck";
+export { default as AddCardIcon } from "@mui/icons-material/AddCircleOutline";
+export { default as CloseIcon } from "@mui/icons-material/Close";
+export { default as DownloadIcon } from "@mui/icons-material/CloudDownloadOutlined";
+export { default as DashboardIcon } from "@mui/icons-material/Dashboard";
+export { default as LogoutIcon } from "@mui/icons-material/ExitToApp";
+export { default as GitHubIcon } from "@mui/icons-material/GitHub";
+export { default as CreateAdapterIcon } from "@mui/icons-material/LibraryAdd";
+export { default as LatestIcon } from "@mui/icons-material/NewReleases";
+export { default as DiscoveryIcon } from "@mui/icons-material/SettingsInputAntenna";
+export { default as AdapterCheckIcon } from "@mui/icons-material/Spellcheck";
 
 /**
  * Icon based on Nijel at English Wikipedia, CC BY-SA 3.0 <https://creativecommons.org/licenses/by-sa/3.0>, via Wikimedia Commons
