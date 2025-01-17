@@ -1,14 +1,14 @@
-import { Box, Paper } from "@mui/material";
+import { Box } from "@mui/material";
 import ReactECharts from "echarts-for-react";
 import { useEffect, useState } from "react";
 import { coerce } from "semver";
 import sort from "semver/functions/sort";
-import { useAdapter } from "../../contexts/AdapterContext";
-import { getStatistics } from "../../lib/ioBroker";
+import { useAdapter } from "../../../contexts/AdapterContext";
+import { getStatisticsHistory } from "../../../lib/ioBroker";
 
 const chartDefaults = {
 	title: {
-		text: "Installed versions",
+		text: "Installed version history",
 	},
 	tooltip: {
 		trigger: "axis",
@@ -56,9 +56,7 @@ const chartDefaults = {
 	series: [],
 };
 
-export interface AdapterStatisticsProps {}
-
-export function AdapterStatistics(props: AdapterStatisticsProps) {
+export function VersionHistory() {
 	const { name } = useAdapter();
 	const [option, setOption] = useState<any>();
 	const [showLoading, setShowLoading] = useState(true);
@@ -66,8 +64,8 @@ export function AdapterStatistics(props: AdapterStatisticsProps) {
 	useEffect(() => {
 		setOption(undefined);
 		setShowLoading(true);
-		const loadStatistics = async () => {
-			const stats = await getStatistics(name);
+		const loadHistory = async () => {
+			const stats = await getStatisticsHistory(name);
 			const versions = new Set<string>();
 			for (const date of Object.keys(stats.counts)) {
 				Object.keys(stats.counts[date].versions)
@@ -147,26 +145,25 @@ export function AdapterStatistics(props: AdapterStatisticsProps) {
 				series,
 			});
 		};
-		loadStatistics().catch((e) => {
+		loadHistory().catch((e) => {
 			console.error(e);
 			setShowLoading(false);
 			setOption(undefined);
 		});
 	}, [name]);
+	if (!option || showLoading) {
+		return null;
+	}
 	return (
-		<Paper sx={{ padding: 2 }}>
-			{(option || showLoading) && (
-				<Box sx={{ marginTop: 2 }}>
-					<ReactECharts
-						style={{ height: "400px" }}
-						loadingOption={{
-							type: "default",
-						}}
-						showLoading={showLoading}
-						option={option || { ...chartDefaults }}
-					/>
-				</Box>
-			)}
-		</Paper>
+		<Box sx={{ marginTop: 2 }}>
+			<ReactECharts
+				style={{ height: "400px" }}
+				loadingOption={{
+					type: "default",
+				}}
+				showLoading={showLoading}
+				option={option || { ...chartDefaults }}
+			/>
+		</Box>
 	);
 }

@@ -26,7 +26,7 @@ import { useLocation } from "react-router-dom";
 import { useUserToken } from "../contexts/UserContext";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
 
-const iconStyles = {
+export const iconStyles = {
 	check: {
 		color: "#00b200",
 	},

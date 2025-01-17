@@ -5,7 +5,7 @@ import { UserProvider } from "./contexts/UserContext";
 import { AdapterDashboard } from "./tools/adapter/AdapterDashboard";
 import { AdapterDetails } from "./tools/adapter/AdapterDetails";
 import { AdapterRatings } from "./tools/adapter/AdapterRatings";
-import { AdapterStatistics } from "./tools/adapter/AdapterStatistics";
+import { Statistics } from "./tools/adapter/statistics/Statistics";
 import { CreateReleaseDialog } from "./tools/adapter/releases/CreateReleaseDialog";
 import { Releases } from "./tools/adapter/releases/Releases";
 import { UpdateRepositoriesDialog } from "./tools/adapter/releases/UpdateRepositoriesDialog";
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
 					},
 					{
 						path: "statistics",
-						element: <AdapterStatistics />,
+						element: <Statistics />,
 					},
 					{
 						path: "ratings",

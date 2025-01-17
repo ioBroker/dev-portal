@@ -1,11 +1,45 @@
 import { Router } from "express";
 import { dbConnect, unescapeObjectKeys } from "../db/utils";
-import { AdapterStats } from "../global/adapter-stats";
+import { AdapterStats, AdapterVersions } from "../global/adapter-stats";
 import { Statistics } from "../global/iobroker";
 
 const router = Router();
 
-router.get("/api/adapter/:name/stats", async function (req, res) {
+router.get("/api/adapter/:name/stats/now", async function (req, res) {
+	try {
+		const { name } = req.params;
+		const db = await dbConnect();
+		const rawStatistics = db.rawStatistics();
+
+		const stats = await rawStatistics
+			.find()
+			.project<Statistics>({
+				adapters: { [name]: 1 },
+				versions: { [name]: 1 },
+				date: 1,
+				_id: 0,
+			})
+			.sort({ date: -1 })
+			.limit(1)
+			.toArray();
+		if (stats.length === 0) {
+			res.status(404).send(`Adapter ${name} not found`);
+			return;
+		}
+
+		const stat = unescapeObjectKeys(stats[0]);
+		const versions: AdapterVersions = {
+			total: stat.adapters[name] ?? 0,
+			versions: stat.versions[name] ?? {},
+		};
+		res.send(versions);
+	} catch (error: any) {
+		console.error(error);
+		res.status(500).send(error.message || error);
+	}
+});
+
+router.get("/api/adapter/:name/stats/history", async function (req, res) {
 	try {
 		const { name } = req.params;
 		const db = await dbConnect();

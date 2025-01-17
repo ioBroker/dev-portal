@@ -1,5 +1,8 @@
 import axios from "axios";
-import { AdapterStats } from "../../../backend/src/global/adapter-stats";
+import {
+	AdapterStats,
+	AdapterVersions,
+} from "../../../backend/src/global/adapter-stats";
 import {
 	AdapterRatings,
 	AllRatings,
@@ -175,9 +178,16 @@ export const getWeblateAdapterComponents = AsyncCache.of(async () => {
 	return result.data;
 });
 
-export async function getStatistics(adapterName: string) {
+export async function getCurrentVersions(adapterName: string) {
+	const result = await axios.get<AdapterVersions>(
+		getApiUrl(`adapter/${uc(adapterName)}/stats/now`),
+	);
+	return result.data;
+}
+
+export async function getStatisticsHistory(adapterName: string) {
 	const result = await axios.get<AdapterStats>(
-		getApiUrl(`adapter/${uc(adapterName)}/stats`),
+		getApiUrl(`adapter/${uc(adapterName)}/stats/history`),
 	);
 	return result.data;
 }
