@@ -3,11 +3,16 @@ import { Router } from "express";
 import { env } from "../common";
 
 const WEBLATE_API = "https://weblate.iobroker.net/api/";
+const ALLOWED_PATHS = ["/projects/", "/components/", "/languages/"];
 
 const router = Router();
 
 router.get<any>("/api/weblate/*", async function (req, res) {
 	try {
+		const userPath = `/${req.params["0"]}`;
+		if (!ALLOWED_PATHS.some(path => userPath.startsWith(path))) {
+			return res.status(400).send("Invalid path");
+		}
 		const url = new URL(`${WEBLATE_API}${req.params["0"]}`);
 		const q = req.query;
 		if (q.page) {
