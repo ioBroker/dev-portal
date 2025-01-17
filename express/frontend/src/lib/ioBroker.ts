@@ -172,10 +172,15 @@ export async function getAdapterInfos(
 }
 
 export const getWeblateAdapterComponents = AsyncCache.of(async () => {
-	const result = await axios.get<any>(
-		getApiUrl("weblate/projects/adapters/components/"),
-	);
-	return result.data;
+	const components: any[] = [];
+	let url = "weblate/projects/adapters/components/";
+	do {
+		const result = await axios.get<any>(getApiUrl(url));
+		components.push(...result.data.results);
+		url = result.data.next?.replace("/api/", "");
+	} while (url);
+
+	return components;
 });
 
 export async function getCurrentVersions(adapterName: string) {
