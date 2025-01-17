@@ -22,9 +22,6 @@ import { AsyncCache, getApiUrl } from "./utils";
 
 const uc = encodeURIComponent;
 
-const CHECK_ADAPTER_URL =
-	"https://e7tj1cpjna.execute-api.eu-west-1.amazonaws.com/";
-
 export type TranslatedText = Record<string, string>;
 
 export const getLatest = AsyncCache.of(async () => {
@@ -237,7 +234,7 @@ export interface CheckResults {
 
 export async function checkAdapter(repoName: string) {
 	const { data } = await axios.get<CheckResults>(
-		`${CHECK_ADAPTER_URL}?url=${uc(`https://github.com/${repoName}`)}`,
+		`${getApiUrl("repochecker/")}?url=${uc(`https://github.com/${repoName}`)}`,
 	);
 	return data;
 }
