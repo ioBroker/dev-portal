@@ -8,6 +8,11 @@ const router = Router();
 router.get("/api/adapter/:name/stats/now", async function (req, res) {
 	try {
 		const { name } = req.params;
+		if (!isValidAdapterName(name)) {
+			res.status(404).send("Adapter not found");
+			return;
+		}
+
 		const db = await dbConnect();
 		const rawStatistics = db.rawStatistics();
 
@@ -23,7 +28,7 @@ router.get("/api/adapter/:name/stats/now", async function (req, res) {
 			.limit(1)
 			.toArray();
 		if (stats.length === 0) {
-			res.status(404).send(`Adapter ${name} not found`);
+			res.status(404).send("Adapter not found");
 			return;
 		}
 
@@ -42,6 +47,10 @@ router.get("/api/adapter/:name/stats/now", async function (req, res) {
 router.get("/api/adapter/:name/stats/history", async function (req, res) {
 	try {
 		const { name } = req.params;
+		if (!isValidAdapterName(name)) {
+			res.status(404).send("Adapter not found");
+			return;
+		}
 		const db = await dbConnect();
 		const rawStatistics = db.rawStatistics();
 		const repoAdapters = db.repoAdapters();
@@ -96,7 +105,7 @@ router.get("/api/adapter/:name/stats/history", async function (req, res) {
 
 		console.log(result);
 		if (Object.keys(result.counts).length === 0) {
-			res.status(404).send(`Adapter ${name} not found`);
+			res.status(404).send("Adapter not found");
 			return;
 		}
 
@@ -106,5 +115,15 @@ router.get("/api/adapter/:name/stats/history", async function (req, res) {
 		res.status(500).send(error.message || error);
 	}
 });
+
+function isValidAdapterName(name: string) {
+	const forbiddenChars = /[^a-z0-9\-_]/g;
+	if (forbiddenChars.test(name)) {
+		return false;
+	}
+
+	// the name must start with a letter
+	return /^[a-z]/.test(name);
+}
 
 export default router;
