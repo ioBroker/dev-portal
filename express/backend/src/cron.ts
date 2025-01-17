@@ -64,12 +64,6 @@ async function collectRepos(): Promise<void> {
 		]);
 		const collection = db.repoAdapters();
 
-		// remove "stale" entries
-		const { deletedCount } = await collection.deleteMany({
-			source: { $exists: false },
-		});
-		console.log(`Deleted ${deletedCount || 0} stale entries`);
-
 		await Promise.all([
 			addRepoAdapters(collection, latest, "latest"),
 			addRepoAdapters(collection, stable, "stable"),
