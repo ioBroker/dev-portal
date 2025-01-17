@@ -16,7 +16,7 @@ router.get<any>("/api/weblate/*", async function (req, res) {
 		const url = new URL(`${WEBLATE_API}${userPath}`);
 		const q = req.query;
 		if (q.page) {
-			url.searchParams.set("page", q.page as string);
+			url.searchParams.set("page", Number(q.page).toString());
 		}
 
 		const result = await axios.get<any>(url.toString(), {
