@@ -262,9 +262,7 @@ async function getDiscoveryLink(adapterName: string) {
 async function getWeblateLink(adapterName: string) {
 	try {
 		const components = await getWeblateAdapterComponents();
-		const component = components.results.find(
-			(c: any) => c.name === adapterName,
-		);
+		const component = components.find((c: any) => c.name === adapterName);
 		if (component) {
 			return (
 				`https://weblate.iobroker.net/projects/adapters/` +
