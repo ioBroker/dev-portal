@@ -151,7 +151,7 @@ export function VersionHistory() {
 			setOption(undefined);
 		});
 	}, [name]);
-	if (!option || showLoading) {
+	if (!option && !showLoading) {
 		return null;
 	}
 	return (
