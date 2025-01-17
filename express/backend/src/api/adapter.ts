@@ -40,7 +40,7 @@ router.get("/api/adapter/:name/stats/now", async function (req, res) {
 		res.send(versions);
 	} catch (error: any) {
 		console.error(error);
-		res.status(500).send(error.message || error);
+		res.status(500).send("An unexpected error occurred");
 	}
 });
 
@@ -112,7 +112,7 @@ router.get("/api/adapter/:name/stats/history", async function (req, res) {
 		res.send(result);
 	} catch (error: any) {
 		console.error(error);
-		res.status(500).send(error.message || error);
+		res.status(500).send("An unexpected error occurred");
 	}
 });
 
