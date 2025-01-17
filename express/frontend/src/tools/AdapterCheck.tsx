@@ -22,7 +22,7 @@ import {
 import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { useEffect, useState } from "react";
 import Chart from "react-google-charts";
-import { useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useUserToken } from "../contexts/UserContext";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
 
@@ -92,7 +92,7 @@ export interface AdapterCheckLocationState {
 
 export function AdapterCheck() {
 	const token = useUserToken();
-	let location = useLocation();
+	const [searchParams] = useSearchParams();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
 	const [busy, setBusy] = useState(false);
@@ -105,14 +105,12 @@ export function AdapterCheck() {
 		loadData().catch(console.error);
 	}, [token]);
 
-	const incomingState = location.state as
-		| AdapterCheckLocationState
-		| undefined;
+	const repo = searchParams.get("repo");
 	useEffect(() => {
-		if (incomingState?.repoFullName) {
-			setRepoName(incomingState.repoFullName);
+		if (repo) {
+			setRepoName(repo);
 		}
-	}, [incomingState]);
+	}, [repo]);
 
 	const handleStartClick = async () => {
 		setMessages([]);
