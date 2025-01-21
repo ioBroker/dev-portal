@@ -113,6 +113,17 @@ export class GitHubRepoComm {
 		return result.data;
 	}
 
+	public readonly getBranches = AsyncCache.of(async () => {
+		const result = await this.request(
+			"GET /repos/{owner}/{repo}/branches",
+			{
+				...this.baseOptions,
+				per_page: 100,
+			},
+		);
+		return result.data;
+	});
+
 	public readonly getTags = AsyncCache.of(async () => {
 		const result = await this.request("GET /repos/{owner}/{repo}/tags", {
 			...this.baseOptions,

@@ -22,11 +22,12 @@ import {
 import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { useEffect, useState } from "react";
 import Chart from "react-google-charts";
-import { useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useUserToken } from "../contexts/UserContext";
+import { GitHubComm } from "../lib/gitHub";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
 
-const iconStyles = {
+export const iconStyles = {
 	check: {
 		color: "#00b200",
 	},
@@ -92,9 +93,11 @@ export interface AdapterCheckLocationState {
 
 export function AdapterCheck() {
 	const token = useUserToken();
-	let location = useLocation();
+	const [searchParams] = useSearchParams();
 	const [repoNames, setRepoNames] = useState<string[]>([]);
 	const [repoName, setRepoName] = useState("");
+	const [branchNames, setBranchNames] = useState<string[]>([]);
+	const [branchName, setBranchName] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [messages, setMessages] = useState<Message[]>([]);
 	useEffect(() => {
@@ -105,20 +108,45 @@ export function AdapterCheck() {
 		loadData().catch(console.error);
 	}, [token]);
 
-	const incomingState = location.state as
-		| AdapterCheckLocationState
-		| undefined;
+	const repo = searchParams.get("repo");
 	useEffect(() => {
-		if (incomingState?.repoFullName) {
-			setRepoName(incomingState.repoFullName);
+		if (repo) {
+			setRepoName(repo);
 		}
-	}, [incomingState]);
+	}, [repo]);
+
+	useEffect(() => {
+		setBranchName("");
+		setBranchNames([]);
+		let cancelled = false;
+		const loadBranches = async () => {
+			const [owner, repo] = repoName.split("/");
+			if (!owner || !repo) {
+				return;
+			}
+
+			const gitHub = GitHubComm.forToken(token);
+			const branches = await gitHub.getRepo(owner, repo).getBranches();
+			if (!cancelled) {
+				setBranchNames(
+					branches
+						.map((b) => b.name)
+						.filter((b) => !b.startsWith("dependabot/")),
+				);
+			}
+		};
+		loadBranches().catch(console.error);
+
+		return () => {
+			cancelled = true;
+		};
+	}, [repoName, token]);
 
 	const handleStartClick = async () => {
 		setMessages([]);
 		setBusy(true);
 		try {
-			const results = await checkAdapter(repoName);
+			const results = await checkAdapter(repoName, branchName);
 			const messages = results.errors.map((c) => new Message("error", c));
 			messages.push(
 				...results.warnings.map((c) => new Message("warning", c)),
@@ -174,6 +202,24 @@ export function AdapterCheck() {
 										</InputAdornment>
 									),
 								}}
+							/>
+						)}
+					/>
+				</Grid2>
+				<Grid2>
+					<Autocomplete
+						freeSolo
+						disabled={busy || !repoName}
+						options={branchNames}
+						getOptionLabel={(option) => option}
+						sx={{ width: 170 }}
+						inputValue={branchName}
+						onInputChange={(_e, value) => setBranchName(value)}
+						renderInput={(params) => (
+							<TextField
+								{...params}
+								label="Branch (optional)"
+								variant="outlined"
 							/>
 						)}
 					/>

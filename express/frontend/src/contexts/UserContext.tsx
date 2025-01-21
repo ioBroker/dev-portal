@@ -27,11 +27,17 @@ export function useUserContext() {
 	return context;
 }
 
+export class UserTokenMissingError extends Error {
+	constructor() {
+		super("User token missing");
+	}
+}
+
 export function useUserToken() {
 	const { user } = useUserContext();
 	const token = user?.token;
 	if (!token) {
-		throw new Error("User token missing");
+		throw new UserTokenMissingError();
 	}
 	return token;
 }

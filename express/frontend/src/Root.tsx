@@ -1,3 +1,4 @@
+import { Flag } from "@mui/icons-material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
@@ -138,6 +139,17 @@ export function Root() {
 							ioBroker Developer Portal
 						</Link>
 					</Typography>
+					<Button
+						color="inherit"
+						variant="outlined"
+						size="small"
+						startIcon={<Flag />}
+						href="https://github.com/ioBroker/dev-portal/issues"
+						target="_blank"
+						style={{ opacity: 0.3 }}
+					>
+						Report Issue
+					</Button>
 					{!user && (
 						<Button
 							color="inherit"

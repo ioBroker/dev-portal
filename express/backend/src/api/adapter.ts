@@ -1,13 +1,56 @@
 import { Router } from "express";
 import { dbConnect, unescapeObjectKeys } from "../db/utils";
-import { AdapterStats } from "../global/adapter-stats";
+import { AdapterStats, AdapterVersions } from "../global/adapter-stats";
 import { Statistics } from "../global/iobroker";
 
 const router = Router();
 
-router.get("/api/adapter/:name/stats", async function (req, res) {
+router.get("/api/adapter/:name/stats/now", async function (req, res) {
 	try {
 		const { name } = req.params;
+		if (!isValidAdapterName(name)) {
+			res.status(404).send("Adapter not found");
+			return;
+		}
+
+		const db = await dbConnect();
+		const rawStatistics = db.rawStatistics();
+
+		const stats = await rawStatistics
+			.find()
+			.project<Statistics>({
+				adapters: { [name]: 1 },
+				versions: { [name]: 1 },
+				date: 1,
+				_id: 0,
+			})
+			.sort({ date: -1 })
+			.limit(1)
+			.toArray();
+		if (stats.length === 0) {
+			res.status(404).send("Adapter not found");
+			return;
+		}
+
+		const stat = unescapeObjectKeys(stats[0]);
+		const versions: AdapterVersions = {
+			total: stat.adapters[name] ?? 0,
+			versions: stat.versions[name] ?? {},
+		};
+		res.send(versions);
+	} catch (error: any) {
+		console.error(error);
+		res.status(500).send("An unexpected error occurred");
+	}
+});
+
+router.get("/api/adapter/:name/stats/history", async function (req, res) {
+	try {
+		const { name } = req.params;
+		if (!isValidAdapterName(name)) {
+			res.status(404).send("Adapter not found");
+			return;
+		}
 		const db = await dbConnect();
 		const rawStatistics = db.rawStatistics();
 		const repoAdapters = db.repoAdapters();
@@ -62,15 +105,25 @@ router.get("/api/adapter/:name/stats", async function (req, res) {
 
 		console.log(result);
 		if (Object.keys(result.counts).length === 0) {
-			res.status(404).send(`Adapter ${name} not found`);
+			res.status(404).send("Adapter not found");
 			return;
 		}
 
 		res.send(result);
 	} catch (error: any) {
 		console.error(error);
-		res.status(500).send(error.message || error);
+		res.status(500).send("An unexpected error occurred");
 	}
 });
+
+function isValidAdapterName(name: string) {
+	const forbiddenChars = /[^a-z0-9\-_]/g;
+	if (forbiddenChars.test(name)) {
+		return false;
+	}
+
+	// the name must start with a letter
+	return /^[a-z]/.test(name);
+}
 
 export default router;

@@ -10,7 +10,11 @@ import { CardButton } from "../../components/CardButton";
 import { CardGrid, CardGridProps } from "../../components/dashboard/CardGrid";
 import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
 import { useAdapter } from "../../contexts/AdapterContext";
-import { getAllRatings, getLatest, getStatistics } from "../../lib/ioBroker";
+import {
+	getAllRatings,
+	getCurrentVersions,
+	getLatest,
+} from "../../lib/ioBroker";
 
 const CATEGORY_GENERAL = "General";
 const CATEGORY_FEATURES = "Features";
@@ -28,18 +32,11 @@ export function AdapterDashboard() {
 	useEffect(() => {
 		setCategories(EMPTY_CARDS);
 		const loadCards = async () => {
-			const [latest, ratings] = await Promise.all([
+			const [latest, ratings, versions] = await Promise.all([
 				getLatest(),
 				getAllRatings(),
+				getCurrentVersions(name).catch(() => null),
 			]);
-			let hasStatistics = !!latest[name];
-			if (!hasStatistics) {
-				// check if statistics are available
-				try {
-					await getStatistics(name);
-					hasStatistics = true;
-				} catch {}
-			}
 			const generalCards: DashboardCardProps[] = [];
 			generalCards.push({
 				title: "Releases",
@@ -51,7 +48,7 @@ export function AdapterDashboard() {
 				to: "releases",
 				buttons: [<CardButton text="Manage" to="releases" />],
 			});
-			if (hasStatistics) {
+			if (latest[name] || versions?.total) {
 				generalCards.push({
 					title: "Statistics",
 					text: "Learn more about the usage and distribution of your adapter.",

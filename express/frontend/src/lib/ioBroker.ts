@@ -1,5 +1,8 @@
 import axios from "axios";
-import { AdapterStats } from "../../../backend/src/global/adapter-stats";
+import {
+	AdapterStats,
+	AdapterVersions,
+} from "../../../backend/src/global/adapter-stats";
 import {
 	AdapterRatings,
 	AllRatings,
@@ -180,9 +183,16 @@ export const getWeblateAdapterComponents = AsyncCache.of(async () => {
 	return components;
 });
 
-export async function getStatistics(adapterName: string) {
+export async function getCurrentVersions(adapterName: string) {
+	const result = await axios.get<AdapterVersions>(
+		getApiUrl(`adapter/${uc(adapterName)}/stats/now`),
+	);
+	return result.data;
+}
+
+export async function getStatisticsHistory(adapterName: string) {
 	const result = await axios.get<AdapterStats>(
-		getApiUrl(`adapter/${uc(adapterName)}/stats`),
+		getApiUrl(`adapter/${uc(adapterName)}/stats/history`),
 	);
 	return result.data;
 }
@@ -237,9 +247,12 @@ export interface CheckResults {
 	errors: CheckResult[];
 }
 
-export async function checkAdapter(repoName: string) {
-	const { data } = await axios.get<CheckResults>(
-		`${getApiUrl("repochecker/")}?url=${uc(`https://github.com/${repoName}`)}`,
-	);
+export async function checkAdapter(repoName: string, branchName?: string) {
+	const url = new URL(getApiUrl("repochecker/"), window.location.origin);
+	url.searchParams.set("url", `https://github.com/${repoName}`);
+	if (branchName) {
+		url.searchParams.set("branch", branchName);
+	}
+	const { data } = await axios.get<CheckResults>(url.toString());
 	return data;
 }
