@@ -1,11 +1,9 @@
 import {
 	Box,
 	Card,
-	CardActionArea,
 	CardActions,
 	CardContent,
 	CardMedia,
-	CircularProgress,
 	Hidden,
 	IconButton,
 	Rating,
@@ -14,7 +12,7 @@ import {
 import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { Rating as IoBrokerRating } from "../../../../backend/src/global/iobroker";
-import { AddCardIcon, CloseIcon } from "../Icons";
+import { CloseIcon, FavoriteIcon, NotFavoriteIcon } from "../Icons";
 
 export interface DashboardCardProps {
 	title: string;
@@ -28,6 +26,8 @@ export interface DashboardCardProps {
 	url?: string;
 	onClick?: () => void;
 	onClose?: () => void;
+	liked?: boolean;
+	onLikeChanged?: (liked: boolean) => void;
 }
 
 export function DashboardCard({
@@ -42,6 +42,8 @@ export function DashboardCard({
 	url,
 	onClick,
 	onClose,
+	liked,
+	onLikeChanged,
 }: DashboardCardProps) {
 	const navigate = useNavigate();
 	const handleCardClick = to
@@ -58,6 +60,26 @@ export function DashboardCard({
 			}}
 			raised={true}
 		>
+			{liked !== undefined && (
+				<Box
+					sx={{
+						height: "0px",
+						overflowY: "visible",
+						textAlign: "left",
+					}}
+				>
+					<IconButton
+						onClick={() => onLikeChanged?.(!liked)}
+						size="small"
+					>
+						{liked ? (
+							<FavoriteIcon color="error" />
+						) : (
+							<NotFavoriteIcon />
+						)}
+					</IconButton>
+				</Box>
+			)}
 			{onClose && (
 				<Box
 					sx={{
@@ -124,70 +146,12 @@ export function DashboardCard({
 				))}
 			</CardContent>
 			{buttons && buttons.length > 0 && (
-				<CardActions>
+				<CardActions sx={{ flexWrap: "wrap" }}>
 					{buttons.map((b, i) => (
 						<Fragment key={i}>{b}</Fragment>
 					))}
 				</CardActions>
 			)}
-		</Card>
-	);
-}
-
-export function LoadingCard() {
-	return (
-		<Card
-			sx={{
-				height: "100%",
-				display: "flex",
-				flexDirection: "column",
-			}}
-			raised={true}
-		>
-			<CircularProgress
-				size="50%"
-				sx={(theme) => ({
-					marginLeft: "25%",
-					[theme.breakpoints.up("sm")]: {
-						marginTop: "40%",
-						marginBottom: "40%",
-					},
-				})}
-			/>
-		</Card>
-	);
-}
-
-export function AddCard(props: { onClick: () => void }) {
-	const { onClick } = props;
-	return (
-		<Card
-			sx={{
-				height: "100%",
-				display: "flex",
-				flexDirection: "column",
-			}}
-			raised={true}
-		>
-			<CardActionArea
-				sx={{
-					height: "100%",
-				}}
-				onClick={onClick}
-			>
-				<AddCardIcon
-					fontSize="large"
-					color="primary"
-					sx={(theme) => ({
-						width: "100%",
-						minHeight: "4em",
-						[theme.breakpoints.up("sm")]: {
-							marginTop: "40%",
-							marginBottom: "40%",
-						},
-					})}
-				/>
-			</CardActionArea>
 		</Card>
 	);
 }

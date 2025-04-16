@@ -1,13 +1,13 @@
 import Chart from "react-google-charts";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useAdapter } from "../../../contexts/AdapterContext";
+import { useAdapterContext } from "../../../contexts/AdapterContext";
 import { useEffect, useState } from "react";
 import { getCurrentVersions } from "../../../lib/ioBroker";
 
 type GraphData = [string, string | number][];
 
 export function CurrentVersions() {
-	const { name } = useAdapter();
+	const { name } = useAdapterContext();
 	const [graphData, setGraphData] = useState<GraphData>();
 
 	useEffect(() => {

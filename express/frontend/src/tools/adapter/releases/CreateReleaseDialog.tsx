@@ -20,7 +20,7 @@ import {
 	LogHandler,
 	WebSocketLog,
 } from "../../../components/WebSocketLog";
-import { useAdapter } from "../../../contexts/AdapterContext";
+import { useAdapterContext } from "../../../contexts/AdapterContext";
 import { getWebSocketUrl } from "../../../lib/utils";
 import { BaseReleaseDialog } from "./BaseReleaseDialog";
 
@@ -35,7 +35,7 @@ const gridSizes = {
 function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 	const { onSelected } = props;
 	const [type, setType] = useState<ReleaseType>();
-	const { infos } = useAdapter();
+	const { info } = useAdapterContext();
 	const [version, setVersion] = useState<string>();
 	const [versions, setVersions] = useState<
 		{ value: ReleaseType; label: string }[]
@@ -45,7 +45,7 @@ function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 
 	useEffect(() => onSelected(type), [type, onSelected]);
 	useEffect(() => {
-		const version = infos.info?.version;
+		const version = info?.version;
 		setVersion(version);
 		if (version) {
 			setVersions(
@@ -57,7 +57,7 @@ function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 		} else {
 			setVersions([]);
 		}
-	}, [infos]);
+	}, [info]);
 
 	return (
 		<Grid2 container direction="column" spacing={2}>
@@ -92,7 +92,7 @@ function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 }
 
 export function CreateReleaseDialog() {
-	const { name, infos } = useAdapter();
+	const { name, repo } = useAdapterContext();
 
 	const webSocket = useWebSocket(getWebSocketUrl("release"));
 
@@ -106,14 +106,16 @@ export function CreateReleaseDialog() {
 		if (step === "create" && !busy && !done) {
 			setBusy(true);
 			const start = async () => {
-				const owner = infos.repo.owner?.login!;
-				const repo = infos.repo.name;
-				webSocket.sendJsonMessage({ owner, repo, type });
+				webSocket.sendJsonMessage({
+					owner: repo?.owner?.login,
+					repo: repo?.name,
+					type,
+				});
 			};
 			start().catch(console.error);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [step, busy, done, infos, type]);
+	}, [step, busy, done, repo, type]);
 
 	const handleMessage = (msg: ServerClientMessage, appendLog: LogHandler) => {
 		if (isLogMessage(msg)) {

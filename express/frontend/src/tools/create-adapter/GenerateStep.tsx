@@ -24,7 +24,10 @@ import {
 import { AuthConsentDialog } from "../../components/AuthConsentDialog";
 import { CardButton } from "../../components/CardButton";
 import { CardGrid } from "../../components/dashboard/CardGrid";
-import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
+import {
+	DashboardCard,
+	DashboardCardProps,
+} from "../../components/dashboard/DashboardCard";
 import { DownloadIcon, GitHubIcon } from "../../components/Icons";
 import { LogHandler, WebSocketLog } from "../../components/WebSocketLog";
 import { User } from "../../lib/gitHub";
@@ -429,7 +432,11 @@ export function GenerateStep(props: GenerateStepProps) {
 					<pre>{JSON.stringify(answers, null, 2)}</pre>
 				</AccordionDetails>
 			</Accordion>
-			<CardGrid cards={cards} />
+			<CardGrid>
+				{cards.map((card) => (
+					<DashboardCard {...card} />
+				))}
+			</CardGrid>
 		</>
 	);
 }

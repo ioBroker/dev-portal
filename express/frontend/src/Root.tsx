@@ -164,7 +164,13 @@ export function Root() {
 			</AppBar>
 			{isReady && (
 				<>
-					<Drawer variant="permanent" open={isOpen}>
+					<Drawer
+						variant="permanent"
+						open={isOpen}
+						PaperProps={{
+							sx: { scrollbarWidth: isOpen ? undefined : "none" },
+						}}
+					>
 						<Box
 							sx={(theme) => ({
 								display: "flex",

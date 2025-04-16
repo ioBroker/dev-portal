@@ -10,14 +10,17 @@ import {
 	TextField,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { AddableAdapterListType } from "../../contexts/AdapterListContext";
 import { useUserToken } from "../../contexts/UserContext";
 import { GitHubComm } from "../../lib/gitHub";
-import { getAdapterInfos, getLatest } from "../../lib/ioBroker";
+import { getAdapterInfo, getLatest } from "../../lib/ioBroker";
 
 export function AddWatchDialog({
+	type,
 	open,
 	onClose,
 }: {
+	type?: AddableAdapterListType;
 	open?: boolean;
 	onClose: (repo?: string) => void;
 }) {
@@ -50,12 +53,10 @@ export function AddWatchDialog({
 		try {
 			const gitHub = GitHubComm.forToken(token);
 			const [owner, repo] = repoName.split("/", 2);
-			const latest = await getLatest();
-			const infos = await getAdapterInfos(
+			const info = await getAdapterInfo(
 				await gitHub.getRepo(owner, repo).getRepo(),
-				latest,
 			);
-			if (!infos.info) {
+			if (!info) {
 				throw new Error("This is not an ioBroker adapter");
 			}
 			onClose(repoName);
@@ -65,6 +66,8 @@ export function AddWatchDialog({
 			setValidating(false);
 		}
 	};
+
+	const typeName = type === "watches" ? "watched" : "favorite";
 
 	return (
 		<Dialog
@@ -78,7 +81,7 @@ export function AddWatchDialog({
 			<DialogContent>
 				<DialogContentText>
 					Please choose a GitHub repository of an ioBroker adapter to
-					add to your list of watched adapters.
+					add to your list of {typeName} adapters.
 				</DialogContentText>
 				<Autocomplete
 					freeSolo

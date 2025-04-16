@@ -17,7 +17,7 @@ import {
 	Rating as IoBrokerRating,
 	RatingComment,
 } from "../../../../backend/src/global/iobroker";
-import { useAdapter } from "../../contexts/AdapterContext";
+import { useAdapterContext } from "../../contexts/AdapterContext";
 import { getAdapterRatings, getAllRatings } from "../../lib/ioBroker";
 
 const sxList: SxProps<Theme> = {
@@ -52,7 +52,7 @@ function GlobalRating(props: { title: string; rating: IoBrokerRating }) {
 }
 
 export function AdapterRatings() {
-	const { name } = useAdapter();
+	const { name } = useAdapterContext();
 	const [overallRating, setOverallRating] = useState<IoBrokerRating>();
 	const [currentRating, setCurrentRating] = useState<
 		IoBrokerRating & { version: string }

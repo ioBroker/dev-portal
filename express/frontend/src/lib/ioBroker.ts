@@ -4,9 +4,9 @@ import {
 	AdapterVersions,
 } from "../../../backend/src/global/adapter-stats";
 import {
+	AdapterInfo,
 	AdapterRatings,
 	AllRatings,
-	LatestAdapter,
 	LatestAdapters,
 	StableAdapters,
 } from "../../../backend/src/global/iobroker";
@@ -72,8 +72,10 @@ export async function getMyAdapterRepos(
 	ghToken: string,
 ): Promise<MinimalRepository[]> {
 	const gitHub = GitHubComm.forToken(ghToken);
-	const repos = await gitHub.getUserRepos();
-	const latest = await getLatest();
+	const [repos, latest] = await Promise.all([
+		gitHub.getUserRepos(),
+		getLatest(),
+	]);
 	return repos.filter((repo) => {
 		if (!repo.name.startsWith("ioBroker.")) {
 			return false;
@@ -84,9 +86,9 @@ export async function getMyAdapterRepos(
 			return false;
 		}
 		const adapterName = parts[1];
-		let info = latest[adapterName];
+		const info = latest[adapterName];
 		if (repo.fork) {
-			if (!info?.meta || !info.meta.includes(`/${repo.full_name}/`)) {
+			if (!info?.meta?.includes(`/${repo.full_name}/`)) {
 				// we are not the true source of this adapter
 				return false;
 			}
@@ -113,62 +115,37 @@ export async function getWatchedAdapterRepos(
 	}
 }
 
-export interface AdapterInfos {
-	repo: Repository;
-	info?: LatestAdapter;
+export function getAdapterFromRepoName(repoName: string) {
+	return repoName.replace(/^ioBroker\./, "");
 }
 
-const myAdapterInfos = new Map<string, Promise<AdapterInfos[]>>();
-export const getMyAdapterInfos = async (ghToken: string) => {
-	if (!myAdapterInfos.has(ghToken)) {
-		const getInfos = async () => {
-			const [repos, latest] = await Promise.all([
-				getMyAdapterRepos(ghToken),
-				getLatest(),
-			]);
-			const infos = await Promise.all(
-				repos.map((repo) => getAdapterInfos(repo, latest)),
-			);
-			return infos.filter((i) => i) as AdapterInfos[];
-		};
-		myAdapterInfos.set(ghToken, getInfos());
-	}
-
-	return myAdapterInfos.get(ghToken) as Promise<AdapterInfos[]>;
-};
-
-export const getWatchedAdapterInfos = async (ghToken: string) => {
-	const [repos, latest] = await Promise.all([
-		getWatchedAdapterRepos(ghToken),
-		getLatest(),
-	]);
-	const infos = await Promise.all(
-		repos.map((repo) => getAdapterInfos(repo, latest)),
-	);
-	return infos.filter((i) => i) as AdapterInfos[];
-};
-
-export async function getAdapterInfos(
+const adapterInfos = new Map<string, Promise<AdapterInfo>>();
+export async function getAdapterInfo(
 	repo: Repository,
-	latest: LatestAdapters,
-): Promise<AdapterInfos> {
-	const adapterName = repo.name.split(".")[1];
-	let info = latest[adapterName];
-	const defaultBranch = repo.default_branch || "master";
-	if (!info) {
-		try {
-			const ioPackage = await axios.get<any>(
-				`https://raw.githubusercontent.com/` +
-					`${uc(repo.full_name)}/` +
-					`${uc(defaultBranch)}/io-package.json`,
-			);
-			info = ioPackage.data.common;
-		} catch (error) {
-			console.error(error);
-		}
+): Promise<AdapterInfo | undefined> {
+	if (!adapterInfos.has(repo.name)) {
+		const getInfo = async () => {
+			const latest = await getLatest();
+			const info = latest[getAdapterFromRepoName(repo.name)];
+			if (info) {
+				return info;
+			}
+			try {
+				const defaultBranch = repo.default_branch || "master";
+				const ioPackage = await axios.get<any>(
+					`https://raw.githubusercontent.com/` +
+						`${encodeURI(repo.full_name)}/` +
+						`${uc(defaultBranch)}/io-package.json`,
+				);
+				return ioPackage.data.common;
+			} catch (error) {
+				console.error(error);
+			}
+		};
+		adapterInfos.set(repo.name, getInfo());
 	}
 
-	return { repo, info };
+	return adapterInfos.get(repo.name);
 }
 
 export const getWeblateAdapterComponents = AsyncCache.of(async () => {

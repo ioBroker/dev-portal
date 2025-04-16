@@ -72,7 +72,7 @@ export class GitHubComm {
 	public getRepo(owner: string | Repository, repo?: string): GitHubRepoComm {
 		if (typeof owner !== "string") {
 			repo = owner.name;
-			owner = owner.owner!.login;
+			owner = owner.owner.login;
 		}
 		const key = `${owner}/${repo}`;
 		if (!this.repos.has(key)) {
