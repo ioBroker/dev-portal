@@ -253,7 +253,7 @@ function AdapterSentryButton() {
 				);
 			}
 		};
-		loadProjects().catch((e) => console.error(name, e));
+		loadProjects().catch(console.error);
 	}, [name]);
 
 	if (projects.length === 0) {
