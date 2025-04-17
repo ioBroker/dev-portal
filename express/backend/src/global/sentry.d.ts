@@ -23,7 +23,7 @@ export interface ProjectStatistics {
 	latestRelease?: any;
 	hasUserReports: boolean;
 	latestDeploys?: any;
-	stats: number[][];
+	stats?: number[][];
 }
 
 export interface Team {

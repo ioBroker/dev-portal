@@ -7,9 +7,12 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { CardButton } from "../../components/CardButton";
-import { CardGrid, CardGridProps } from "../../components/dashboard/CardGrid";
-import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
-import { useAdapter } from "../../contexts/AdapterContext";
+import { CardGrid } from "../../components/dashboard/CardGrid";
+import {
+	DashboardCard,
+	DashboardCardProps,
+} from "../../components/dashboard/DashboardCard";
+import { useAdapterContext } from "../../contexts/AdapterContext";
 import {
 	getAllRatings,
 	getCurrentVersions,
@@ -19,14 +22,14 @@ import {
 const CATEGORY_GENERAL = "General";
 const CATEGORY_FEATURES = "Features";
 const EMPTY_CARDS = {
-	[CATEGORY_GENERAL]: { cards: [] },
-	[CATEGORY_FEATURES]: { cards: [] },
+	[CATEGORY_GENERAL]: [],
+	[CATEGORY_FEATURES]: [],
 };
 
 export function AdapterDashboard() {
-	const { name } = useAdapter();
+	const { name } = useAdapterContext();
 	const [categories, setCategories] =
-		useState<Record<string, CardGridProps>>(EMPTY_CARDS);
+		useState<Record<string, DashboardCardProps[]>>(EMPTY_CARDS);
 	const [collapsed, setCollapsed] = useState<boolean[]>([]);
 
 	useEffect(() => {
@@ -68,7 +71,7 @@ export function AdapterDashboard() {
 			//const featureCards: DashboardCardProps[] = [];
 			// features: discovery, sentry, weblate, create-adapter upgrades/changes, adapter-check?, adapter transfer (to community)
 			setCategories({
-				[CATEGORY_GENERAL]: { cards: generalCards },
+				[CATEGORY_GENERAL]: generalCards,
 				//[CATEGORY_FEATURES]: { cards: featureCards },
 			});
 		};
@@ -86,10 +89,10 @@ export function AdapterDashboard() {
 	return (
 		<>
 			{Object.keys(categories).map((title, index) => {
-				const grid = categories[title];
+				const cards = categories[title];
 				return (
 					<Accordion
-						key={index}
+						key={title}
 						expanded={!collapsed[index]}
 						onChange={() => handleAccordion(index)}
 					>
@@ -101,7 +104,11 @@ export function AdapterDashboard() {
 							<Typography variant="h5">{title}</Typography>
 						</AccordionSummary>
 						<AccordionDetails>
-							<CardGrid {...grid} />
+							<CardGrid>
+								{cards.map((card) => (
+									<DashboardCard key={card.title} {...card} />
+								))}
+							</CardGrid>
 						</AccordionDetails>
 					</Accordion>
 				);

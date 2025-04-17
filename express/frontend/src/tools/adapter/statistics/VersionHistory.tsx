@@ -3,7 +3,7 @@ import ReactECharts from "echarts-for-react";
 import { useEffect, useState } from "react";
 import { coerce } from "semver";
 import sort from "semver/functions/sort";
-import { useAdapter } from "../../../contexts/AdapterContext";
+import { useAdapterContext } from "../../../contexts/AdapterContext";
 import { getStatisticsHistory } from "../../../lib/ioBroker";
 
 const chartDefaults = {
@@ -57,7 +57,7 @@ const chartDefaults = {
 };
 
 export function VersionHistory() {
-	const { name } = useAdapter();
+	const { name } = useAdapterContext();
 	const [option, setOption] = useState<any>();
 	const [showLoading, setShowLoading] = useState(true);
 

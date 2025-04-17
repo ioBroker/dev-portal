@@ -1,4 +1,5 @@
 import {
+	CircularProgress,
 	Divider,
 	ListItem,
 	ListItemIcon,
@@ -6,10 +7,14 @@ import {
 	Tooltip,
 } from "@mui/material";
 import { Link as RouterLink, useLocation } from "react-router-dom";
+import {
+	AdapterContextProvider,
+	AdapterRepoName,
+	useAdapterContext,
+} from "../contexts/AdapterContext";
 import { useAdapterList } from "../contexts/AdapterListContext";
 import { useDrawerContext } from "../contexts/DrawerContext";
 import { useUserContext } from "../contexts/UserContext";
-import { notEmpty } from "../lib/utils";
 import { AdapterCheckIcon, CreateAdapterIcon, DashboardIcon } from "./Icons";
 
 function NavListItem({
@@ -50,7 +55,9 @@ function NavListItem({
 
 export function NavList() {
 	const { user } = useUserContext();
-	const { own, watched } = useAdapterList();
+	const {
+		adapters: { own, watches, favorites },
+	} = useAdapterList();
 	return (
 		<>
 			<NavListItem link="/" title="Dashboard" icon={<DashboardIcon />} />
@@ -72,45 +79,43 @@ export function NavList() {
 
 			<Divider />
 
-			{own
-				.map((a) => a.info)
-				.filter(notEmpty)
-				.map(({ name, extIcon }) => (
-					<NavListItem
-						key={name}
-						link={`/adapter/${name}`}
-						title={`ioBroker.${name}`}
-						icon={
-							<img
-								src={extIcon}
-								style={{ height: "2em" }}
-								alt={name}
-							/>
-						}
-					/>
-				))}
-
-			{!!own.length && <Divider />}
-
-			{watched
-				.map((a) => a.info)
-				.filter(notEmpty)
-				.map(({ name, extIcon }) => (
-					<NavListItem
-						key={name}
-						link={`/adapter/${name}`}
-						title={`ioBroker.${name}`}
-						icon={
-							<img
-								src={extIcon}
-								style={{ height: "2em" }}
-								alt={name}
-							/>
-						}
-					/>
-				))}
-
-			{!!watched.length && <Divider />}
+			<AdapterNavListItems adapters={favorites} />
+			<AdapterNavListItems adapters={own} />
+			<AdapterNavListItems adapters={watches} />
 		</>
+	);
+}
+
+function AdapterNavListItems({ adapters }: { adapters?: AdapterRepoName[] }) {
+	return (
+		<>
+			{adapters?.map((repo) => (
+				<AdapterContextProvider key={repo.name} repoName={repo}>
+					<AdapterNavListItem />
+				</AdapterContextProvider>
+			))}
+			{!!adapters?.length && <Divider />}
+		</>
+	);
+}
+
+function AdapterNavListItem() {
+	const { name, repoName, info } = useAdapterContext();
+	return (
+		<NavListItem
+			link={`/adapter/${repoName.owner}/${repoName.name}`}
+			title={`ioBroker.${name}`}
+			icon={
+				info ? (
+					<img
+						src={info.extIcon}
+						style={{ height: "2em" }}
+						alt={name}
+					/>
+				) : (
+					<CircularProgress size="2em" />
+				)
+			}
+		/>
 	);
 }

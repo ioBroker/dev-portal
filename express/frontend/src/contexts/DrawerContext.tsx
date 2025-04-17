@@ -5,9 +5,7 @@ interface IDrawerContext {
 	toggle: () => void;
 }
 
-export const DrawerContext = createContext<IDrawerContext | undefined>(
-	undefined,
-);
+const DrawerContext = createContext<IDrawerContext | undefined>(undefined);
 
 export function useDrawerContext() {
 	const context = useContext(DrawerContext);
@@ -17,7 +15,7 @@ export function useDrawerContext() {
 	return context;
 }
 
-export function DrawerProvider({ children }: { children: ReactNode }) {
+export function DrawerContextProvider({ children }: { children: ReactNode }) {
 	const [isOpen, setOpen] = useState(false);
 	const toggle = () => setOpen((o) => !o);
 

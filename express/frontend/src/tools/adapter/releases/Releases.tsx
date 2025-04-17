@@ -26,7 +26,7 @@ import {
 	LatestIcon,
 	NpmIcon,
 } from "../../../components/Icons";
-import { useAdapter } from "../../../contexts/AdapterContext";
+import { useAdapterContext } from "../../../contexts/AdapterContext";
 import { useUserToken } from "../../../contexts/UserContext";
 import { GitHubComm } from "../../../lib/gitHub";
 import { getLatest } from "../../../lib/ioBroker";
@@ -122,7 +122,7 @@ const sxButton: SxProps = {
 
 export function Releases() {
 	const token = useUserToken();
-	const { name, infos } = useAdapter();
+	const { name, repo } = useAdapterContext();
 	const location = useLocation();
 	const [canPush, setCanPush] = useState<boolean>();
 	const [rows, setRows] = useState<ReleaseInfo[]>();
@@ -142,14 +142,14 @@ export function Releases() {
 		};
 		const loadReleases = async () => {
 			const gitHub = GitHubComm.forToken(token);
-			const repo = gitHub.getRepo(infos.repo);
+			const repoComm = gitHub.getRepo(repo!);
 			const [npm, fullRepo, tags, latest, defaultHead] =
 				await Promise.all([
 					tryGetPackageMetaData(),
-					repo.getRepo(),
-					repo.getTags(),
+					repoComm.getRepo(),
+					repoComm.getTags(),
 					getLatest(),
-					repo.getRef(`heads/${infos.repo.default_branch}`),
+					repoComm.getRef(`heads/${repo!.default_branch}`),
 				]);
 			setCanPush(fullRepo.permissions?.push);
 			const releases: ReleaseInfo[] = [];
@@ -197,9 +197,9 @@ export function Releases() {
 			if (masterRelease) {
 				masterRelease.icons.push("github");
 			} else {
-				const commit = await repo.getCommit(defaultHead.object.sha);
+				const commit = await repoComm.getCommit(defaultHead.object.sha);
 				const release: ReleaseInfo = {
-					version: `(${infos.repo.default_branch})`,
+					version: `(${repo!.default_branch})`,
 					icons: ["github"],
 					commit: defaultHead.object.sha,
 					action: "release",
@@ -216,18 +216,18 @@ export function Releases() {
 			console.error(e);
 			setRows([]);
 		});
-	}, [name, token, infos]);
+	}, [name, token, repo]);
 
 	useEffect(() => {
 		const checkPackageInfo = async () => {
 			const { data: pkg } = await axios.get<any>(
-				`https://raw.githubusercontent.com/${infos.repo.full_name}/${infos.repo.default_branch}/package.json`,
+				`https://raw.githubusercontent.com/${repo!.full_name}/${repo!.default_branch}/package.json`,
 			);
 			setHasReleaseScript(!!pkg.scripts?.release);
 		};
 		setHasReleaseScript(undefined);
 		checkPackageInfo().catch(console.error);
-	}, [infos]);
+	}, [repo]);
 
 	useEffect(() => {
 		switch (releaseAction) {
@@ -304,7 +304,7 @@ export function Releases() {
 				<TableCell>
 					{row.commit && (
 						<Link
-							href={`https://github.com/${infos.repo.full_name}/commit/${row.commit}`}
+							href={`https://github.com/${repo!.full_name}/commit/${row.commit}`}
 							target="_blank"
 						>
 							{row.commit.substring(0, 7)}

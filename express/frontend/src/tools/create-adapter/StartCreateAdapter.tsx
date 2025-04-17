@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CardButton } from "../../components/CardButton";
 import { CardGrid } from "../../components/dashboard/CardGrid";
-import { DashboardCardProps } from "../../components/dashboard/DashboardCard";
+import {
+	DashboardCard,
+	DashboardCardProps,
+} from "../../components/dashboard/DashboardCard";
 import { AnswersWithoutTarget, STORAGE_KEY_CURRENT_ANSWERS } from "./common";
 
 export function StartCreateAdapter() {
@@ -81,5 +84,11 @@ export function StartCreateAdapter() {
 		}
 	}, []);
 
-	return <CardGrid cards={cards} />;
+	return (
+		<CardGrid>
+			{cards.map((card) => (
+				<DashboardCard {...card} />
+			))}
+		</CardGrid>
+	);
 }

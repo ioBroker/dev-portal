@@ -27,7 +27,7 @@ import {
 	LogHandler,
 	WebSocketLog,
 } from "../../../components/WebSocketLog";
-import { useAdapter } from "../../../contexts/AdapterContext";
+import { useAdapterContext } from "../../../contexts/AdapterContext";
 import { useUserContext, useUserToken } from "../../../contexts/UserContext";
 import { GitHubComm } from "../../../lib/gitHub";
 import { checkAdapter } from "../../../lib/ioBroker";
@@ -45,7 +45,7 @@ function AdapterCheckStep(props: {
 	const [errors, setErrors] = useState<Message[]>();
 	const [pullRequestUrl, setPullRequestUrl] = useState<string>();
 	const token = useUserToken();
-	const { name, infos } = useAdapter();
+	const { name, repo } = useAdapterContext();
 
 	useEffect(() => {
 		// check the diffs for an add (line starts with "+") of this adapter
@@ -63,7 +63,7 @@ function AdapterCheckStep(props: {
 						file.filename === "sources-dist-stable.json" &&
 						!!file.patch?.match(
 							new RegExp(
-								`"icon"\\s*:\\s*"https:\\/\\/raw\\.githubusercontent\\.com\\/${infos.repo.owner?.login}\\/ioBroker\\.${infos.repo.name}[^"]+",\\s+"type"\\s*:\\s*"[^"]+",\\s+-\\s+"version"`,
+								`"icon"\\s*:\\s*"https:\\/\\/raw\\.githubusercontent\\.com\\/${repo?.owner?.login}\\/ioBroker\\.${repo?.name}[^"]+",\\s+"type"\\s*:\\s*"[^"]+",\\s+-\\s+"version"`,
 							),
 						);
 		const findPullRequest = async () => {
@@ -80,7 +80,7 @@ function AdapterCheckStep(props: {
 		};
 		const runAdapterCheck = async () => {
 			try {
-				const awaitCheckAdapter = checkAdapter(infos.repo.full_name);
+				const awaitCheckAdapter = checkAdapter(repo!.full_name);
 				const pr = await findPullRequest();
 				setPullRequestUrl(pr);
 				const results = await awaitCheckAdapter;
@@ -90,7 +90,7 @@ function AdapterCheckStep(props: {
 			}
 		};
 		runAdapterCheck().catch(console.error);
-	}, [infos, token, action, name]);
+	}, [repo, token, action, name]);
 
 	useEffect(() => {
 		if (errors && errors.length === 0 && !pullRequestUrl) {
@@ -158,7 +158,7 @@ export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
 	const { action } = props;
 	const { version } = useParams<"version">();
 	const { user } = useUserContext();
-	const { name, infos } = useAdapter();
+	const { name, repo } = useAdapterContext();
 
 	const webSocket = useWebSocket(getWebSocketUrl(action));
 
@@ -171,15 +171,15 @@ export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
 		if (step === "add" && !busy && !done) {
 			setBusy(true);
 			const start = async () => {
-				const owner = infos.repo.owner?.login!;
-				const repo = infos.repo.name;
+				const owner = repo?.owner.login!;
+				const repoName = repo?.name;
 				let msg: Partial<ToLatestMessage & ToStableMessage> = {
 					owner,
-					repo,
+					repo: repoName,
 				};
 				if (action === "to-latest") {
 					const { data: ioPackage } = await axios.get<any>(
-						`https://raw.githubusercontent.com/${owner}/${repo}/${infos.repo.default_branch}/io-package.json`,
+						`https://raw.githubusercontent.com/${owner}/${repoName}/${repo?.default_branch}/io-package.json`,
 					);
 					msg.type = ioPackage.common.type;
 				} else {
@@ -191,7 +191,7 @@ export function UpdateRepositoriesDialog(props: UpdateRepositoriesDialogProps) {
 			start().catch(console.error);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [step, busy, done, infos, action, version, user]);
+	}, [step, busy, done, repo, action, version, user]);
 
 	const handleMessage = (msg: ServerClientMessage, appendLog: LogHandler) => {
 		if (isLogMessage(msg)) {

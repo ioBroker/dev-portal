@@ -5,6 +5,8 @@ export { default as CloseIcon } from "@mui/icons-material/Close";
 export { default as DownloadIcon } from "@mui/icons-material/CloudDownloadOutlined";
 export { default as DashboardIcon } from "@mui/icons-material/Dashboard";
 export { default as LogoutIcon } from "@mui/icons-material/ExitToApp";
+export { default as FavoriteIcon } from "@mui/icons-material/Favorite";
+export { default as NotFavoriteIcon } from "@mui/icons-material/FavoriteBorder";
 export { default as GitHubIcon } from "@mui/icons-material/GitHub";
 export { default as CreateAdapterIcon } from "@mui/icons-material/LibraryAdd";
 export { default as LatestIcon } from "@mui/icons-material/NewReleases";

@@ -47,7 +47,7 @@ export const router = createBrowserRouter([
 						element: <AdapterCheck />,
 					},
 					{
-						path: "/adapter/:name",
+						path: "/adapter/:owner/:repo",
 						element: <AdapterDetails />,
 						children: [
 							{
