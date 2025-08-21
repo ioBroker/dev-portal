@@ -60,6 +60,7 @@ router.get("/api/adapter/:name/stats/history", async function (req, res) {
 			latest: {},
 			stable: {},
 		};
+		const counts: (AdapterVersions & { date: Date })[] = [];
 		await rawStatistics
 			.find()
 			.project<Statistics>({
@@ -72,11 +73,26 @@ router.get("/api/adapter/:name/stats/history", async function (req, res) {
 			.forEach((s) => {
 				const stat = unescapeObjectKeys(s);
 				if (stat.adapters[name]) {
-					result.counts[stat.date] = {
+					counts.push({
+						date: new Date(stat.date),
 						total: stat.adapters[name],
 						versions: stat.versions[name],
-					};
+					});
 				}
+			});
+
+		// find all history entries in the given range
+		const start = new Date((req.query.start as string) ?? 0);
+		const end = new Date((req.query.end as string) ?? "2999-01-01");
+		const filtered = counts.filter(
+			({ date }) => date >= start && date <= end,
+		);
+		const minCounts = 100; // return at least 100 items
+		const modulo = Math.max(1, Math.floor(filtered.length / minCounts));
+		filtered
+			.filter((_, i) => i % modulo === 0 || i === filtered.length - 1)
+			.forEach(({ date, total, versions }) => {
+				result.counts[date.toISOString()] = { total, versions };
 			});
 
 		// the first version timestamp is wrong (except for new adapters)
@@ -103,7 +119,19 @@ router.get("/api/adapter/:name/stats/history", async function (req, res) {
 				}
 			});
 
-		console.log(result);
+		console.log(
+			{
+				name,
+				start,
+				end,
+				total: counts.length,
+				inRange: filtered.length,
+				minCounts,
+				modulo,
+				returned: Object.keys(result.counts).length,
+			},
+			result,
+		);
 		if (Object.keys(result.counts).length === 0) {
 			res.status(404).send("Adapter not found");
 			return;
