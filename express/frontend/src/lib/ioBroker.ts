@@ -167,10 +167,24 @@ export async function getCurrentVersions(adapterName: string) {
 	return result.data;
 }
 
-export async function getStatisticsHistory(adapterName: string) {
-	const result = await axios.get<AdapterStats>(
+export async function getStatisticsHistory(
+	adapterName: string,
+	start?: Date,
+	end?: Date,
+) {
+	const url = new URL(
 		getApiUrl(`adapter/${uc(adapterName)}/stats/history`),
+		document.location.origin,
 	);
+	if (start) {
+		url.searchParams.set("start", start.toISOString());
+	}
+
+	if (end) {
+		url.searchParams.set("end", end.toISOString());
+	}
+
+	const result = await axios.get<AdapterStats>(url.toString());
 	return result.data;
 }
 
