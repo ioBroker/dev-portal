@@ -12,7 +12,7 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
-		"@iobroker/create-adapter": "^2.6.5",
+		"@iobroker/create-adapter": "^3.1.1",
 		"@iobroker/repochecker": "3.5.5",
 		"@octokit/request": "^5.6.2",
 		"archiver": "^5.3.0",
