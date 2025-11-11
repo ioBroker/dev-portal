@@ -5,7 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@iobroker/create-adapter": "^2.6.5",
+    "@iobroker/create-adapter": "^3.1.2",
     "@mui/icons-material": "^6.1.8",
     "@mui/material": "^6.1.7",
     "@testing-library/jest-dom": "^5.17.0",
