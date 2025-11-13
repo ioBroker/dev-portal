@@ -135,47 +135,6 @@ export function TokensDialog(props: TokensDialogProps) {
 						repository secrets.
 					</DialogContentText>
 				)}
-				{tokens[index] === "NPM_TOKEN" && (
-					<DialogContentText>
-						To use the release script with GitHub Actions you must
-						provide a npm Access Token with the type "Automation".
-						<br />
-						Please follow these steps:
-						<ol>
-							<li>
-								Open the tokens settings of your{" "}
-								<a
-									href="https://www.npmjs.com/"
-									target="tokens"
-								>
-									npmjs
-								</a>{" "}
-								account (
-								<code>
-									https://www.npmjs.com/settings/&lt;username&gt;/tokens
-								</code>
-								)
-							</li>
-							<li>Click on "Generate New Token"</li>
-							<li>
-								Select the type <code>Automation</code>
-							</li>
-							<li>Click on "Generate Token"</li>
-							<li>Copy the generated token</li>
-							<li>Paste the token here:</li>
-						</ol>
-						<TextField
-							id="npm-token"
-							label="NPM_TOKEN"
-							fullWidth
-							value={value}
-							onChange={handleValueChange}
-						/>
-						<br />
-						This token will not be stored anywhere but in your
-						repository secrets.
-					</DialogContentText>
-				)}
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={onCancel} color="primary">
@@ -327,9 +286,6 @@ export function GenerateStep(props: GenerateStepProps) {
 		const tokens: string[] = [];
 		if (answers.dependabot === "yes") {
 			tokens.push("AUTO_MERGE_TOKEN");
-		}
-		if (answers.releaseScript === "yes") {
-			tokens.push("NPM_TOKEN");
 		}
 		const actions = [
 			`create a new repository called ioBroker.${answers.adapterName} for the user or organization you choose`,
