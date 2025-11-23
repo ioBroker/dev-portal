@@ -39,12 +39,12 @@ export function Dashboard() {
 	const { user, login } = useUserContext();
 	const { adapters, add } = useAdapterList();
 
-	const [categories, setCategories] = useState<DashboardCategories>({
+	const [categories, setCategories] = useState<DashboardCategories>(() => ({
 		Resources: resourcesCards,
 		Social: socialCards,
 		Tools: getToolsCards(!!user),
 		[MY_ADAPTERS_CATEGORY]: [],
-	});
+	}));
 	const [collapsed, setCollapsed] = useState<ReadonlyArray<string>>(() => {
 		try {
 			return JSON.parse(

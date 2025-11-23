@@ -15,7 +15,12 @@ import {
 import { useAdapterList } from "../contexts/AdapterListContext";
 import { useDrawerContext } from "../contexts/DrawerContext";
 import { useUserContext } from "../contexts/UserContext";
-import { AdapterCheckIcon, CreateAdapterIcon, DashboardIcon } from "./Icons";
+import {
+	AdapterCheckIcon,
+	CreateAdapterIcon,
+	DashboardIcon,
+	StatisticsIcon,
+} from "./Icons";
 
 function NavListItem({
 	link,
@@ -70,11 +75,18 @@ export function NavList() {
 				icon={<CreateAdapterIcon />}
 			/>
 			{user && (
-				<NavListItem
-					link="/adapter-check"
-					title="Adapter Check"
-					icon={<AdapterCheckIcon />}
-				/>
+				<>
+					<NavListItem
+						link="/adapter-check"
+						title="Adapter Check"
+						icon={<AdapterCheckIcon />}
+					/>
+					<NavListItem
+						link="/statistics"
+						title="Adapter Statistics"
+						icon={<StatisticsIcon />}
+					/>
+				</>
 			)}
 
 			<Divider />
