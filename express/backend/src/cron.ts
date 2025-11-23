@@ -1,6 +1,9 @@
+import { operations } from "@octokit/openapi-types/types";
+import { request } from "@octokit/request";
 import axios from "axios";
 import { job } from "cron";
 import { Collection } from "mongodb";
+import { delay } from "./common";
 import { RepoAdapter } from "./db/schemas";
 import { dbConnect, escapeObjectKeys } from "./db/utils";
 import {
@@ -26,6 +29,12 @@ export function startCronJobs() {
 		onTick: collectRepos,
 		start: true,
 	});
+	// find GitHub repos every 2 minutes
+	/*job({
+		cronTime: "0 0/2 * * * *",
+		onTick: findAdapterRepos,
+		start: true,
+	});*/
 }
 
 async function collectStatistics(): Promise<void> {
@@ -100,4 +109,165 @@ async function addRepoAdapters<T extends LatestAdapter | StableAdapter>(
 			await collection.insertOne(escapeObjectKeys(add as any));
 		}
 	}
+}
+
+let nextRepoSearch = "a";
+
+async function findAdapterRepos(): Promise<void> {
+	if (nextRepoSearch === "~") {
+		// done
+		return;
+	}
+
+	try {
+		console.log(
+			"cron-findAdapterRepos",
+			`Find adapter repos from ${nextRepoSearch}`,
+		);
+
+		const query: operations["search/repos"]["parameters"]["query"] = {
+			q: `ioBroker.${nextRepoSearch} in:name`,
+			sort: "updated",
+			order: "desc",
+			per_page: 100,
+			page: 1,
+		};
+		let search = await request("GET /search/repositories", query);
+		if (search.data.total_count >= 1000 && nextRepoSearch.length < 6) {
+			console.log(
+				"cron-findAdapterRepos",
+				`${search.data.total_count} results for ioBroker.${nextRepoSearch}, trying deeper`,
+			);
+			// more than 1000 results, need to narrow down
+			nextRepoSearch += "a";
+			return;
+		}
+
+		console.log(
+			"cron-findAdapterRepos",
+			`found ${search.data.total_count} results for ioBroker.${nextRepoSearch}`,
+		);
+
+		nextRepoSearch = getNextRepoSearch(nextRepoSearch);
+
+		const db = await dbConnect();
+		const collection = db.gitHubRepos();
+
+		while (search.data.items.length > 0) {
+			const repoInfoCaptured = new Date().toISOString();
+			for (const repoInfo of search.data.items) {
+				if (!repoInfo.owner || !repoInfo.name.startsWith("ioBroker.")) {
+					continue;
+				}
+
+				const owner = repoInfo.owner.login;
+				const repo = repoInfo.name;
+				if (
+					await collection.findOne({
+						owner,
+						repo,
+					})
+				) {
+					// already exists
+					console.info(
+						"cron-findAdapterRepos",
+						`skipping ${repoInfo.full_name}`,
+					);
+					continue;
+				}
+
+				await delay(100);
+				try {
+					const { data } = await axios.get<any>(
+						`https://raw.githubusercontent.com/${owner}/${repo}/${repoInfo.default_branch}/io-package.json`,
+					);
+					const ioPackage = data;
+					const ioPackageCaptured = new Date().toISOString();
+
+					const adapterName = ioPackage.common.name;
+
+					let npmMetadata: any = undefined;
+					let npmMetadataCaptured: string | undefined = undefined;
+					try {
+						const { data } = await axios.get<any>(
+							`https://registry.npmjs.org/iobroker.${adapterName}`,
+							{
+								headers: {
+									accept: "application/vnd.npm.install-v1+json",
+								},
+							},
+						);
+						npmMetadata = data;
+						npmMetadataCaptured = new Date().toISOString();
+					} catch (error) {
+						// ignore
+					}
+
+					let createAdapter: any = undefined;
+					let createAdapterCaptured: string | undefined = undefined;
+					try {
+						const { data } = await axios.get<any>(
+							`https://raw.githubusercontent.com/${owner}/${repo}/${repoInfo.default_branch}/.create-adapter.json`,
+						);
+						createAdapter = data;
+						createAdapterCaptured = new Date().toISOString();
+					} catch (error) {
+						// ignore
+					}
+
+					console.info(
+						"cron-findAdapterRepos",
+						`adding ${repoInfo.full_name}`,
+					);
+					await collection.insertOne({
+						owner,
+						repo,
+						valid: true,
+						adapterName,
+						repoInfo,
+						repoInfoCaptured,
+						ioPackage,
+						ioPackageCaptured,
+						npmMetadata,
+						npmMetadataCaptured,
+						createAdapter,
+						createAdapterCaptured,
+					});
+				} catch (error: any) {
+					console.info(
+						"cron-findAdapterRepos",
+						`cannot load ${repoInfo.full_name}`,
+						error.message || error,
+					);
+					await collection.insertOne({
+						owner,
+						repo,
+						valid: false,
+					});
+					continue;
+				}
+			}
+
+			query.page = (query.page ?? 1) + 1;
+			if (query.page > 10) {
+				break;
+			}
+
+			search = await request("GET /search/repositories", query);
+		}
+	} catch (error) {
+		console.error("cron-findAdapterRepos", error);
+	}
+}
+
+function getNextRepoSearch(current: string): string {
+	if (current === "") {
+		return "~";
+	}
+	const currentCharCode = current.charCodeAt(current.length - 1);
+	if (currentCharCode < "z".charCodeAt(0)) {
+		return current.slice(0, -1) + String.fromCharCode(currentCharCode + 1);
+	}
+
+	return getNextRepoSearch(current.slice(0, -1));
 }
