@@ -31,11 +31,11 @@ export function startCronJobs() {
 		start: true,
 	});
 	// find GitHub repos every 2 minutes (this is only needed at the beginning to seed the DB)
-	CronJob.from({
+	/*CronJob.from({
 		cronTime: "0 0/2 * * * *",
 		onTick: findAdapterRepos,
 		start: true,
-	});
+	});*/
 	// update existing GitHub repos every day at 03:15
 	CronJob.from({
 		cronTime: "0 15 3 * * *",
