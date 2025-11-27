@@ -1,6 +1,7 @@
 import { SvgIcon } from "@mui/material";
 
 export { default as AddCardIcon } from "@mui/icons-material/AddCircleOutline";
+export { default as StatisticsIcon } from "@mui/icons-material/BarChart";
 export { default as CloseIcon } from "@mui/icons-material/Close";
 export { default as DownloadIcon } from "@mui/icons-material/CloudDownloadOutlined";
 export { default as DashboardIcon } from "@mui/icons-material/Dashboard";

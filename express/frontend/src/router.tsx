@@ -14,6 +14,7 @@ import { Statistics } from "./tools/adapter/statistics/Statistics";
 import { AdapterCheck } from "./tools/AdapterCheck";
 import { StartCreateAdapter } from "./tools/create-adapter/StartCreateAdapter";
 import { Wizard } from "./tools/create-adapter/Wizard";
+import { RepoStatistics } from "./tools/repo-statistics/RepoStatistics";
 
 export const router = createBrowserRouter([
 	{
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
 					{
 						path: "/adapter-check",
 						element: <AdapterCheck />,
+					},
+					{
+						path: "/statistics",
+						element: <RepoStatistics />,
 					},
 					{
 						path: "/adapter/:owner/:repo",

@@ -1,7 +1,8 @@
 import { CardButton } from "../CardButton";
+import { DashboardCardProps } from "./DashboardCard";
 import { LoginButton } from "./LoginButton";
 
-export const resourcesCards = [
+export const resourcesCards: DashboardCardProps[] = [
 	{
 		title: "Documentation",
 		img: "images/doc.jpg",
@@ -69,7 +70,7 @@ export const resourcesCards = [
 	},
 ];
 
-export const socialCards = [
+export const socialCards: DashboardCardProps[] = [
 	{
 		title: "Developer Forum",
 		img: "images/iobroker.png",
@@ -118,14 +119,12 @@ export const socialCards = [
 		squareImg: true,
 		text: "Get in touch with other developers and discuss features on our Discord server.",
 		url: "https://discord.gg/HwUCwsH",
-		buttons: [
-			<CardButton text="Join" url="https://discord.gg/HwUCwsH" />,
-		],
+		buttons: [<CardButton text="Join" url="https://discord.gg/HwUCwsH" />],
 	},
 ];
 
 export function getToolsCards(isLoggedIn: boolean) {
-	return [
+	const tools: DashboardCardProps[] = [
 		{
 			title: "Adapter Creator",
 			img: "images/adapter-creator.png",
@@ -161,4 +160,14 @@ export function getToolsCards(isLoggedIn: boolean) {
 			],
 		},
 	];
+	if (isLoggedIn) {
+		tools.push({
+			title: "Adapter Statistics",
+			img: "images/statistics.png",
+			text: "Get insights into all adapters found on GitHub.",
+			to: "/statistics",
+			buttons: [<CardButton text="Open" to="/statistics" />],
+		});
+	}
+	return tools;
 }

@@ -10,10 +10,10 @@ import archiver from "archiver";
 import { createHash } from "crypto";
 import { Router } from "express";
 import { existsSync } from "fs-extra";
+import sodium from "libsodium-wrappers";
 import mkdirp from "mkdirp";
 import path from "path";
 import rimraf from "rimraf";
-import sodium from "tweetsodium";
 import { promisify } from "util";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
 import { delay } from "../common";
@@ -230,12 +230,17 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 				},
 			);
 
+			const binKey = sodium.from_base64(
+				keys.key,
+				sodium.base64_variants.ORIGINAL,
+			);
 			for (const [secretName, value] of Object.entries(secrets)) {
-				const messageBytes = Buffer.from(value);
-				const keyBytes = Buffer.from(keys.key, "base64");
-				const encryptedBytes = sodium.seal(messageBytes, keyBytes);
-				const encrypted =
-					Buffer.from(encryptedBytes).toString("base64");
+				const binSec = sodium.from_string(value);
+				const encryptedBytes = sodium.crypto_box_seal(binSec, binKey);
+				const encrypted = sodium.to_base64(
+					encryptedBytes,
+					sodium.base64_variants.ORIGINAL,
+				);
 
 				await requestWithAuth(
 					"PUT /repos/{owner}/{repo}/actions/secrets/{secret_name}",

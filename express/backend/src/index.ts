@@ -7,6 +7,7 @@ import adapterApi from "./api/adapter";
 import npmProxy from "./api/npm-proxy";
 import repocheckerApi from "./api/repochecker";
 import sentryApi from "./api/sentry";
+import statisticsApi from "./api/statistics";
 import userApi from "./api/user";
 import weblateProxy from "./api/weblate-proxy";
 import { router as createAdapterRouter } from "./apps/create-adapter";
@@ -41,6 +42,7 @@ app.use(npmProxy);
 app.use(weblateProxy);
 app.use(adapterApi);
 app.use(repocheckerApi);
+app.use(statisticsApi);
 app.use(userApi);
 app.use(sentryApi);
 app.get<any, Version>("/api/version", function (_req, res) {

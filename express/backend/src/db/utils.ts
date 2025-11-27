@@ -1,5 +1,10 @@
 import { MongoClient } from "mongodb";
-import { RepoAdapter, Statistics, User } from "./schemas";
+import {
+	AdapterRepo as GitHubAdapterRepo,
+	RepoAdapter,
+	Statistics,
+	User,
+} from "./schemas";
 
 export function createClient() {
 	return new MongoClient("mongodb://mongo/dev-portal");
@@ -13,6 +18,7 @@ export async function dbConnect() {
 	return {
 		rawStatistics: () => db.collection<Statistics>("raw-statistics"),
 		repoAdapters: () => db.collection<RepoAdapter>("repo-adapters"),
+		gitHubRepos: () => db.collection<GitHubAdapterRepo>("github-repos"),
 		users: () => db.collection<User>("users"),
 	};
 }
