@@ -88,10 +88,18 @@ router.get("/api/statistics", async function (req, res) {
 	const db = await dbConnect();
 	const repos = db.gitHubRepos();
 
+	const filters = Object.keys(req.query).filter(
+		(key) =>
+			key !== "stats" &&
+			typeof req.query[key] === "string" &&
+			availableFields.hasOwnProperty(key),
+	) as (keyof typeof availableFields)[];
+
 	const statsToInclude =
 		((req.query.stats as string)?.split(
 			",",
 		) as (keyof typeof availableFields)[]) ?? [];
+	statsToInclude.push(...filters);
 
 	const pipeline: Document[] = [
 		{
@@ -100,7 +108,7 @@ router.get("/api/statistics", async function (req, res) {
 			},
 		},
 	];
-	if (statsToInclude.includes("publishState")) {
+	if (statsToInclude.includes("publishState") || req.query.publishState) {
 		pipeline.push({
 			$lookup: {
 				as: "repo-adapters",
@@ -124,11 +132,25 @@ router.get("/api/statistics", async function (req, res) {
 		$project,
 	});
 
+	if (filters.length) {
+		const $match: Record<string, any> = {};
+		for (const field of filters) {
+			$match[field] = req.query[field];
+		}
+		pipeline.push({
+			$match,
+		});
+	}
+
 	const stream = repos.aggregate(pipeline).stream();
 
 	const stats = new Map<string, Map<string, number>>();
 	for await (const doc of stream) {
 		for (const [key, value] of Object.entries(doc)) {
+			if (req.query[key]) {
+				// skip stats that are used as filter
+				continue;
+			}
 			if (!stats.has(key)) {
 				stats.set(key, new Map<string, number>());
 			}
