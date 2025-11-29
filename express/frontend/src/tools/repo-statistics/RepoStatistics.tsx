@@ -30,6 +30,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import Chart from "react-google-charts";
 import { useSearchParams } from "react-router-dom";
 import { CardGrid } from "../../components/dashboard/CardGrid";
+import { useUserToken } from "../../contexts/UserContext";
 import { getApiUrl } from "../../lib/utils";
 
 type GraphData = [string, string | number][];
@@ -195,6 +196,9 @@ export function RepoStatistics() {
 	>({ Loading: [] });
 	const [chooseStatsOpen, setChooseStatsOpen] = useState(false);
 	const [filtersOpen, setFiltersOpen] = useState(false);
+
+	// ensure user is logged in
+	useUserToken();
 
 	useEffect(() => {
 		const loadStatistics = async () => {
