@@ -145,7 +145,9 @@ router.get("/api/statistics", async function (req, res) {
 	const stream = repos.aggregate(pipeline).stream();
 
 	const stats = new Map<string, Map<string, number>>();
+	let total = 0;
 	for await (const doc of stream) {
+		total++;
 		for (const [key, value] of Object.entries(doc)) {
 			if (req.query[key]) {
 				// skip stats that are used as filter
@@ -161,15 +163,15 @@ router.get("/api/statistics", async function (req, res) {
 		}
 	}
 
-	const result: Record<string, Record<string, number>> = {};
+	const statistics: Record<string, Record<string, number>> = {};
 	for (const [key, stat] of stats.entries()) {
-		result[key] = {};
+		statistics[key] = {};
 		for (const [value, count] of stat.entries()) {
-			result[key][value] = count;
+			statistics[key][value] = count;
 		}
 	}
 
-	res.send(result);
+	res.send({ total, statistics });
 });
 
 export default router;

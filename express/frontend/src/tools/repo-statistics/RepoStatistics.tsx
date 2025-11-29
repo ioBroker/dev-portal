@@ -2,7 +2,6 @@ import { default as AddIcon } from "@mui/icons-material/Add";
 import { default as ChecklistIcon } from "@mui/icons-material/Checklist";
 import { default as DeleteIcon } from "@mui/icons-material/Delete";
 import { default as FilterIcon } from "@mui/icons-material/FilterAlt";
-import { default as InfoIcon } from "@mui/icons-material/InfoOutlined";
 import {
 	Autocomplete,
 	Badge,
@@ -21,8 +20,8 @@ import {
 	IconButton,
 	Menu,
 	MenuItem,
+	Switch,
 	TextField,
-	Tooltip,
 	Typography,
 } from "@mui/material";
 import axios from "axios";
@@ -37,6 +36,11 @@ type GraphData = [string, string | number][];
 type StatisticsData = {
 	name: string;
 	data: GraphData;
+};
+
+type StatisticsResponse = {
+	total: number;
+	statistics: Record<string, Record<string, number>>;
 };
 
 const allStats: {
@@ -194,11 +198,18 @@ export function RepoStatistics() {
 	const [statistics, setStatistics] = useState<
 		Record<string, StatisticsData[]>
 	>({ Loading: [] });
+	const [total, setTotal] = useState<number>();
 	const [chooseStatsOpen, setChooseStatsOpen] = useState(false);
 	const [filtersOpen, setFiltersOpen] = useState(false);
+	const [includeUnknown, setIncludeUnknown] = useState(false);
 
 	// ensure user is logged in
 	useUserToken();
+
+	const selectedFilters = useMemo(
+		() => [...searchParams.entries()].filter(([k]) => k !== "stats"),
+		[searchParams],
+	);
 
 	useEffect(() => {
 		const loadStatistics = async () => {
@@ -209,18 +220,24 @@ export function RepoStatistics() {
 			);
 			const params = new URLSearchParams(searchParams);
 			params.set("stats", selectedStats.join(","));
-			const { data } = await axios.get<
-				Record<string, Record<string, number>>
-			>(getApiUrl(`statistics?${params}`));
-			const statistics = Object.entries(data).map(([title, stat]) => {
-				const valueCounts = Object.entries(stat).map(
-					([value, count]) =>
-						[value, count] satisfies [string, number],
-				);
-				valueCounts.sort((a, b) => b[1] - a[1]);
-				const data: GraphData = [["Value", "Count"], ...valueCounts];
-				return { title, data };
-			});
+			const { data } = await axios.get<StatisticsResponse>(
+				getApiUrl(`statistics?${params}`),
+			);
+			setTotal(data.total);
+			const statistics = Object.entries(data.statistics).map(
+				([title, stat]) => {
+					const valueCounts = Object.entries(stat).map(
+						([value, count]) =>
+							[value, count] satisfies [string, number],
+					);
+					valueCounts.sort((a, b) => b[1] - a[1]);
+					const data: GraphData = [
+						["Value", "Count"],
+						...valueCounts,
+					];
+					return { title, data };
+				},
+			);
 			setStatistics({
 				...allStats
 					.filter(({ stats }) =>
@@ -234,9 +251,11 @@ export function RepoStatistics() {
 								)
 								.map(({ name }) => ({
 									name,
-									data:
+									data: addUnknown(
 										statistics.find((s) => s.title === name)
 											?.data ?? [],
+										includeUnknown ? data.total : undefined,
+									),
 								}))
 								.filter(({ data }) => data.length);
 							if (add.length > 0) {
@@ -249,7 +268,7 @@ export function RepoStatistics() {
 			});
 		};
 		loadStatistics().catch(console.error);
-	}, [searchParams]);
+	}, [searchParams, includeUnknown]);
 
 	return (
 		<>
@@ -300,26 +319,40 @@ export function RepoStatistics() {
 				)}
 			</Box>
 			<Box>
-				{[...searchParams.entries()]
-					.filter(([k]) => k !== "stats")
-					.map(([key, value]) => (
-						<Chip
-							key={key}
-							label={`${getStatTitle(key)}: ${value}`}
-							sx={{ marginRight: 1, marginBottom: 1 }}
-							icon={<FilterIcon />}
-							onDelete={() => {
-								const params = new URLSearchParams(
-									searchParams,
-								);
-								params.delete(key);
-								setSearchParams(params);
-							}}
-						/>
-					))}
+				{selectedFilters.map(([key, value]) => (
+					<Chip
+						key={key}
+						label={`${getStatTitle(key)}: ${value}`}
+						sx={{ marginRight: 1, marginBottom: 1 }}
+						icon={<FilterIcon />}
+						onDelete={() => {
+							const params = new URLSearchParams(searchParams);
+							params.delete(key);
+							setSearchParams(params);
+						}}
+					/>
+				))}
 			</Box>
-			{Object.entries(statistics).map(([section, stats], index) => (
-				<>
+			<Box sx={{ marginBottom: 1 }}>
+				{total !== undefined && (
+					<Typography>
+						{selectedFilters.length ? "Found" : "Total"}
+						{`: ${total} `}
+						GitHub Repositories
+					</Typography>
+				)}
+			</Box>
+			<FormControlLabel
+				control={
+					<Switch
+						checked={includeUnknown}
+						onChange={(e) => setIncludeUnknown(e.target.checked)}
+					/>
+				}
+				label="Include unknown"
+			/>
+			{Object.entries(statistics).map(([section, stats]) => (
+				<Fragment key={section}>
 					<Typography
 						variant="h6"
 						sx={{
@@ -337,14 +370,31 @@ export function RepoStatistics() {
 							/>
 						))}
 					</CardGrid>
-				</>
+				</Fragment>
 			))}
 		</>
 	);
 }
 
+function addUnknown(data: GraphData, totalCount?: number): GraphData {
+	if (totalCount === undefined) {
+		return data;
+	}
+	const knownCount = data
+		.slice(1)
+		.reduce(
+			(acc, [, count]) => acc + (typeof count === "number" ? count : 0),
+			0,
+		);
+	const unknownCount = totalCount - knownCount;
+	if (unknownCount <= 0) {
+		return data;
+	}
+	return [...data, ["<unknown>", unknownCount]];
+}
+
 function StatisticsCard({ name, data }: { name: string; data: GraphData }) {
-	const title = useMemo(() => getStatTitle(name), [name]);
+	const stat = useMemo(() => getStat(name), [name]);
 	return (
 		<Card
 			key={name}
@@ -380,35 +430,11 @@ function StatisticsCard({ name, data }: { name: string; data: GraphData }) {
 				}}
 			>
 				<Typography gutterBottom variant="h6" component="h2">
-					{title}
-					<StatDescriptionIcon name={name} />
+					{stat?.title}
 				</Typography>
+				<Typography>{stat?.description}</Typography>
 			</CardContent>
 		</Card>
-	);
-}
-
-function StatDescriptionIcon({ name }: { name: string }) {
-	const stat = useMemo(() => {
-		for (const s of allStats.flatMap((s) => s.stats)) {
-			if (s.name === name) {
-				return s;
-			}
-		}
-		return null;
-	}, [name]);
-
-	if (!stat) {
-		return null;
-	}
-
-	return (
-		<Tooltip title={stat.description} arrow>
-			<InfoIcon
-				fontSize="small"
-				sx={{ marginLeft: 1, marginTop: "auto", marginBottom: "auto" }}
-			/>
-		</Tooltip>
 	);
 }
 
@@ -615,10 +641,10 @@ function StatisticsFilter({
 
 	useEffect(() => {
 		const loadOptions = async () => {
-			const { data } = await axios.get<
-				Record<string, Record<string, number>>
-			>(getApiUrl(`statistics?stats=${name}`));
-			const stat = data[name];
+			const { data } = await axios.get<StatisticsResponse>(
+				getApiUrl(`statistics?stats=${name}`),
+			);
+			const stat = data.statistics[name];
 			setOptions(Object.keys(stat ?? {}).sort());
 		};
 		loadOptions().catch(console.error);
