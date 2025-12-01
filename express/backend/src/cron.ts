@@ -71,10 +71,10 @@ async function collectRepos(): Promise<void> {
 		console.log("Collecting latest adapters");
 		const [{ data: latest }, { data: stable }, db] = await Promise.all([
 			axios.get<LatestAdapters>(
-				"http://download.iobroker.net/sources-dist-latest.json",
+				"https://download.iobroker.net/sources-dist-latest.json",
 			),
 			axios.get<StableAdapters>(
-				"http://download.iobroker.net/sources-dist.json",
+				"https://download.iobroker.net/sources-dist.json",
 			),
 			dbConnect(),
 		]);

@@ -41,7 +41,7 @@ export interface StableAdapter extends AdapterInfo {
 }
 
 /**
- * Result of http://download.iobroker.net/sources-dist.json
+ * Result of https://download.iobroker.net/sources-dist.json
  */
 export type StableAdapters = Record<AdapterName, StableAdapter>;
 
@@ -50,7 +50,7 @@ export interface LatestAdapter extends AdapterInfo {
 }
 
 /**
- * Result of http://download.iobroker.net/sources-dist-latest.json
+ * Result of https://download.iobroker.net/sources-dist-latest.json
  */
 export type LatestAdapters = Record<AdapterName, LatestAdapter>;
 
