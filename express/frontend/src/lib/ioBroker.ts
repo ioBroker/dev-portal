@@ -29,14 +29,14 @@ export type TranslatedText = Record<string, string>;
 
 export const getLatest = AsyncCache.of(async () => {
 	const result = await axios.get<LatestAdapters>(
-		"https://repo.iobroker.live/sources-dist-latest.json",
+		"http://download.iobroker.net/sources-dist-latest.json",
 	);
 	return result.data;
 });
 
 export const getStable = AsyncCache.of(async () => {
 	const result = await axios.get<StableAdapters>(
-		"https://repo.iobroker.live/sources-dist.json",
+		"http://download.iobroker.net/sources-dist.json",
 	);
 	return result.data;
 });
