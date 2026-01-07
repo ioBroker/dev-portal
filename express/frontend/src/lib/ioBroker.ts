@@ -77,7 +77,11 @@ export async function getMyAdapterRepos(
 		getLatest(),
 	]);
 	return repos.filter((repo) => {
-		if (!repo.name.startsWith("ioBroker.")) {
+		if (
+			!repo.name.startsWith("ioBroker.") ||
+			repo.archived ||
+			repo.private
+		) {
 			return false;
 		}
 
