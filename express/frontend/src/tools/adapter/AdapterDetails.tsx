@@ -14,6 +14,7 @@ const LinkRouter = (props: any) => <Link {...props} component={RouterLink} />;
 export function AdapterDetails() {
 	const matches = useMatches();
 	const pathNames = matches[matches.length - 1].pathname
+		.replace(/\/~.+?$/g, "")
 		.split("/")
 		.slice(4)
 		.filter(Boolean);
