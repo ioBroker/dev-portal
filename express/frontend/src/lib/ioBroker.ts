@@ -119,6 +119,37 @@ export async function getWatchedAdapterRepos(
 	}
 }
 
+export async function getOpenRepositoriesPRs(
+	ghToken: string,
+): Promise<Record<string, Record<string, string>>> {
+	const gitHub = GitHubComm.forToken(ghToken);
+	const repo = gitHub.getRepo("ioBroker", "ioBroker.repositories");
+	const prs = await repo.getPullRequests("open");
+	const result: Record<string, Record<string, string>> = {};
+	for (const pr of prs) {
+		const latestMatch = pr.title.match(/Add (\S+) to latest/);
+		if (latestMatch) {
+			const adapterName = latestMatch[1];
+			if (!result[adapterName]) {
+				result[adapterName] = {};
+			}
+			result[adapterName].latest = pr.html_url;
+			continue;
+		}
+		const stableMatch = pr.title.match(/Update (\S+) to ([\d.]+)/);
+		if (stableMatch) {
+			const adapterName = stableMatch[1];
+			const version = stableMatch[2];
+			if (!result[adapterName]) {
+				result[adapterName] = {};
+			}
+			result[adapterName][version] = pr.html_url;
+			continue;
+		}
+	}
+	return result;
+}
+
 export function getAdapterFromRepoName(repoName: string) {
 	return repoName.replace(/^ioBroker\./, "");
 }

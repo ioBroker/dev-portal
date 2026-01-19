@@ -29,7 +29,7 @@ import {
 import { useAdapterContext } from "../../../contexts/AdapterContext";
 import { useUserToken } from "../../../contexts/UserContext";
 import { GitHubComm } from "../../../lib/gitHub";
-import { getLatest } from "../../../lib/ioBroker";
+import { getLatest, getOpenRepositoriesPRs } from "../../../lib/ioBroker";
 import { getPackage as getPackageMetaData } from "../../../lib/npm";
 import { RepositoriesAction } from "./UpdateRepositoriesDialog";
 
@@ -44,6 +44,7 @@ interface ReleaseInfo {
 	shortDate?: string;
 	commit?: string;
 	action?: ReleaseAction;
+	prUrl?: string;
 }
 
 function setDates(release: ReleaseInfo, time: string) {
@@ -143,13 +144,14 @@ export function Releases() {
 		const loadReleases = async () => {
 			const gitHub = GitHubComm.forToken(token);
 			const repoComm = gitHub.getRepo(repo!);
-			const [npm, fullRepo, tags, latest, defaultHead] =
+			const [npm, fullRepo, tags, latest, defaultHead, openPRs] =
 				await Promise.all([
 					tryGetPackageMetaData(),
 					repoComm.getRepo(),
 					repoComm.getTags(),
 					getLatest(),
 					repoComm.getRef(`heads/${repo!.default_branch}`),
+					getOpenRepositoriesPRs(token),
 				]);
 			setCanPush(fullRepo.permissions?.push);
 			const releases: ReleaseInfo[] = [];
@@ -157,6 +159,7 @@ export function Releases() {
 				const adapter = latest[name];
 				const adapterStableSemver = coerce(adapter?.stable);
 				const latestNpm = npm["dist-tags"].latest;
+				const adapterOpenPRs = openPRs[name] || {};
 				for (const version of Object.keys(npm.versions).reverse()) {
 					const semver = coerce(version);
 					const release: ReleaseInfo = { version, icons: [] };
@@ -177,7 +180,11 @@ export function Releases() {
 					if (version === latestNpm) {
 						release.icons.push("npm");
 						if (!adapter) {
-							release.action = "to-latest";
+							if (adapterOpenPRs.latest) {
+								release.prUrl = adapterOpenPRs.latest;
+							} else {
+								release.action = "to-latest";
+							}
 						}
 					}
 					if (
@@ -185,7 +192,11 @@ export function Releases() {
 						(!adapterStableSemver ||
 							semver?.compare(adapterStableSemver) === 1)
 					) {
-						release.action = "to-stable";
+						if (adapterOpenPRs[version]) {
+							release.prUrl = adapterOpenPRs[version];
+						} else {
+							release.action = "to-stable";
+						}
 					}
 					releases.push(release);
 				}
@@ -216,7 +227,7 @@ export function Releases() {
 			console.error(e);
 			setRows([]);
 		});
-	}, [name, token, repo]);
+	}, [name, token, repo, location.pathname]);
 
 	useEffect(() => {
 		const checkPackageInfo = async () => {
@@ -350,6 +361,18 @@ export function Releases() {
 								onClick={handleToLatest}
 							>
 								Add to latest
+							</Button>
+						)}
+						{row.prUrl && (
+							<Button
+								variant="outlined"
+								color="primary"
+								size="small"
+								href={row.prUrl}
+								target="_blank"
+								startIcon={<GitHubIcon />}
+							>
+								View PR
 							</Button>
 						)}
 					</TableCell>
