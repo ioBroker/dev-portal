@@ -14,6 +14,7 @@ const availableFields = {
 	compact: "$ioPackage.common.compact",
 	connectionType: "$ioPackage.common.connectionType",
 	dataSource: "$ioPackage.common.dataSource",
+	deviceManager: "$ioPackage.common.supportedMessages.deviceManager",
 	adminUiConfig: "$ioPackage.common.adminUI.config",
 	adminUiTab: "$ioPackage.common.adminUI.tab",
 	depJsController: "$ioPackage.common.dependencies.js-controller",

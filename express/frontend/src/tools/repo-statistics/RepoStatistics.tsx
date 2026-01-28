@@ -100,6 +100,11 @@ const allStats: {
 				description: "The tier number of the adapter (1-3)",
 			},
 			{
+				name: "deviceManager",
+				title: "Device Manager Support",
+				description: "Whether the adapter supports device manager",
+			},
+			{
 				name: "adminUiConfig",
 				title: "Admin Config UI",
 				description:
