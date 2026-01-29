@@ -7,16 +7,15 @@ import {
 } from "./schemas";
 
 let client: MongoClient | null = null;
-let db: Db | null = null;
-let connectionPromise: Promise<void> | null = null;
+let connectionPromise: Promise<Db> | null = null;
 
 export function createClient() {
 	return new MongoClient("mongodb://mongo/dev-portal");
 }
 
-export async function connectDatabase(): Promise<void> {
+export async function connectDatabase(): Promise<Db> {
 	if (client) {
-		return;
+		return client.db();
 	}
 	
 	// Prevent race conditions by reusing the connection promise
@@ -27,12 +26,13 @@ export async function connectDatabase(): Promise<void> {
 	connectionPromise = (async () => {
 		client = createClient();
 		await client.connect();
-		db = client.db();
+		const db = client.db();
 		console.log("MongoDB connected successfully");
+		return db;
 	})();
 	
 	try {
-		await connectionPromise;
+		return await connectionPromise;
 	} finally {
 		// Clean up the promise after it's fulfilled
 		connectionPromise = null;
@@ -48,22 +48,19 @@ export async function closeDatabaseConnection(): Promise<void> {
 			console.error("Error closing MongoDB connection:", error);
 		} finally {
 			client = null;
-			db = null;
 			connectionPromise = null;
 		}
 	}
 }
 
 export async function dbConnect() {
-	if (!client || !db) {
-		await connectDatabase();
-	}
+	const db = await connectDatabase();
 
 	return {
-		rawStatistics: () => db!.collection<Statistics>("raw-statistics"),
-		repoAdapters: () => db!.collection<RepoAdapter>("repo-adapters"),
-		gitHubRepos: () => db!.collection<GitHubAdapterRepo>("github-repos"),
-		users: () => db!.collection<User>("users"),
+		rawStatistics: () => db.collection<Statistics>("raw-statistics"),
+		repoAdapters: () => db.collection<RepoAdapter>("repo-adapters"),
+		gitHubRepos: () => db.collection<GitHubAdapterRepo>("github-repos"),
+		users: () => db.collection<User>("users"),
 	};
 }
 
