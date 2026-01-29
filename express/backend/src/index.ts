@@ -15,12 +15,19 @@ import { handleUpgrade } from "./apps/websocket-handler";
 import auth from "./auth";
 import { env } from "./common";
 import { startCronJobs } from "./cron";
+import { connectDatabase, closeDatabaseConnection } from "./db/utils";
 import { Version } from "./global/version";
 import { GIT_BRANCH, GIT_COMMIT } from "./version";
 
 console.log(
 	`Starting portal express application from ${GIT_COMMIT}@${GIT_BRANCH}`,
 );
+
+// Initialize database connection
+connectDatabase().catch((error) => {
+	console.error("Failed to connect to MongoDB:", error);
+	process.exit(1);
+});
 
 const app = express();
 const port = 8080;
@@ -72,3 +79,22 @@ server.on(
 );
 
 startCronJobs();
+
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+	console.log("SIGTERM signal received: closing HTTP server and database connection");
+	server.close(() => {
+		console.log("HTTP server closed");
+	});
+	await closeDatabaseConnection();
+	process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+	console.log("SIGINT signal received: closing HTTP server and database connection");
+	server.close(() => {
+		console.log("HTTP server closed");
+	});
+	await closeDatabaseConnection();
+	process.exit(0);
+});

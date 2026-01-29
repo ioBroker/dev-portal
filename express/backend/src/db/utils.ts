@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, Db } from "mongodb";
 import {
 	AdapterRepo as GitHubAdapterRepo,
 	RepoAdapter,
@@ -6,20 +6,42 @@ import {
 	User,
 } from "./schemas";
 
+let client: MongoClient | null = null;
+let db: Db | null = null;
+
 export function createClient() {
 	return new MongoClient("mongodb://mongo/dev-portal");
 }
 
-export async function dbConnect() {
-	const client = createClient();
+export async function connectDatabase(): Promise<void> {
+	if (client) {
+		return;
+	}
+	client = createClient();
 	await client.connect();
-	const db = client.db();
+	db = client.db();
+	console.log("MongoDB connected successfully");
+}
+
+export async function closeDatabaseConnection(): Promise<void> {
+	if (client) {
+		await client.close();
+		client = null;
+		db = null;
+		console.log("MongoDB connection closed");
+	}
+}
+
+export async function dbConnect() {
+	if (!client || !db) {
+		await connectDatabase();
+	}
 
 	return {
-		rawStatistics: () => db.collection<Statistics>("raw-statistics"),
-		repoAdapters: () => db.collection<RepoAdapter>("repo-adapters"),
-		gitHubRepos: () => db.collection<GitHubAdapterRepo>("github-repos"),
-		users: () => db.collection<User>("users"),
+		rawStatistics: () => db!.collection<Statistics>("raw-statistics"),
+		repoAdapters: () => db!.collection<RepoAdapter>("repo-adapters"),
+		gitHubRepos: () => db!.collection<GitHubAdapterRepo>("github-repos"),
+		users: () => db!.collection<User>("users"),
 	};
 }
 
