@@ -31,16 +31,26 @@ export async function connectDatabase(): Promise<void> {
 		console.log("MongoDB connected successfully");
 	})();
 	
-	await connectionPromise;
+	try {
+		await connectionPromise;
+	} finally {
+		// Clean up the promise after it's fulfilled
+		connectionPromise = null;
+	}
 }
 
 export async function closeDatabaseConnection(): Promise<void> {
 	if (client) {
-		await client.close();
-		client = null;
-		db = null;
-		connectionPromise = null;
-		console.log("MongoDB connection closed");
+		try {
+			await client.close();
+			console.log("MongoDB connection closed");
+		} catch (error) {
+			console.error("Error closing MongoDB connection:", error);
+		} finally {
+			client = null;
+			db = null;
+			connectionPromise = null;
+		}
 	}
 }
 
