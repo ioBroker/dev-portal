@@ -25,22 +25,36 @@ export async function connectDatabase(): Promise<Db> {
 	
 	connectionPromise = (async () => {
 		client = createClient();
-		await client.connect();
-		
-		// Set up event listeners to detect disconnections
-		client.on("close", () => {
-			console.log("MongoDB connection closed unexpectedly");
+		try {
+			await client.connect();
+			
+			// Set up event listeners to detect disconnections
+			client.on("close", () => {
+				console.log("MongoDB connection closed unexpectedly");
+				client = null;
+				connectionPromise = null;
+			});
+			
+			client.on("error", (error) => {
+				console.error("MongoDB client error:", error);
+			});
+			
+			const db = client.db();
+			console.log("MongoDB connected successfully");
+			return db;
+		} catch (error) {
+			console.error("Error connecting to MongoDB:", error);
+			// Clean up failed client
+			if (client) {
+				try {
+					await client.close();
+				} catch (closeError) {
+					console.error("Error closing MongoDB client after failed connection:", closeError);
+				}
+			}
 			client = null;
-			connectionPromise = null;
-		});
-		
-		client.on("error", (error) => {
-			console.error("MongoDB client error:", error);
-		});
-		
-		const db = client.db();
-		console.log("MongoDB connected successfully");
-		return db;
+			throw error;
+		}
 	})();
 	
 	try {

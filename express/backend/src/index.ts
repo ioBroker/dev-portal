@@ -78,13 +78,22 @@ startCronJobs();
 async function gracefulShutdown(signal: string) {
 	console.log(`${signal} signal received: closing HTTP server and database connection`);
 	
-	// Close the HTTP server and wait for it to complete
-	await new Promise<void>((resolve) => {
-		server.close(() => {
-			console.log("HTTP server closed");
-			resolve();
-		});
-	});
+	// Close the HTTP server with a timeout
+	const shutdownTimeout = 30000; // 30 seconds
+	await Promise.race([
+		new Promise<void>((resolve) => {
+			server.close(() => {
+				console.log("HTTP server closed");
+				resolve();
+			});
+		}),
+		new Promise<void>((resolve) => {
+			setTimeout(() => {
+				console.log("HTTP server shutdown timeout reached, forcing exit");
+				resolve();
+			}, shutdownTimeout);
+		})
+	]);
 	
 	// Close database connection
 	await closeDatabaseConnection();
