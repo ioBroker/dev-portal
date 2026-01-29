@@ -54,6 +54,7 @@ export async function connectDatabase(): Promise<Db> {
 export async function closeDatabaseConnection(): Promise<void> {
 	if (client) {
 		try {
+			client.removeAllListeners();
 			await client.close();
 			console.log("MongoDB connection closed");
 		} catch (error) {
