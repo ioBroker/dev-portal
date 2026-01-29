@@ -26,6 +26,18 @@ export async function connectDatabase(): Promise<Db> {
 	connectionPromise = (async () => {
 		client = createClient();
 		await client.connect();
+		
+		// Set up event listeners to detect disconnections
+		client.on("close", () => {
+			console.log("MongoDB connection closed unexpectedly");
+			client = null;
+			connectionPromise = null;
+		});
+		
+		client.on("error", (error) => {
+			console.error("MongoDB client error:", error);
+		});
+		
 		const db = client.db();
 		console.log("MongoDB connected successfully");
 		return db;
