@@ -8,6 +8,7 @@ import {
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
+let connectionPromise: Promise<void> | null = null;
 
 export function createClient() {
 	return new MongoClient("mongodb://mongo/dev-portal");
@@ -17,10 +18,20 @@ export async function connectDatabase(): Promise<void> {
 	if (client) {
 		return;
 	}
-	client = createClient();
-	await client.connect();
-	db = client.db();
-	console.log("MongoDB connected successfully");
+	
+	// Prevent race conditions by reusing the connection promise
+	if (connectionPromise) {
+		return connectionPromise;
+	}
+	
+	connectionPromise = (async () => {
+		client = createClient();
+		await client.connect();
+		db = client.db();
+		console.log("MongoDB connected successfully");
+	})();
+	
+	await connectionPromise;
 }
 
 export async function closeDatabaseConnection(): Promise<void> {
@@ -28,6 +39,7 @@ export async function closeDatabaseConnection(): Promise<void> {
 		await client.close();
 		client = null;
 		db = null;
+		connectionPromise = null;
 		console.log("MongoDB connection closed");
 	}
 }
