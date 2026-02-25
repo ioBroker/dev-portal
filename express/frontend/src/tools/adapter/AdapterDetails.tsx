@@ -8,10 +8,14 @@ import {
 	useParams,
 } from "react-router-dom";
 import { AdapterContextProvider } from "../../contexts/AdapterContext";
+import { useUserToken } from "../../contexts/UserContext";
 
 const LinkRouter = (props: any) => <Link {...props} component={RouterLink} />;
 
 export function AdapterDetails() {
+	// ensure user is logged in, otherwise AdapterContextProvider will fail to load the adapter info
+	useUserToken();
+
 	const matches = useMatches();
 	const pathNames = matches[matches.length - 1].pathname
 		.replace(/\/~.+?$/g, "")
