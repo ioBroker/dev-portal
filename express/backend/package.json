@@ -13,7 +13,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@iobroker/create-adapter": "^3.1.2",
-		"@iobroker/repochecker": "5.1.1",
+		"@iobroker/repochecker": "5.2.2",
 		"@octokit/request": "^10.0.7",
 		"archiver": "^5.3.0",
 		"axios": "^0.22.0",
