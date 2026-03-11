@@ -1,3 +1,4 @@
+import { ToggleThemeMenu } from "@iobroker/adapter-react-v5";
 import { Flag } from "@mui/icons-material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -24,6 +25,7 @@ import { NavList } from "./components/NavList";
 import { ReloadPageSnackbar } from "./components/ReloadPageSnackbar";
 import { UserMenu } from "./components/UserMenu";
 import { useDrawerContext } from "./contexts/DrawerContext";
+import { useIoBrokerThemeContext } from "./contexts/IoBrokerThemeContext";
 import { useUserContext } from "./contexts/UserContext";
 import { GIT_BRANCH, GIT_COMMIT } from "./version";
 
@@ -102,6 +104,7 @@ const Drawer = styled(MuiDrawer, {
 export function Root() {
 	const { user, isReady, login, logout } = useUserContext();
 	const { isOpen, toggle } = useDrawerContext();
+	const { themeName, toggle: toggleTheme } = useIoBrokerThemeContext();
 
 	return (
 		<Box sx={{ display: "flex" }}>
@@ -151,6 +154,11 @@ export function Root() {
 					>
 						Report Issue
 					</Button>
+					<ToggleThemeMenu
+						themeName={themeName}
+						toggleTheme={toggleTheme}
+						t={() => ""}
+					/>
 					{!user && (
 						<Button
 							color="inherit"

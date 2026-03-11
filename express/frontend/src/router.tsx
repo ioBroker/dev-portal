@@ -3,7 +3,7 @@ import { createBrowserRouter, useRouteError } from "react-router-dom";
 import { App } from "./App";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { LoginButton } from "./components/dashboard/LoginButton";
-import { UserProvider, UserTokenMissingError } from "./contexts/UserContext";
+import { UserTokenMissingError } from "./contexts/UserContext";
 import { AdapterDashboard } from "./tools/adapter/AdapterDashboard";
 import { AdapterDetails } from "./tools/adapter/AdapterDetails";
 import { AdapterRatings } from "./tools/adapter/AdapterRatings";
