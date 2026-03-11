@@ -159,6 +159,21 @@ export function getToolsCards(isLoggedIn: boolean) {
 				/>,
 			],
 		},
+		{
+			title: "Type Detector",
+			img: "images/type-detector.png",
+			text: "Type Detector is a library to detect device types based on available states. The test tool allows you to verify and improve the type detection for your adapter.",
+			buttons: [
+				<CardButton
+					text="Library"
+					url="https://github.com/ioBroker/ioBroker.type-detector"
+				/>,
+				<CardButton
+					text="Test Tool"
+					url="https://iobroker.github.io/type-detector/"
+				/>,
+			],
+		},
 	];
 	if (isLoggedIn) {
 		tools.push({
