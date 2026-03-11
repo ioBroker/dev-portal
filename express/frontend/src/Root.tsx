@@ -147,6 +147,7 @@ export function Root() {
 						href="https://github.com/ioBroker/dev-portal/issues"
 						target="_blank"
 						style={{ opacity: 0.3 }}
+						sx={{ display: { sm: "flex", xs: "none" } }}
 					>
 						Report Issue
 					</Button>
