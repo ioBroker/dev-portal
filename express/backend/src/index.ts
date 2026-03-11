@@ -15,6 +15,7 @@ import { handleUpgrade } from "./apps/websocket-handler";
 import auth from "./auth";
 import { env } from "./common";
 import { startCronJobs } from "./cron";
+import { closeDatabaseConnection } from "./db/utils";
 import { Version } from "./global/version";
 import { GIT_BRANCH, GIT_COMMIT } from "./version";
 
@@ -72,3 +73,34 @@ server.on(
 );
 
 startCronJobs();
+
+// Graceful shutdown helper
+async function gracefulShutdown(signal: string) {
+	console.log(`${signal} signal received: closing HTTP server and database connection`);
+	
+	// Close the HTTP server with a timeout
+	const shutdownTimeout = 30000; // 30 seconds
+	await Promise.race([
+		new Promise<void>((resolve) => {
+			server.close(() => {
+				console.log("HTTP server closed");
+				resolve();
+			});
+		}),
+		new Promise<void>((resolve) => {
+			setTimeout(() => {
+				console.log("HTTP server shutdown timeout reached, forcing exit");
+				resolve();
+			}, shutdownTimeout);
+		})
+	]);
+	
+	// Close database connection
+	await closeDatabaseConnection();
+	
+	process.exit(0);
+}
+
+// Graceful shutdown handlers
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
