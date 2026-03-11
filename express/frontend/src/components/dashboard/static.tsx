@@ -176,13 +176,27 @@ export function getToolsCards(isLoggedIn: boolean) {
 		},
 	];
 	if (isLoggedIn) {
-		tools.push({
-			title: "Adapter Statistics",
-			img: "images/statistics.png",
-			text: "Get insights into all adapters found on GitHub.",
-			to: "/statistics",
-			buttons: [<CardButton text="Open" to="/statistics" />],
-		});
+		tools.push(
+			{
+				title: "Adapter Requests",
+				img: "images/github.png",
+				text: "Looking for your next challenge? Check out adapters requested by users.",
+				url: "https://github.com/ioBroker/AdapterRequests/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc",
+				buttons: [
+					<CardButton
+						text="Open"
+						url="https://github.com/ioBroker/AdapterRequests/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc"
+					/>,
+				],
+			},
+			{
+				title: "Adapter Statistics",
+				img: "images/statistics.png",
+				text: "Get insights into all adapters found on GitHub.",
+				to: "/statistics",
+				buttons: [<CardButton text="Open" to="/statistics" />],
+			},
+		);
 	}
 	return tools;
 }
