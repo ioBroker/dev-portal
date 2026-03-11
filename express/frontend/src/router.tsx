@@ -19,11 +19,7 @@ import { RepoStatistics } from "./tools/repo-statistics/RepoStatistics";
 export const router = createBrowserRouter([
 	{
 		path: "/",
-		element: (
-			<UserProvider>
-				<App />
-			</UserProvider>
-		),
+		element: <App />,
 
 		children: [
 			{
