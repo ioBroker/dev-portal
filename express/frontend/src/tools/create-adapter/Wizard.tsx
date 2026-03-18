@@ -140,7 +140,7 @@ export function Wizard() {
 
 	return (
 		<Paper sx={{ padding: 2 }}>
-			<Hidden smDown>
+			<Hidden xsDown>
 				<Stepper
 					activeStep={activeStep}
 					sx={{ padding: 1 }}
@@ -192,7 +192,7 @@ export function Wizard() {
 					onRequestLogin={handleLoginRequest}
 				/>
 			)}
-			<Hidden smDown>
+			<Hidden xsDown>
 				<Grid2 container spacing={1}>
 					<Grid2>
 						<Button

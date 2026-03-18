@@ -94,7 +94,7 @@ export function DashboardCard({
 				</Box>
 			)}
 			{img && (
-				<Hidden smDown>
+				<Hidden xsDown>
 					<CardMedia
 						sx={{
 							paddingTop: "56.25%", // 16:9
