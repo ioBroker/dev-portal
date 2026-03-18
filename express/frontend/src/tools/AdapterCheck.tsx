@@ -8,6 +8,7 @@ import {
 	Divider,
 	Grid2,
 	InputAdornment,
+	Link,
 	Paper,
 	SxProps,
 	Table,
@@ -62,12 +63,7 @@ export class Message {
 	}
 }
 
-export interface MessageIconProps {
-	type: MessageType;
-}
-
-export function MessageIcon(props: MessageIconProps) {
-	const { type } = props;
+export function MessageIcon({ type }: { type: MessageType }) {
 	let Icon: OverridableComponent<any>;
 	switch (type) {
 		case "check":
@@ -87,8 +83,29 @@ export function MessageIcon(props: MessageIconProps) {
 	return <Icon sx={{ color: iconStyles[type].color }} />;
 }
 
-export interface AdapterCheckLocationState {
-	repoFullName?: string;
+export function MessageText({ message }: { message: string }) {
+	// convert Markdown links to HTML links
+	const linkRegex =
+		/\[((?:[^[\]]|\[[^[\]]*\])*)\]\(([^()\s]+(?:\([^()]*\)[^()]*)*)\)/g; //;/\[(.+)\]\(([^)]+)\)/g;
+	const parts = [];
+	let lastIndex = 0;
+	let match;
+	while ((match = linkRegex.exec(message)) !== null) {
+		if (match.index > lastIndex) {
+			parts.push(message.substring(lastIndex, match.index));
+		}
+		parts.push(
+			<Link key={parts.length} href={match[2]} target="_blank">
+				{match[1]}
+			</Link>,
+		);
+		lastIndex = match.index + match[0].length;
+	}
+	if (lastIndex < message.length) {
+		parts.push(message.substring(lastIndex));
+	}
+
+	return parts;
 }
 
 export function AdapterCheck() {
@@ -274,7 +291,11 @@ export function AdapterCheck() {
 										<TableCell scope="row" sx={sxTableIcon}>
 											<MessageIcon type={message.type} />
 										</TableCell>
-										<TableCell>{message.text}</TableCell>
+										<TableCell>
+											<MessageText
+												message={message.text}
+											/>
+										</TableCell>
 									</TableRow>
 								))}
 							</TableBody>
