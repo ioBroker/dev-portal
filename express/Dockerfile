@@ -43,6 +43,6 @@ COPY --from=build-backend /app/*.json ./
 RUN npm ci --production
 
 COPY --from=build-backend /app/build/ ./
-COPY --from=build-frontend /app/frontend/build/ ./public/
+COPY --from=build-frontend /app/frontend/dist/ ./public/
 
 CMD [ "node", "/app/index.js" ]
