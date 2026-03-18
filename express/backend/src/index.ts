@@ -52,12 +52,12 @@ app.get<any, Version>("/api/version", function (_req, res) {
 		commit: GIT_COMMIT,
 	});
 });
-app.get("/api/*", function (_req, res) {
+app.get("/api/*splat", function (_req, res) {
 	// ensure that unknown API calls don't end up serving the HTML below
 	res.status(404).send("API endpoint not found");
 });
 
-app.get("/*", function (_req, res) {
+app.get("/*splat", function (_req, res) {
 	res.sendFile(path.join(publicPath, "index.html"));
 });
 
@@ -76,8 +76,10 @@ startCronJobs();
 
 // Graceful shutdown helper
 async function gracefulShutdown(signal: string) {
-	console.log(`${signal} signal received: closing HTTP server and database connection`);
-	
+	console.log(
+		`${signal} signal received: closing HTTP server and database connection`,
+	);
+
 	// Close the HTTP server with a timeout
 	const shutdownTimeout = 30000; // 30 seconds
 	await Promise.race([
@@ -89,15 +91,17 @@ async function gracefulShutdown(signal: string) {
 		}),
 		new Promise<void>((resolve) => {
 			setTimeout(() => {
-				console.log("HTTP server shutdown timeout reached, forcing exit");
+				console.log(
+					"HTTP server shutdown timeout reached, forcing exit",
+				);
 				resolve();
 			}, shutdownTimeout);
-		})
+		}),
 	]);
-	
+
 	// Close database connection
 	await closeDatabaseConnection();
-	
+
 	process.exit(0);
 }
 

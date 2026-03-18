@@ -7,9 +7,11 @@ const ALLOWED_PATHS = ["projects/adapters/components/"] as const;
 
 const router = Router();
 
-router.get<any>("/api/weblate/*", async function (req, res) {
+router.get<any>("/api/weblate/*splat", async function (req, res) {
 	try {
-		const userPath = req.params["0"];
+		const userPath = Array.isArray(req.params.splat)
+			? req.params.splat.join("/")
+			: req.params.splat;
 		if (!ALLOWED_PATHS.some((path) => userPath.startsWith(path))) {
 			return res.status(400).send("Invalid path");
 		}
