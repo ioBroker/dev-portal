@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { Grid2 } from "@mui/material";
 import { ReactNode } from "react";
 import { AddCard } from "./AddCard";
 import { LoadingCard } from "./LoadingCard";
@@ -17,23 +17,23 @@ const itemSizes = {
 
 export function CardGrid({ children, onAdd }: CardGridProps) {
 	return (
-		<Grid container spacing={4} sx={{ marginBottom: 1 }}>
+		<Grid2 container spacing={4} sx={{ marginBottom: 1 }}>
 			{children.length > 0 &&
 				children.map((child, index) => (
-					<Grid key={index} size={itemSizes}>
+					<Grid2 key={index} size={itemSizes}>
 						{child}
-					</Grid>
+					</Grid2>
 				))}
 			{onAdd && (
-				<Grid size={itemSizes}>
+				<Grid2 size={itemSizes}>
 					<AddCard onClick={onAdd} />
-				</Grid>
+				</Grid2>
 			)}
 			{children.length === 0 && !onAdd && (
-				<Grid size={itemSizes}>
+				<Grid2 size={itemSizes}>
 					<LoadingCard />
-				</Grid>
+				</Grid2>
 			)}
-		</Grid>
+		</Grid2>
 	);
 }

@@ -4,6 +4,7 @@ import {
 	CardActions,
 	CardContent,
 	CardMedia,
+	Hidden,
 	IconButton,
 	Rating,
 	Typography,
@@ -93,7 +94,7 @@ export function DashboardCard({
 				</Box>
 			)}
 			{img && (
-				<Box sx={{ display: { xs: "none", sm: "block" } }}>
+				<Hidden smDown>
 					<CardMedia
 						sx={{
 							paddingTop: "56.25%", // 16:9
@@ -107,7 +108,7 @@ export function DashboardCard({
 						title={title}
 						onClick={handleCardClick}
 					/>
-				</Box>
+				</Hidden>
 			)}
 			<CardContent
 				sx={{

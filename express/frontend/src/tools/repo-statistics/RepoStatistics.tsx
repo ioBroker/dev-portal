@@ -16,7 +16,7 @@ import {
 	DialogContent,
 	DialogTitle,
 	FormControlLabel,
-	Grid,
+	Grid2,
 	IconButton,
 	Menu,
 	MenuItem,
@@ -483,9 +483,9 @@ function ChooseStatsDialog({
 				Select Statistics to Display
 			</DialogTitle>
 			<DialogContent>
-				<Grid container spacing={2}>
+				<Grid2 container spacing={2}>
 					{allStats.map(({ section, stats }) => (
-						<Grid
+						<Grid2
 							size={{
 								xs: 12,
 								md: 4,
@@ -510,9 +510,9 @@ function ChooseStatsDialog({
 									/>
 								</Box>
 							))}
-						</Grid>
+						</Grid2>
 					))}
-				</Grid>
+				</Grid2>
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={() => onClose()} color="primary">

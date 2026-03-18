@@ -1,8 +1,8 @@
 import {
 	Alert,
 	AlertTitle,
-	Box,
 	Button,
+	Hidden,
 	LinearProgress,
 	Link,
 	Paper,
@@ -309,8 +309,8 @@ export function Releases() {
 				</TableCell>
 				<TableCell>{row.version}</TableCell>
 				<TableCell>
-					<Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>{row.date}</Box>
-					<Box component="span" sx={{ display: { md: "none" } }}>{row.shortDate}</Box>
+					<Hidden smDown>{row.date}</Hidden>
+					<Hidden mdUp>{row.shortDate}</Hidden>
 				</TableCell>
 				<TableCell>
 					{row.commit && (

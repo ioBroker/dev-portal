@@ -2,7 +2,7 @@ import {
 	QuestionGroup,
 	testCondition,
 } from "@iobroker/create-adapter/build/core";
-import { Grid, Typography } from "@mui/material";
+import { Grid2, Typography } from "@mui/material";
 import { useState } from "react";
 import { QuestionView } from "./QuestionView";
 import { getQuestionName } from "./common";
@@ -28,10 +28,10 @@ export function Group({ group, answers, onAnswerChanged }: GroupProps) {
 	};
 
 	return (
-		<Grid container spacing={1}>
-			<Grid size={12}>
+		<Grid2 container spacing={1}>
+			<Grid2 size={12}>
 				<Typography variant="h6">{group.headline}</Typography>
-			</Grid>
+			</Grid2>
 			{group.questions.map((question, i) => {
 				if (
 					!testCondition(question.condition, answers) ||
@@ -40,7 +40,7 @@ export function Group({ group, answers, onAnswerChanged }: GroupProps) {
 					return null;
 				}
 				return (
-					<Grid key={i} size={12}>
+					<Grid2 key={i} size={12}>
 						<QuestionView
 							question={question}
 							answers={answers}
@@ -48,9 +48,9 @@ export function Group({ group, answers, onAnswerChanged }: GroupProps) {
 								handleAnswerChanged(value, error, i)
 							}
 						/>
-					</Grid>
+					</Grid2>
 				);
 			})}
-		</Grid>
+		</Grid2>
 	);
 }

@@ -6,7 +6,7 @@ import {
 	Button,
 	CircularProgress,
 	Divider,
-	Grid,
+	Grid2,
 	InputAdornment,
 	Paper,
 	SxProps,
@@ -179,8 +179,8 @@ export function AdapterCheck() {
 				Adapter Check
 			</Typography>
 
-			<Grid container direction="row" alignItems="center" spacing={1}>
-				<Grid>
+			<Grid2 container direction="row" alignItems="center" spacing={1}>
+				<Grid2>
 					<Autocomplete
 						freeSolo
 						disabled={busy}
@@ -205,8 +205,8 @@ export function AdapterCheck() {
 							/>
 						)}
 					/>
-				</Grid>
-				<Grid>
+				</Grid2>
+				<Grid2>
 					<Autocomplete
 						freeSolo
 						disabled={busy || !repoName}
@@ -223,8 +223,8 @@ export function AdapterCheck() {
 							/>
 						)}
 					/>
-				</Grid>
-				<Grid>
+				</Grid2>
+				<Grid2>
 					<Button
 						variant="contained"
 						color="primary"
@@ -233,8 +233,8 @@ export function AdapterCheck() {
 					>
 						Start Check
 					</Button>
-				</Grid>
-			</Grid>
+				</Grid2>
+			</Grid2>
 
 			{busy && (
 				<>
