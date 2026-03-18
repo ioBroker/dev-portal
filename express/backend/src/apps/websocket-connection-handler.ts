@@ -1,8 +1,8 @@
 import { spawn } from "child_process";
+import { rm } from "fs/promises";
 import { IncomingMessage } from "http";
 import path from "path";
 import { env } from "process";
-import rimraf from "rimraf";
 import { v4 } from "uuid";
 import WebSocket from "ws";
 import { ClientServerMessage, ServerClientMessage } from "../global/websocket";
@@ -13,7 +13,9 @@ export const tempDir = path.join(
 );
 
 console.log(`Clearing ${tempDir}`);
-rimraf(tempDir, (e) => e && console.error(e));
+rm(tempDir, { recursive: true, force: true }).catch(
+	(e: any) => e && console.error(e),
+);
 
 export abstract class WebSocketConnectionHandler<
 	T extends ClientServerMessage,
@@ -40,7 +42,7 @@ export abstract class WebSocketConnectionHandler<
 		client.on("error", (e) => this.logLocal("Client error", e));
 		client.on("close", (code, reason) => {
 			this.logLocal("Closed", code, reason);
-			rimraf(this.rootDir, (e) => {
+			rm(this.rootDir, { recursive: true, force: true }).catch((e) => {
 				e && this.logLocal("Rimraf error", e);
 			});
 		});
