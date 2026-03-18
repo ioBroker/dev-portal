@@ -8,6 +8,7 @@ COPY frontend/*.json ./
 RUN npm ci
 
 # copy all source files and build
+COPY frontend/index.html ./
 COPY frontend/public/ ./public/
 COPY frontend/src/ ./src/
 COPY backend/src/global/*.d.ts ../backend/src/global/
