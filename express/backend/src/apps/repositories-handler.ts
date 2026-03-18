@@ -1,6 +1,6 @@
 import { checkAdapterName } from "@iobroker/create-adapter";
 import { request } from "@octokit/request";
-import { mkdirp, remove } from "fs-extra";
+import { mkdir, rm } from "fs/promises";
 import path from "path";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
 import { ToLatestMessage, ToStableMessage } from "../global/websocket";
@@ -73,8 +73,8 @@ export abstract class RepositoriesConnectionHandler<
 
 		this.log(`Cloning repository from GitHub`);
 		const baseDir = path.join(this.rootDir, REPOSITORY);
-		await remove(baseDir);
-		await mkdirp(baseDir);
+		await rm(baseDir, { recursive: true, force: true });
+		await mkdir(baseDir, { recursive: true });
 		const baseUrl = `https://${uc(user.login)}:${uc(token)}@github.com/`;
 		await this.exec(
 			`git clone "${baseUrl}${uc(user.login)}/${uc(forkName)}.git" .`,
@@ -98,7 +98,7 @@ export abstract class RepositoriesConnectionHandler<
 		this.log(`Pushing changes to ${user.login}/${forkName}`);
 		await this.exec(`git push origin ${branchName}`);
 
-		await remove(baseDir);
+		await rm(baseDir, { recursive: true, force: true });
 
 		this.log(`Creating pull request on ${ORG}/${REPOSITORY}`);
 		const { data: pullRequest } = await requestWithAuth(

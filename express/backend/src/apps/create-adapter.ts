@@ -9,7 +9,7 @@ import { request } from "@octokit/request";
 import archiver from "archiver";
 import { createHash } from "crypto";
 import { Router } from "express";
-import { existsSync } from "fs-extra";
+import { existsSync } from "fs";
 import sodium from "libsodium-wrappers";
 import mkdirp from "mkdirp";
 import path from "path";

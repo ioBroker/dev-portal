@@ -1,7 +1,7 @@
 import { checkAdapterName } from "@iobroker/create-adapter";
 import { request } from "@octokit/request";
 import { spawn } from "child_process";
-import { mkdirp, remove } from "fs-extra";
+import { mkdir, rm } from "fs/promises";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
 import { CreateReleaseMessage } from "../global/websocket";
 import { WebSocketConnectionHandler } from "./websocket-connection-handler";
@@ -35,8 +35,8 @@ export class ReleaseConnectionHandler extends WebSocketConnectionHandler<CreateR
 		this.log(`Connected to GitHub as ${user.login}`);
 
 		this.log(`Cloning ${owner}/${repo} from GitHub`);
-		await remove(this.rootDir);
-		await mkdirp(this.rootDir);
+		await rm(this.rootDir, { recursive: true, force: true });
+		await mkdir(this.rootDir, { recursive: true });
 		await this.exec(
 			`git clone "https://${uc(user.login!)}:${uc(token)}@github.com/${uc(
 				owner,
