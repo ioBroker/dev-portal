@@ -1,3 +1,4 @@
+import { CookiesProvider } from "react-cookie";
 import { AdapterListProvider } from "./contexts/AdapterListContext";
 import { DrawerContextProvider } from "./contexts/DrawerContext";
 import { IoBrokerThemeProvider } from "./contexts/IoBrokerThemeContext";
@@ -6,14 +7,16 @@ import { Root } from "./Root";
 
 export function App() {
 	return (
-		<IoBrokerThemeProvider>
-			<UserProvider>
-				<AdapterListProvider>
-					<DrawerContextProvider>
-						<Root />
-					</DrawerContextProvider>
-				</AdapterListProvider>
-			</UserProvider>
-		</IoBrokerThemeProvider>
+		<CookiesProvider>
+			<IoBrokerThemeProvider>
+				<UserProvider>
+					<AdapterListProvider>
+						<DrawerContextProvider>
+							<Root />
+						</DrawerContextProvider>
+					</AdapterListProvider>
+				</UserProvider>
+			</IoBrokerThemeProvider>
+		</CookiesProvider>
 	);
 }

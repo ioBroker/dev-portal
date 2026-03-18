@@ -6,7 +6,7 @@ import {
 	Link as RouterLink,
 	useMatches,
 	useParams,
-} from "react-router-dom";
+} from "react-router";
 import { AdapterContextProvider } from "../../contexts/AdapterContext";
 import { useUserToken } from "../../contexts/UserContext";
 

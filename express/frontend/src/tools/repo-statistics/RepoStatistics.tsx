@@ -27,7 +27,7 @@ import {
 import axios from "axios";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import Chart from "react-google-charts";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { CardGrid } from "../../components/dashboard/CardGrid";
 import { useUserToken } from "../../contexts/UserContext";
 import { getApiUrl } from "../../lib/utils";

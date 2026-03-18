@@ -73,7 +73,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 	const login = useCallback(() => {
 		const redirect = encodeURIComponent(window.location.pathname);
-		if (window.location.port === "3000") {
+		if (window.location.port === "5173") {
 			window.location.href = `http://localhost:8080/login?redirect=${redirect}`;
 		} else {
 			window.location.href = `/login?redirect=${redirect}`;

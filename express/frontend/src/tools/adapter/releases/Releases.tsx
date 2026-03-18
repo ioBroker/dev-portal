@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router";
 import { coerce } from "semver";
 import { AuthConsentDialog } from "../../../components/AuthConsentDialog";
 import {

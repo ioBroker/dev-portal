@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import useWebSocket from "react-use-websocket";
 import {
 	ServerClientMessage,
@@ -32,7 +32,12 @@ import { useUserContext, useUserToken } from "../../../contexts/UserContext";
 import { GitHubComm } from "../../../lib/gitHub";
 import { checkAdapter } from "../../../lib/ioBroker";
 import { getWebSocketUrl } from "../../../lib/utils";
-import { Message, MessageIcon, sxTableIcon } from "../../AdapterCheck";
+import {
+	Message,
+	MessageIcon,
+	MessageText,
+	sxTableIcon,
+} from "../../AdapterCheck";
 import { BaseReleaseDialog } from "./BaseReleaseDialog";
 
 export type RepositoriesAction = "to-stable" | "to-latest";
@@ -141,7 +146,9 @@ function AdapterCheckStep(props: {
 								<TableCell scope="row" sx={sxTableIcon}>
 									<MessageIcon type={error.type} />
 								</TableCell>
-								<TableCell>{error.text}</TableCell>
+								<TableCell>
+									<MessageText message={error.text} />
+								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>

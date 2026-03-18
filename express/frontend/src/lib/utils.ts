@@ -18,7 +18,7 @@ export class AsyncCache<T> {
 }
 
 export function getApiUrl(path: string) {
-	if (window.location.port === "3000") {
+	if (window.location.port === "5173") {
 		return `http://localhost:8080/api/${path}`;
 	} else {
 		return `/api/${path}`;
@@ -27,7 +27,7 @@ export function getApiUrl(path: string) {
 
 export function getWebSocketUrl(path: string) {
 	const loc = window.location;
-	if (loc.port === "3000") {
+	if (loc.port === "5173") {
 		return `ws://localhost:8080/ws/${path}`;
 	} else {
 		const protocol = loc.protocol.replace(/^http/, "ws");

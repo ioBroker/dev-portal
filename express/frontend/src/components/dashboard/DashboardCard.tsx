@@ -10,7 +10,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { Fragment } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Rating as IoBrokerRating } from "../../../../backend/src/global/iobroker";
 import { CloseIcon, FavoriteIcon, NotFavoriteIcon } from "../Icons";
 

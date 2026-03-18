@@ -2,8 +2,7 @@ import { Box, debounce } from "@mui/material";
 import { EChartsOption, SeriesOption } from "echarts";
 import ReactECharts from "echarts-for-react";
 import { useEffect, useState } from "react";
-import { coerce } from "semver";
-import sort from "semver/functions/sort";
+import { coerce, sort } from "semver";
 import { useAdapterContext } from "../../../contexts/AdapterContext";
 import { getStatisticsHistory } from "../../../lib/ioBroker";
 

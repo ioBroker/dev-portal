@@ -8,6 +8,7 @@ COPY frontend/*.json ./
 RUN npm ci
 
 # copy all source files and build
+COPY frontend/index.html ./
 COPY frontend/public/ ./public/
 COPY frontend/src/ ./src/
 COPY backend/src/global/*.d.ts ../backend/src/global/
@@ -42,6 +43,6 @@ COPY --from=build-backend /app/*.json ./
 RUN npm ci --production
 
 COPY --from=build-backend /app/build/ ./
-COPY --from=build-frontend /app/frontend/build/ ./public/
+COPY --from=build-frontend /app/frontend/dist/ ./public/
 
 CMD [ "node", "/app/index.js" ]
