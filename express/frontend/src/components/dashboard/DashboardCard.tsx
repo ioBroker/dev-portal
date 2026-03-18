@@ -4,13 +4,12 @@ import {
 	CardActions,
 	CardContent,
 	CardMedia,
-	Hidden,
 	IconButton,
 	Rating,
 	Typography,
 } from "@mui/material";
 import { Fragment } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Rating as IoBrokerRating } from "../../../../backend/src/global/iobroker";
 import { CloseIcon, FavoriteIcon, NotFavoriteIcon } from "../Icons";
 
@@ -94,7 +93,7 @@ export function DashboardCard({
 				</Box>
 			)}
 			{img && (
-				<Hidden xsDown>
+				<Box sx={{ display: { xs: "none", sm: "block" } }}>
 					<CardMedia
 						sx={{
 							paddingTop: "56.25%", // 16:9
@@ -108,7 +107,7 @@ export function DashboardCard({
 						title={title}
 						onClick={handleCardClick}
 					/>
-				</Hidden>
+				</Box>
 			)}
 			<CardContent
 				sx={{

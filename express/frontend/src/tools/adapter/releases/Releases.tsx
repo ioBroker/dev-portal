@@ -1,8 +1,8 @@
 import {
 	Alert,
 	AlertTitle,
+	Box,
 	Button,
-	Hidden,
 	LinearProgress,
 	Link,
 	Paper,
@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router";
 import { coerce } from "semver";
 import { AuthConsentDialog } from "../../../components/AuthConsentDialog";
 import {
@@ -309,8 +309,8 @@ export function Releases() {
 				</TableCell>
 				<TableCell>{row.version}</TableCell>
 				<TableCell>
-					<Hidden smDown>{row.date}</Hidden>
-					<Hidden mdUp>{row.shortDate}</Hidden>
+					<Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>{row.date}</Box>
+					<Box component="span" sx={{ display: { md: "none" } }}>{row.shortDate}</Box>
 				</TableCell>
 				<TableCell>
 					{row.commit && (

@@ -6,7 +6,7 @@ import {
 	Button,
 	CircularProgress,
 	Divider,
-	Grid2,
+	Grid,
 	InputAdornment,
 	Paper,
 	SxProps,
@@ -22,7 +22,7 @@ import {
 import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { useEffect, useState } from "react";
 import Chart from "react-google-charts";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { useUserToken } from "../contexts/UserContext";
 import { GitHubComm } from "../lib/gitHub";
 import { checkAdapter, CheckResult, getMyAdapterRepos } from "../lib/ioBroker";
@@ -179,8 +179,8 @@ export function AdapterCheck() {
 				Adapter Check
 			</Typography>
 
-			<Grid2 container direction="row" alignItems="center" spacing={1}>
-				<Grid2>
+			<Grid container direction="row" alignItems="center" spacing={1}>
+				<Grid>
 					<Autocomplete
 						freeSolo
 						disabled={busy}
@@ -205,8 +205,8 @@ export function AdapterCheck() {
 							/>
 						)}
 					/>
-				</Grid2>
-				<Grid2>
+				</Grid>
+				<Grid>
 					<Autocomplete
 						freeSolo
 						disabled={busy || !repoName}
@@ -223,8 +223,8 @@ export function AdapterCheck() {
 							/>
 						)}
 					/>
-				</Grid2>
-				<Grid2>
+				</Grid>
+				<Grid>
 					<Button
 						variant="contained"
 						color="primary"
@@ -233,8 +233,8 @@ export function AdapterCheck() {
 					>
 						Start Check
 					</Button>
-				</Grid2>
-			</Grid2>
+				</Grid>
+			</Grid>
 
 			{busy && (
 				<>

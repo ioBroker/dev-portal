@@ -2,10 +2,10 @@ import { questionGroups } from "@iobroker/create-adapter/build/core";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import {
+	Box,
 	Button,
 	Divider,
-	Grid2,
-	Hidden,
+	Grid,
 	MobileStepper,
 	Paper,
 	Step,
@@ -140,7 +140,7 @@ export function Wizard() {
 
 	return (
 		<Paper sx={{ padding: 2 }}>
-			<Hidden xsDown>
+			<Box sx={{ display: { xs: "none", sm: "block" } }}>
 				<Stepper
 					activeStep={activeStep}
 					sx={{ padding: 1 }}
@@ -167,7 +167,7 @@ export function Wizard() {
 						marginBottom: 1,
 					}}
 				/>
-			</Hidden>
+			</Box>
 			{questionGroups[activeStep] ? (
 				<Group
 					key={questionGroups[activeStep].title}
@@ -192,9 +192,9 @@ export function Wizard() {
 					onRequestLogin={handleLoginRequest}
 				/>
 			)}
-			<Hidden xsDown>
-				<Grid2 container spacing={1}>
-					<Grid2>
+			<Box sx={{ display: { xs: "none", sm: "block" } }}>
+				<Grid container spacing={1}>
+					<Grid>
 						<Button
 							variant="contained"
 							disabled={!hasPrevious}
@@ -202,8 +202,8 @@ export function Wizard() {
 						>
 							Previous
 						</Button>
-					</Grid2>
-					<Grid2>
+					</Grid>
+					<Grid>
 						<Button
 							color="primary"
 							variant="contained"
@@ -212,8 +212,8 @@ export function Wizard() {
 						>
 							Next
 						</Button>
-					</Grid2>
-					<Grid2
+					</Grid>
+					<Grid
 						sx={{
 							marginLeft: "auto",
 							color: "#ccc",
@@ -221,10 +221,10 @@ export function Wizard() {
 					>
 						<br />
 						{version}
-					</Grid2>
-				</Grid2>
-			</Hidden>
-			<Hidden smUp>
+					</Grid>
+				</Grid>
+			</Box>
+			<Box sx={{ display: { sm: "none" } }}>
 				<MobileStepper
 					steps={questionGroups.length + 1}
 					position="static"
@@ -251,7 +251,7 @@ export function Wizard() {
 						</Button>
 					}
 				/>
-			</Hidden>
+			</Box>
 		</Paper>
 	);
 }

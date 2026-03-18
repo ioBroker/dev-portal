@@ -16,7 +16,7 @@ import {
 	DialogContent,
 	DialogTitle,
 	FormControlLabel,
-	Grid2,
+	Grid,
 	IconButton,
 	Menu,
 	MenuItem,
@@ -27,7 +27,7 @@ import {
 import axios from "axios";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import Chart from "react-google-charts";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { CardGrid } from "../../components/dashboard/CardGrid";
 import { useUserToken } from "../../contexts/UserContext";
 import { getApiUrl } from "../../lib/utils";
@@ -483,9 +483,9 @@ function ChooseStatsDialog({
 				Select Statistics to Display
 			</DialogTitle>
 			<DialogContent>
-				<Grid2 container spacing={2}>
+				<Grid container spacing={2}>
 					{allStats.map(({ section, stats }) => (
-						<Grid2
+						<Grid
 							size={{
 								xs: 12,
 								md: 4,
@@ -510,9 +510,9 @@ function ChooseStatsDialog({
 									/>
 								</Box>
 							))}
-						</Grid2>
+						</Grid>
 					))}
-				</Grid2>
+				</Grid>
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={() => onClose()} color="primary">

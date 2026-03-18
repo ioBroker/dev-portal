@@ -1,5 +1,5 @@
 import { Paper, Typography } from "@mui/material";
-import { createBrowserRouter, useRouteError } from "react-router-dom";
+import { createBrowserRouter, useRouteError } from "react-router";
 import { App } from "./App";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { LoginButton } from "./components/dashboard/LoginButton";

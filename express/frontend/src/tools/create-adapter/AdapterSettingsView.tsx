@@ -7,7 +7,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
 	Checkbox,
-	Grid2,
+	Grid,
 	IconButton,
 	Input,
 	MenuItem,
@@ -38,21 +38,21 @@ export const AdapterSettingOption = (props: {
 	const handleChange = (): void => onChange({ text, value });
 	return (
 		<>
-			<Grid2 size={textSize}>
+			<Grid size={textSize}>
 				<Input
 					value={text}
 					onChange={(e) => setText(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
-			</Grid2>
-			<Grid2 size={valueSize}>
+			</Grid>
+			<Grid size={valueSize}>
 				<Input
 					value={value}
 					onChange={(e) => setValue(e.target.value)}
 					onBlur={() => handleChange()}
 				/>
-			</Grid2>
-			<Grid2 size={buttonSize}>
+			</Grid>
+			<Grid size={buttonSize}>
 				<IconButton
 					size="small"
 					aria-label="delete"
@@ -61,7 +61,7 @@ export const AdapterSettingOption = (props: {
 				>
 					<DeleteIcon fontSize="inherit" />
 				</IconButton>
-			</Grid2>
+			</Grid>
 		</>
 	);
 };
@@ -93,10 +93,10 @@ export const AdapterSettingOptions = (props: {
 	};
 
 	return (
-		<Grid2 container spacing={0} style={{ width: "30vw" }}>
-			<Grid2 size={textSize}>Text</Grid2>
-			<Grid2 size={valueSize}>Value</Grid2>
-			<Grid2 size={buttonSize}>
+		<Grid container spacing={0} style={{ width: "30vw" }}>
+			<Grid size={textSize}>Text</Grid>
+			<Grid size={valueSize}>Value</Grid>
+			<Grid size={buttonSize}>
 				<IconButton
 					size="small"
 					aria-label="add"
@@ -104,7 +104,7 @@ export const AdapterSettingOptions = (props: {
 				>
 					<AddIcon fontSize="inherit" />
 				</IconButton>
-			</Grid2>
+			</Grid>
 			{options.map((option, i) => (
 				<AdapterSettingOption
 					key={i}
@@ -113,7 +113,7 @@ export const AdapterSettingOptions = (props: {
 					onChange={(o) => handleChange(i, o)}
 				/>
 			))}
-		</Grid2>
+		</Grid>
 	);
 };
 

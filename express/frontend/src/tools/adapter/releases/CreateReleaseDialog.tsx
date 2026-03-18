@@ -3,7 +3,7 @@ import {
 	DialogContent,
 	DialogContentText,
 	DialogTitle,
-	Grid2,
+	Grid,
 	MenuItem,
 	TextField,
 } from "@mui/material";
@@ -60,8 +60,8 @@ function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 	}, [info]);
 
 	return (
-		<Grid2 container direction="column" spacing={2}>
-			<Grid2 size={gridSizes}>
+		<Grid container direction="column" spacing={2}>
+			<Grid size={gridSizes}>
 				<TextField
 					label="Current Version"
 					disabled
@@ -69,8 +69,8 @@ function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 					value={version || ""}
 					variant="outlined"
 				/>
-			</Grid2>
-			<Grid2 size={gridSizes}>
+			</Grid>
+			<Grid size={gridSizes}>
 				<TextField
 					select
 					fullWidth
@@ -86,8 +86,8 @@ function SelectVersion(props: { onSelected: (type?: ReleaseType) => void }) {
 						</MenuItem>
 					))}
 				</TextField>
-			</Grid2>
-		</Grid2>
+			</Grid>
+		</Grid>
 	);
 }
 

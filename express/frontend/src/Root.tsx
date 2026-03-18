@@ -19,7 +19,7 @@ import {
 	Typography,
 	styled,
 } from "@mui/material";
-import { Outlet, Link as RouterLink } from "react-router-dom";
+import { Outlet, Link as RouterLink } from "react-router";
 import { GitHubIcon } from "./components/Icons";
 import { NavList } from "./components/NavList";
 import { ReloadPageSnackbar } from "./components/ReloadPageSnackbar";
