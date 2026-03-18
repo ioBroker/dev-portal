@@ -86,7 +86,7 @@ export function MessageIcon({ type }: { type: MessageType }) {
 export function MessageText({ message }: { message: string }) {
 	// convert Markdown links to HTML links
 	const linkRegex =
-		/\[((?:[^[\]]|\[[^[\]]*\])*)\]\(([^()\s]+(?:\([^()]*\)[^()]*)*)\)/g; //;/\[(.+)\]\(([^)]+)\)/g;
+		/\[((?:[^[\]]|\[[^[\]]*\])*)\]\(([^()\s]+(?:\([^()]*\)[^()]*)*)\)/g;
 	const parts = [];
 	let lastIndex = 0;
 	let match;
