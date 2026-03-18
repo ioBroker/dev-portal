@@ -25,6 +25,7 @@ export interface IAdapterListContext {
 		type: AddableAdapterListType,
 		adapter: AdapterRepoName,
 	) => Promise<void>;
+	readonly hide: (adapter: AdapterRepoName) => void;
 }
 
 const AdapterListContext = createContext<IAdapterListContext | undefined>(
@@ -125,8 +126,21 @@ export function AdapterListProvider({
 		[user],
 	);
 
+	const hide = useCallback((adapter: AdapterRepoName) => {
+		function filter(list?: AdapterRepoName[]) {
+			return list?.filter(
+				(a) => !(a.name === adapter.name && a.owner === adapter.owner),
+			);
+		}
+		setAdapters((prev) => ({
+			own: filter(prev.own),
+			watches: filter(prev.watches),
+			favorites: filter(prev.favorites),
+		}));
+	}, []);
+
 	return (
-		<AdapterListContext.Provider value={{ adapters, add, remove }}>
+		<AdapterListContext.Provider value={{ adapters, add, remove, hide }}>
 			{children}
 		</AdapterListContext.Provider>
 	);

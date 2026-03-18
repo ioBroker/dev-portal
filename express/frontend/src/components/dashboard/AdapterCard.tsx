@@ -27,11 +27,13 @@ import {
 	getWeblateAdapterComponents,
 	hasDiscoverySupport,
 } from "../../lib/ioBroker";
+import { getPackage } from "../../lib/npm";
 import { CardButton } from "../CardButton";
 import {
 	AdapterCheckIcon,
 	DiscoveryIcon,
 	GitHubIcon,
+	NpmIcon,
 	SentryIcon,
 	WeblateIcon,
 } from "../Icons";
@@ -91,15 +93,7 @@ export function AdapterCard({ type }: { type: AdapterListType }) {
 			}
 			buttons={[
 				<AdapterGitHubButton />,
-				<CardButton
-					icon={
-						<Tooltip title="Start Adapter Check">
-							<AdapterCheckIcon />
-						</Tooltip>
-					}
-					to={`/adapter-check?repo=${repo?.full_name}`}
-					disabled={!repo}
-				/>,
+				<AdapterCheckButton />,
 				<AdapterDiscoveryButton />,
 				<AdapterSentryButton />,
 				<AdapterWeblateButton />,
@@ -109,7 +103,7 @@ export function AdapterCard({ type }: { type: AdapterListType }) {
 	);
 }
 
-function AdapterGitHubButton() {
+export function AdapterGitHubButton() {
 	const [counts, setCounts] = useState("");
 	const [color, setColor] = useState<"primary" | "error">("primary");
 	const { user } = useUserContext();
@@ -158,7 +152,54 @@ function AdapterGitHubButton() {
 	);
 }
 
-function AdapterDiscoveryButton() {
+export function AdapterNpmButton() {
+	const { name } = useAdapterContext();
+	const [latestVersion, setLatestVersion] = useState<string>();
+	useEffect(() => {
+		const tryGetPackage = async () => {
+			try {
+				const npm = await getPackage(`iobroker.${name}`);
+
+				console.info("package", npm);
+				setLatestVersion(npm["dist-tags"].latest);
+			} catch {
+				setLatestVersion(undefined);
+			}
+		};
+		tryGetPackage();
+	}, [name]);
+
+	return (
+		<Tooltip
+			title={`npm Package ${latestVersion ? `(latest version: ${latestVersion})` : "not found"}`}
+		>
+			<span>
+				<CardButton
+					icon={<NpmIcon />}
+					url={`https://www.npmjs.com/package/iobroker.${name}`}
+					disabled={!latestVersion}
+				/>
+			</span>
+		</Tooltip>
+	);
+}
+
+export function AdapterCheckButton() {
+	const { repo } = useAdapterContext();
+	return (
+		<CardButton
+			icon={
+				<Tooltip title="Start Adapter Check">
+					<AdapterCheckIcon />
+				</Tooltip>
+			}
+			to={`/adapter-check?repo=${repo?.full_name}`}
+			disabled={!repo}
+		/>
+	);
+}
+
+export function AdapterDiscoveryButton() {
 	const { name } = useAdapterContext();
 	const [discoveryLink, setDiscoveryLink] = useState<string>();
 
@@ -169,6 +210,8 @@ function AdapterDiscoveryButton() {
 					`https://github.com/ioBroker/ioBroker.discovery/blob/master/lib/adapters/` +
 						`${uc(name)}.js`,
 				);
+			} else {
+				setDiscoveryLink(undefined);
 			}
 		});
 	}, [name]);
@@ -202,7 +245,7 @@ const SentryErrorBadge = forwardRef(
 	},
 );
 
-function AdapterSentryButton() {
+export function AdapterSentryButton() {
 	const { name } = useAdapterContext();
 	const [projects, setProjects] = useState<ProjectInfo[]>([]);
 	const [tooltip, setTooltip] = useState("Sentry available for this adapter");
@@ -338,7 +381,7 @@ function AdapterSentryButton() {
 	}
 }
 
-function AdapterWeblateButton() {
+export function AdapterWeblateButton() {
 	const { name } = useAdapterContext();
 	const [weblateLink, setWeblateLink] = useState<string>();
 
@@ -352,6 +395,8 @@ function AdapterWeblateButton() {
 							component.slug,
 						)}/`,
 					);
+				} else {
+					setWeblateLink(undefined);
 				}
 			})
 			.catch(console.error);

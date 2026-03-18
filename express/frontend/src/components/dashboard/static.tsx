@@ -159,15 +159,44 @@ export function getToolsCards(isLoggedIn: boolean) {
 				/>,
 			],
 		},
+		{
+			title: "Type Detector",
+			img: "images/type-detector.png",
+			text: "Type Detector is a library to detect device types based on available states. The test tool allows you to verify and improve the type detection for your adapter.",
+			buttons: [
+				<CardButton
+					text="Library"
+					url="https://github.com/ioBroker/ioBroker.type-detector"
+				/>,
+				<CardButton
+					text="Test Tool"
+					url="https://iobroker.github.io/type-detector/"
+				/>,
+			],
+		},
 	];
 	if (isLoggedIn) {
-		tools.push({
-			title: "Adapter Statistics",
-			img: "images/statistics.png",
-			text: "Get insights into all adapters found on GitHub.",
-			to: "/statistics",
-			buttons: [<CardButton text="Open" to="/statistics" />],
-		});
+		tools.push(
+			{
+				title: "Adapter Requests",
+				img: "images/github.png",
+				text: "Looking for your next challenge? Check out adapters requested by users.",
+				url: "https://github.com/ioBroker/AdapterRequests/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc",
+				buttons: [
+					<CardButton
+						text="Open"
+						url="https://github.com/ioBroker/AdapterRequests/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc"
+					/>,
+				],
+			},
+			{
+				title: "Adapter Statistics",
+				img: "images/statistics.png",
+				text: "Get insights into all adapters found on GitHub.",
+				to: "/statistics",
+				buttons: [<CardButton text="Open" to="/statistics" />],
+			},
+		);
 	}
 	return tools;
 }

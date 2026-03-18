@@ -1,12 +1,14 @@
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {
-	Accordion,
-	AccordionDetails,
-	AccordionSummary,
-	Typography,
-} from "@mui/material";
+import { Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import { CardButton } from "../../components/CardButton";
+import {
+	AdapterCheckButton,
+	AdapterDiscoveryButton,
+	AdapterGitHubButton,
+	AdapterNpmButton,
+	AdapterSentryButton,
+	AdapterWeblateButton,
+} from "../../components/dashboard/AdapterCard";
 import { CardGrid } from "../../components/dashboard/CardGrid";
 import {
 	DashboardCard,
@@ -19,29 +21,20 @@ import {
 	getLatest,
 } from "../../lib/ioBroker";
 
-const CATEGORY_GENERAL = "General";
-const CATEGORY_FEATURES = "Features";
-const EMPTY_CARDS = {
-	[CATEGORY_GENERAL]: [],
-	[CATEGORY_FEATURES]: [],
-};
-
 export function AdapterDashboard() {
 	const { name } = useAdapterContext();
-	const [categories, setCategories] =
-		useState<Record<string, DashboardCardProps[]>>(EMPTY_CARDS);
-	const [collapsed, setCollapsed] = useState<boolean[]>([]);
+	const [cards, setCards] = useState<DashboardCardProps[]>([]);
 
 	useEffect(() => {
-		setCategories(EMPTY_CARDS);
+		setCards([]);
 		const loadCards = async () => {
 			const [latest, ratings, versions] = await Promise.all([
 				getLatest(),
 				getAllRatings(),
 				getCurrentVersions(name).catch(() => null),
 			]);
-			const generalCards: DashboardCardProps[] = [];
-			generalCards.push({
+			const cards: DashboardCardProps[] = [];
+			cards.push({
 				title: "Releases",
 				text: "Manage releases of your adapter.",
 				badges: {
@@ -52,7 +45,7 @@ export function AdapterDashboard() {
 				buttons: [<CardButton text="Manage" to="releases" />],
 			});
 			if (latest[name] || versions?.total) {
-				generalCards.push({
+				cards.push({
 					title: "Statistics",
 					text: "Learn more about the usage and distribution of your adapter.",
 					to: "statistics",
@@ -60,7 +53,7 @@ export function AdapterDashboard() {
 				});
 			}
 			if (ratings[name]) {
-				generalCards.push({
+				cards.push({
 					title: "Ratings",
 					text: "Have a look at how users are rating your adapter.",
 					rating: ratings[name].rating,
@@ -68,51 +61,29 @@ export function AdapterDashboard() {
 					buttons: [<CardButton text="Show" to="ratings" />],
 				});
 			}
-			//const featureCards: DashboardCardProps[] = [];
-			// features: discovery, sentry, weblate, create-adapter upgrades/changes, adapter-check?, adapter transfer (to community)
-			setCategories({
-				[CATEGORY_GENERAL]: generalCards,
-				//[CATEGORY_FEATURES]: { cards: featureCards },
-			});
+			setCards(cards);
 		};
 		loadCards().catch(console.error);
 	}, [name]);
 
-	const handleAccordion = (index: number) => {
-		setCollapsed((old) => {
-			const result = [...old];
-			result[index] = !result[index];
-			return result;
-		});
-	};
-
 	return (
 		<>
-			{Object.keys(categories).map((title, index) => {
-				const cards = categories[title];
-				return (
-					<Accordion
-						key={title}
-						expanded={!collapsed[index]}
-						onChange={() => handleAccordion(index)}
-					>
-						<AccordionSummary
-							expandIcon={<ExpandMoreIcon />}
-							aria-controls={`${title}-content`}
-							id={`${title}-header`}
-						>
-							<Typography variant="h5">{title}</Typography>
-						</AccordionSummary>
-						<AccordionDetails>
-							<CardGrid>
-								{cards.map((card) => (
-									<DashboardCard key={card.title} {...card} />
-								))}
-							</CardGrid>
-						</AccordionDetails>
-					</Accordion>
-				);
-			})}
+			<Paper
+				sx={{ p: 1, mb: 2, gap: 1, display: "flex", flexWrap: "wrap" }}
+				elevation={7}
+			>
+				<AdapterGitHubButton />
+				<AdapterNpmButton />
+				<AdapterCheckButton />
+				<AdapterDiscoveryButton />
+				<AdapterSentryButton />
+				<AdapterWeblateButton />
+			</Paper>
+			<CardGrid>
+				{cards.map((card) => (
+					<DashboardCard key={card.title} {...card} />
+				))}
+			</CardGrid>
 		</>
 	);
 }

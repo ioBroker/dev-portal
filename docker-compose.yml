@@ -18,7 +18,7 @@ services:
         volumes:
             - mongo-data:/data/db
     watchtower:
-        image: containrrr/watchtower
+        image: nickfedor/watchtower
         container_name: iobroker-dev-portal-watchtower
         restart: unless-stopped
         volumes:

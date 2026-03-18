@@ -10,6 +10,7 @@ import {
 import { AdapterInfo } from "../../../backend/src/global/iobroker";
 import { GitHubComm, Repository } from "../lib/gitHub";
 import { getAdapterFromRepoName, getAdapterInfo } from "../lib/ioBroker";
+import { useAdapterList } from "./AdapterListContext";
 import { useUserContext } from "./UserContext";
 
 export interface AdapterRepoName {
@@ -46,6 +47,7 @@ export function AdapterContextProvider({
 	children: ReactNode;
 }) {
 	const { user } = useUserContext();
+	const { hide } = useAdapterList();
 	const [value, setValue] = useState<IAdapterContext>(() => ({
 		name: getAdapterFromRepoName(repoName.name),
 		repoName,
@@ -73,6 +75,11 @@ export function AdapterContextProvider({
 					.getRepo();
 			}
 			const info = await getAdapterInfo(repo);
+			if (!info) {
+				hide(repoName);
+				return;
+			}
+
 			setValue({
 				name: getAdapterFromRepoName(repoName.name),
 				repoName,
@@ -81,7 +88,7 @@ export function AdapterContextProvider({
 			});
 		};
 		loadInfos().catch(console.error);
-	}, [repoName, user]);
+	}, [repoName, user, hide]);
 
 	return (
 		<AdapterContext.Provider value={value}>
