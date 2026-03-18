@@ -10,11 +10,9 @@ import archiver from "archiver";
 import { createHash } from "crypto";
 import { Router } from "express";
 import { existsSync } from "fs";
+import { mkdir, rm } from "fs/promises";
 import sodium from "libsodium-wrappers";
-import mkdirp from "mkdirp";
 import path from "path";
-import rimraf from "rimraf";
-import { promisify } from "util";
 import { COOKIE_NAME_CREATOR_TOKEN } from "../auth";
 import { delay } from "../common";
 import { GenerateAdapterMessage } from "../global/websocket";
@@ -23,7 +21,6 @@ import {
 	WebSocketConnectionHandler,
 } from "./websocket-connection-handler";
 
-const rimrafAsync = promisify(rimraf);
 const uc = encodeURIComponent;
 
 interface TreeNode {
@@ -129,8 +126,8 @@ export class CreateAdapterConnectionHandler extends WebSocketConnectionHandler<G
 
 	private async createFiles(answers: Answers, outputDir: string) {
 		this.logLocal("Creating adapter for", answers);
-		await mkdirp(outputDir);
-		await rimrafAsync(outputDir);
+		await mkdir(outputDir, { recursive: true });
+		await rm(outputDir, { recursive: true, force: true });
 
 		this.log(`Generating all adapter files...`);
 		const files = await createAdapterFiles(answers);
