@@ -4,12 +4,18 @@ import { Router } from "express";
 const router = Router();
 
 router.get("/api/repochecker/", async function (req, res) {
+	const authorization = req.headers.authorization;
 	handler(
 		{
 			queryStringParameters: {
 				url: req.query.url as string,
 				branch: req.query.branch as string | undefined,
 			},
+			headers: authorization
+				? {
+						authorization,
+					}
+				: undefined,
 		},
 		null,
 		(error, result) => {
