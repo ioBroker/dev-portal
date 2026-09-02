@@ -10,9 +10,6 @@ declare module "@iobroker/repochecker" {
 			url: string;
 			branch?: string;
 		};
-		headers?: {
-			authorization?: string;
-		};
 	};
 
 	export type CheckResult = {
