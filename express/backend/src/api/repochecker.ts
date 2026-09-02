@@ -34,16 +34,6 @@ function getGithubToken(authorization?: string | string[]) {
 	return token || undefined;
 }
 
-function getErrorMessage(error: unknown) {
-	if (error instanceof Error) {
-		return error.message;
-	}
-
-	return typeof error === "string"
-		? error
-		: "Repochecker request failed";
-}
-
 function runRepochecker(
 	request: CheckRequest,
 	githubToken?: string,
@@ -104,7 +94,8 @@ router.get("/api/repochecker/", async function (req, res) {
 		);
 		res.status(result.statusCode).send(result.body);
 	} catch (error) {
-		res.status(500).send(getErrorMessage(error));
+		console.error("Repochecker request failed", error);
+		res.status(500).send("Repochecker request failed");
 	}
 });
 
