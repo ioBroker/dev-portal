@@ -15,8 +15,33 @@ function getGithubToken(authorization?: string | string[]) {
 		return undefined;
 	}
 
-	const match = authorization.match(/^\s*(?:bearer|token)\s+(.+?)\s*$/i);
-	return match?.[1] || authorization.trim() || undefined;
+	const trimmed = authorization.trim();
+	if (!trimmed) {
+		return undefined;
+	}
+
+	const separatorIndex = trimmed.indexOf(" ");
+	if (separatorIndex < 0) {
+		return trimmed;
+	}
+
+	const scheme = trimmed.slice(0, separatorIndex).toLowerCase();
+	if (scheme !== "bearer" && scheme !== "token") {
+		return trimmed;
+	}
+
+	const token = trimmed.slice(separatorIndex + 1).trim();
+	return token || undefined;
+}
+
+function getErrorMessage(error: unknown) {
+	if (error instanceof Error) {
+		return error.message;
+	}
+
+	return typeof error === "string"
+		? error
+		: "Repochecker request failed";
 }
 
 function runRepochecker(
@@ -79,7 +104,7 @@ router.get("/api/repochecker/", async function (req, res) {
 		);
 		res.status(result.statusCode).send(result.body);
 	} catch (error) {
-		res.status(500).send(error);
+		res.status(500).send(getErrorMessage(error));
 	}
 });
 
