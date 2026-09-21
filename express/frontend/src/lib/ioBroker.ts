@@ -273,12 +273,20 @@ export interface CheckResults {
 	errors: CheckResult[];
 }
 
-export async function checkAdapter(repoName: string, branchName?: string) {
+export async function checkAdapter(
+	repoName: string,
+	ghToken: string,
+	branchName?: string,
+) {
 	const url = new URL(getApiUrl("repochecker/"), window.location.origin);
 	url.searchParams.set("url", `https://github.com/${repoName}`);
 	if (branchName) {
 		url.searchParams.set("branch", branchName);
 	}
-	const { data } = await axios.get<CheckResults>(url.toString());
+	const { data } = await axios.get<CheckResults>(url.toString(), {
+		headers: {
+			Authorization: ["Bearer", ghToken].join(" "),
+		},
+	});
 	return data;
 }

@@ -163,7 +163,7 @@ export function AdapterCheck() {
 		setMessages([]);
 		setBusy(true);
 		try {
-			const results = await checkAdapter(repoName, branchName);
+			const results = await checkAdapter(repoName, token, branchName);
 			const messages = results.errors.map((c) => new Message("error", c));
 			messages.push(
 				...results.warnings.map((c) => new Message("warning", c)),
