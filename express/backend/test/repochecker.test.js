@@ -49,7 +49,7 @@ test("passes header tokens to repochecker without changing the environment", asy
 	assert.deepEqual({ ...process.env }, environment);
 });
 
-test("keeps tokens separate for overlapping checks", async (t) => {
+test("rejects overlapping checks to avoid sharing library credentials", async (t) => {
 	const pending = [];
 	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
 		pending.push({ request, callback });
@@ -62,11 +62,21 @@ test("keeps tokens separate for overlapping checks", async (t) => {
 		}, responses[index]),
 	);
 	assert.equal(pending[0].request.queryStringParameters.githubToken, "first-token");
-	assert.equal(pending[1].request.queryStringParameters.githubToken, "second-token");
-	pending[1].callback(null, { statusCode: 200, body: "second" });
+	assert.equal(pending.length, 1);
+	assert.equal(responses[1].statusCode, 503);
+	assert.equal(responses[1].body, "Repochecker is busy; please try again later");
 	pending[0].callback(null, { statusCode: 200, body: "first" });
 	await Promise.all(checks);
 	assert.equal(responses[0].body, "first");
+
+	const retry = route({
+		query: { url: "https://github.com/example/ioBroker.test" },
+		headers: { authorization: ["Bearer", "second-token"].join(" ") },
+	}, responses[1]);
+	assert.equal(pending[1].request.queryStringParameters.githubToken, "second-token");
+	pending[1].callback(null, { statusCode: 200, body: "second" });
+	await retry;
+	assert.equal(responses[1].statusCode, 200);
 	assert.equal(responses[1].body, "second");
 });
 

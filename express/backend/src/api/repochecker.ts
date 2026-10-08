@@ -2,6 +2,7 @@ import { CheckRequest, CheckResult, handler } from "@iobroker/repochecker";
 import { Router } from "express";
 
 const router = Router();
+let checkInProgress = false;
 
 function getGithubToken(authorization?: string | string[]) {
 	if (typeof authorization !== "string") {
@@ -40,6 +41,12 @@ function runRepochecker(request: CheckRequest): Promise<CheckResult> {
 }
 
 router.get("/api/repochecker/", async function (req, res) {
+	// Repochecker 5.21.0 still shares an Axios instance for some requests.
+	if (checkInProgress) {
+		res.status(503).send("Repochecker is busy; please try again later");
+		return;
+	}
+	checkInProgress = true;
 	try {
 		const result = await runRepochecker({
 			queryStringParameters: {
@@ -52,6 +59,8 @@ router.get("/api/repochecker/", async function (req, res) {
 	} catch {
 		console.error("Repochecker request failed");
 		res.status(500).send("Repochecker request failed");
+	} finally {
+		checkInProgress = false;
 	}
 });
 
