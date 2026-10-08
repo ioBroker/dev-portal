@@ -85,7 +85,7 @@ function AdapterCheckStep(props: {
 		};
 		const runAdapterCheck = async () => {
 			try {
-				const awaitCheckAdapter = checkAdapter(repo!.full_name);
+				const awaitCheckAdapter = checkAdapter(repo!.full_name, token);
 				const pr = await findPullRequest();
 				setPullRequestUrl(pr);
 				const results = await awaitCheckAdapter;
