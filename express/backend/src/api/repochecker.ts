@@ -1,31 +1,37 @@
 import { CheckRequest, CheckResult, handler } from "@iobroker/repochecker";
 import { Router } from "express";
+import Cookies from "universal-cookie";
+import cookiesMiddleware from "universal-cookie-express";
+import { COOKIE_NAME_PORTAL_TOKEN } from "../auth";
 
 const router = Router();
-let checkInProgress = false;
 
-function getGithubToken(authorization?: string | string[]) {
-	if (typeof authorization !== "string") {
-		return undefined;
+// Each check performs many HTTP requests, so only a few may run at once;
+// additional checks wait in a queue until a slot becomes free.
+const MAX_PARALLEL_CHECKS = 3;
+let runningChecks = 0;
+const waitingChecks: (() => void)[] = [];
+
+// Only one check per user (GitHub token) may be running or queued at a time.
+const activeTokens = new Set<string>();
+
+async function withCheckSlot<T>(fn: () => Promise<T>): Promise<T> {
+	if (runningChecks >= MAX_PARALLEL_CHECKS) {
+		await new Promise<void>((resolve) => waitingChecks.push(resolve));
+	} else {
+		runningChecks++;
 	}
-
-	const trimmed = authorization.trim();
-	if (!trimmed) {
-		return undefined;
+	try {
+		return await fn();
+	} finally {
+		const next = waitingChecks.shift();
+		if (next) {
+			// hand the slot over directly to the next waiting check
+			next();
+		} else {
+			runningChecks--;
+		}
 	}
-
-	const separatorIndex = trimmed.indexOf(" ");
-	if (separatorIndex < 0) {
-		return trimmed;
-	}
-
-	const scheme = trimmed.slice(0, separatorIndex).toLowerCase();
-	if (scheme !== "bearer" && scheme !== "token") {
-		return trimmed;
-	}
-
-	const token = trimmed.slice(separatorIndex + 1).trim();
-	return token || undefined;
 }
 
 function runRepochecker(request: CheckRequest): Promise<CheckResult> {
@@ -40,27 +46,38 @@ function runRepochecker(request: CheckRequest): Promise<CheckResult> {
 	});
 }
 
-router.get("/api/repochecker/", async function (req, res) {
-	// Repochecker shares a module-scoped Axios instance for some requests.
-	if (checkInProgress) {
-		res.status(503).send("Repochecker is busy; please try again later");
-		return;
+router.get("/api/repochecker/", cookiesMiddleware(), async function (req, res) {
+	const cookies = (req as any)["universalCookies"] as Cookies;
+	const ghToken: string | undefined =
+		cookies.get(COOKIE_NAME_PORTAL_TOKEN) || undefined;
+
+	if (ghToken) {
+		if (activeTokens.has(ghToken)) {
+			res.status(429).send(
+				"A repository check is already running for your account; please try again later",
+			);
+			return;
+		}
+		activeTokens.add(ghToken);
 	}
-	checkInProgress = true;
 	try {
-		const result = await runRepochecker({
-			queryStringParameters: {
-				url: req.query.url as string,
-				branch: req.query.branch as string | undefined,
-				githubToken: getGithubToken(req.headers.authorization),
-			},
-		});
+		const result = await withCheckSlot(() =>
+			runRepochecker({
+				queryStringParameters: {
+					url: req.query.url as string,
+					branch: req.query.branch as string | undefined,
+					githubToken: ghToken,
+				},
+			}),
+		);
 		res.status(result.statusCode).send(result.body);
 	} catch {
 		console.error("Repochecker request failed");
 		res.status(500).send("Repochecker request failed");
 	} finally {
-		checkInProgress = false;
+		if (ghToken) {
+			activeTokens.delete(ghToken);
+		}
 	}
 });
 
