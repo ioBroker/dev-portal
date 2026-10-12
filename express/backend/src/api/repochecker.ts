@@ -41,7 +41,7 @@ function runRepochecker(request: CheckRequest): Promise<CheckResult> {
 }
 
 router.get("/api/repochecker/", async function (req, res) {
-	// Repochecker 5.21.0 still shares an Axios instance for some requests.
+	// Repochecker shares a module-scoped Axios instance for some requests.
 	if (checkInProgress) {
 		res.status(503).send("Repochecker is busy; please try again later");
 		return;
