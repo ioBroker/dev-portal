@@ -7,13 +7,21 @@ import { COOKIE_NAME_PORTAL_TOKEN } from "../auth";
 const router = Router();
 
 // Each check performs many HTTP requests, so only a few may run at once;
-// additional checks wait in a queue until a slot becomes free.
+// additional checks wait in a bounded queue until a slot becomes free.
 const MAX_PARALLEL_CHECKS = 3;
+const MAX_QUEUED_CHECKS = 10;
 let runningChecks = 0;
 const waitingChecks: (() => void)[] = [];
 
 // Only one check per user (GitHub token) may be running or queued at a time.
 const activeTokens = new Set<string>();
+
+function isQueueFull() {
+	return (
+		runningChecks >= MAX_PARALLEL_CHECKS &&
+		waitingChecks.length >= MAX_QUEUED_CHECKS
+	);
+}
 
 async function withCheckSlot<T>(fn: () => Promise<T>): Promise<T> {
 	if (runningChecks >= MAX_PARALLEL_CHECKS) {
@@ -47,6 +55,13 @@ function runRepochecker(request: CheckRequest): Promise<CheckResult> {
 }
 
 router.get("/api/repochecker/", cookiesMiddleware(), async function (req, res) {
+	if (isQueueFull()) {
+		res.status(429).send(
+			"Too many repository checks are waiting; please try again later",
+		);
+		return;
+	}
+
 	const cookies = (req as any)["universalCookies"] as Cookies;
 	const ghToken: string | undefined =
 		cookies.get(COOKIE_NAME_PORTAL_TOKEN) || undefined;

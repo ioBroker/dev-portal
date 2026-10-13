@@ -112,6 +112,29 @@ test("queues checks beyond the parallel limit", async (t) => {
 	assert.deepEqual(responses.map((r) => r.body), tokens);
 });
 
+test("rejects checks when the queue is full", async (t) => {
+	const pending = [];
+	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
+		pending.push({ request, callback });
+	});
+	// 3 running + 10 queued; requests without a token bypass the per-user guard
+	const accepted = Array.from({ length: 13 }, () => response());
+	const checks = accepted.map((res) => route(request(undefined), res));
+	await tick();
+	assert.equal(pending.length, 3);
+
+	const rejected = response();
+	await route(request(undefined), rejected);
+	assert.equal(rejected.statusCode, 429);
+
+	while (pending.length) {
+		pending.shift().callback(null, { statusCode: 200, body: "ok" });
+		await tick();
+	}
+	await Promise.all(checks);
+	assert.ok(accepted.every((res) => res.statusCode === 200));
+});
+
 test("does not expose errors or tokens in responses or logs", async (t) => {
 	const log = t.mock.method(console, "error", () => {});
 	const error = new Error("test-token");
