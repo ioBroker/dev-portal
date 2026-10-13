@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const repochecker = require("@iobroker/repochecker");
 const { COOKIE_NAME_PORTAL_TOKEN } = require("../src/auth");
+const user = require("../src/api/user");
 const {
 	default: router,
 	MAX_PARALLEL_CHECKS,
@@ -12,23 +13,45 @@ const route = routeStack[routeStack.length - 1].handle;
 
 const url = "https://github.com/example/ioBroker.test";
 
+// avoid GitHub requests when resolving the user name for the log
+user.getGitHubLogin = async (req) => {
+	const token = req.universalCookies.get(COOKIE_NAME_PORTAL_TOKEN);
+	if (token === "unknown-user-token") {
+		throw new Error("lookup failed");
+	}
+	return `login-of-${token}`;
+};
+
 function request(token, query = { url }) {
 	return {
 		query,
 		universalCookies: {
-			get: (name) => (name === COOKIE_NAME_PORTAL_TOKEN ? token : undefined),
+			get: (name) =>
+				name === COOKIE_NAME_PORTAL_TOKEN ? token : undefined,
 		},
 	};
 }
 
 function response() {
+	const listeners = {};
 	return {
+		writableFinished: false,
+		on(event, listener) {
+			listeners[event] = listener;
+			return this;
+		},
+		// simulates the connection being closed, by the server or the client
+		close() {
+			listeners.close?.();
+		},
 		status(code) {
 			this.statusCode = code;
 			return this;
 		},
 		send(body) {
 			this.body = body;
+			this.writableFinished = true;
+			this.close();
 			return this;
 		},
 	};
@@ -116,16 +139,24 @@ test("queues checks beyond the parallel limit", async (t) => {
 	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
 		pending.push({ request, callback });
 	});
-	const tokens = Array.from({ length: MAX_PARALLEL_CHECKS + 1 }, (_, i) => `token-${i}`);
+	const tokens = Array.from(
+		{ length: MAX_PARALLEL_CHECKS + 1 },
+		(_, i) => `token-${i}`,
+	);
 	const responses = tokens.map(() => response());
-	const checks = tokens.map((token, i) => route(request(token), responses[i]));
+	const checks = tokens.map((token, i) =>
+		route(request(token), responses[i]),
+	);
 	await tick();
 	assert.equal(pending.length, MAX_PARALLEL_CHECKS);
 	assert.equal(responses[MAX_PARALLEL_CHECKS].statusCode, undefined);
 
 	await drain(pending);
 	await Promise.all(checks);
-	assert.deepEqual(responses.map((r) => r.body), tokens);
+	assert.deepEqual(
+		responses.map((r) => r.body),
+		tokens,
+	);
 });
 
 test("rejects checks when the queue is full", async (t) => {
@@ -151,7 +182,58 @@ test("rejects checks when the queue is full", async (t) => {
 	assert.ok(accepted.every((res) => res.statusCode === 200));
 });
 
+function logLines(mock) {
+	return mock.mock.calls.map((call) => call.arguments.join(" "));
+}
+
+test("logs start and end of a check with user, repository and time needed", async (t) => {
+	const log = t.mock.method(console, "log", () => {});
+	const warn = t.mock.method(console, "warn", () => {});
+	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
+		callback(null, {
+			statusCode: 200,
+			body: JSON.stringify({ errors: [1, 2], warnings: [1] }),
+		});
+	});
+	await route(request("test-token", { url, branch: "dev" }), response());
+
+	const lines = logLines(log);
+	assert.equal(lines.length, 3);
+	assert.match(
+		lines[0],
+		/#\d+ by login-of-test-token for "https:\/\/github.com\/example\/ioBroker.test" \(branch "dev"\) requested/,
+	);
+	assert.match(lines[1], /started after \d+\.\ds in queue/);
+	assert.match(
+		lines[2],
+		/finished with status 200 \(2 errors, 1 warnings\), time needed \d+\.\ds \(queued \d+\.\ds, checking \d+\.\ds\)/,
+	);
+	assert.equal(warn.mock.calls.length, 0);
+});
+
+test("logs when the connection closes before the result is sent", async (t) => {
+	t.mock.method(console, "log", () => {});
+	const warn = t.mock.method(console, "warn", () => {});
+	let finish;
+	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
+		finish = callback;
+	});
+	const res = response();
+	const check = route(request("unknown-user-token"), res);
+	await tick();
+	res.close();
+	assert.match(
+		logLines(warn)[0],
+		/#\d+ by unknown for .* connection closed by client or proxy after \d+\.\ds, before the result was sent/,
+	);
+
+	finish(null, { statusCode: 200, body: "{}" });
+	await check;
+	assert.equal(warn.mock.calls.length, 1);
+});
+
 test("does not expose errors or tokens in responses or logs", async (t) => {
+	t.mock.method(console, "log", () => {});
 	const log = t.mock.method(console, "error", () => {});
 	const error = new Error("test-token");
 	const handler = t.mock.method(repochecker, "handler");
@@ -169,7 +251,10 @@ test("does not expose errors or tokens in responses or logs", async (t) => {
 		assert.equal(res.body, "Repochecker request failed");
 	}
 	assert.equal(log.mock.calls.length, 3);
-	for (const call of log.mock.calls) {
-		assert.deepEqual(call.arguments, ["Repochecker request failed"]);
+	for (const line of logLines(log)) {
+		assert.match(
+			line,
+			/^Repochecker #\d+ by login-of-test-token for .* failed, time needed \d+\.\ds$/,
+		);
 	}
 });
