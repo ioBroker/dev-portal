@@ -7,7 +7,7 @@
 		"build": "tsc",
 		"watch": "nodemon --config nodemon.json src/index.ts",
 		"watch:debug": "nodemon --config nodemon.json --inspect-brk src/index.ts",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "node --require ts-node/register --test test/*.test.js"
 	},
 	"author": "",
 	"license": "MIT",

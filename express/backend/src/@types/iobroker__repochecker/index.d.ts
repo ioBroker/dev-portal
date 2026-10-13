@@ -9,6 +9,7 @@ declare module "@iobroker/repochecker" {
 		queryStringParameters: {
 			url: string;
 			branch?: string;
+			githubToken?: string;
 		};
 	};
 
