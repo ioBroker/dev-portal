@@ -55,6 +55,18 @@ function runRepochecker(request: CheckRequest): Promise<CheckResult> {
 }
 
 router.get("/api/repochecker/", cookiesMiddleware(), async function (req, res) {
+	const cookies = (req as any)["universalCookies"] as Cookies;
+	const ghToken: string | undefined = cookies.get(COOKIE_NAME_PORTAL_TOKEN);
+	if (!ghToken) {
+		res.status(401).send("Not logged in");
+		return;
+	}
+	if (activeTokens.has(ghToken)) {
+		res.status(429).send(
+			"A repository check is already running for your account; please try again later",
+		);
+		return;
+	}
 	if (isQueueFull()) {
 		res.status(429).send(
 			"Too many repository checks are waiting; please try again later",
@@ -62,19 +74,7 @@ router.get("/api/repochecker/", cookiesMiddleware(), async function (req, res) {
 		return;
 	}
 
-	const cookies = (req as any)["universalCookies"] as Cookies;
-	const ghToken: string | undefined =
-		cookies.get(COOKIE_NAME_PORTAL_TOKEN) || undefined;
-
-	if (ghToken) {
-		if (activeTokens.has(ghToken)) {
-			res.status(429).send(
-				"A repository check is already running for your account; please try again later",
-			);
-			return;
-		}
-		activeTokens.add(ghToken);
-	}
+	activeTokens.add(ghToken);
 	try {
 		const result = await withCheckSlot(() =>
 			runRepochecker({
@@ -90,9 +90,7 @@ router.get("/api/repochecker/", cookiesMiddleware(), async function (req, res) {
 		console.error("Repochecker request failed");
 		res.status(500).send("Repochecker request failed");
 	} finally {
-		if (ghToken) {
-			activeTokens.delete(ghToken);
-		}
+		activeTokens.delete(ghToken);
 	}
 });
 

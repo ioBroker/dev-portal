@@ -41,18 +41,26 @@ test("passes the cookie token to repochecker without changing the environment", 
 		callback(null, { statusCode: 201, body: "checked" });
 	});
 
-	for (const token of ["test-token", undefined, ""]) {
-		const res = response();
-		await route(request(token, { url, branch: "main" }), res);
-		assert.deepEqual(parameters, {
-			url,
-			branch: "main",
-			githubToken: token || undefined,
-		});
-		assert.equal(res.statusCode, 201);
-		assert.equal(res.body, "checked");
-	}
+	const res = response();
+	await route(request("test-token", { url, branch: "main" }), res);
+	assert.deepEqual(parameters, {
+		url,
+		branch: "main",
+		githubToken: "test-token",
+	});
+	assert.equal(res.statusCode, 201);
+	assert.equal(res.body, "checked");
 	assert.deepEqual({ ...process.env }, environment);
+});
+
+test("rejects requests without a login cookie", async (t) => {
+	const handler = t.mock.method(repochecker, "handler", () => {});
+	for (const token of [undefined, ""]) {
+		const res = response();
+		await route(request(token), res);
+		assert.equal(res.statusCode, 401);
+	}
+	assert.equal(handler.mock.calls.length, 0);
 });
 
 test("allows only one check per user at a time", async (t) => {
@@ -117,14 +125,14 @@ test("rejects checks when the queue is full", async (t) => {
 	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
 		pending.push({ request, callback });
 	});
-	// 3 running + 10 queued; requests without a token bypass the per-user guard
+	// 3 running + 10 queued, each from a different user
 	const accepted = Array.from({ length: 13 }, () => response());
-	const checks = accepted.map((res) => route(request(undefined), res));
+	const checks = accepted.map((res, i) => route(request(`token-${i}`), res));
 	await tick();
 	assert.equal(pending.length, 3);
 
 	const rejected = response();
-	await route(request(undefined), rejected);
+	await route(request("token-13"), rejected);
 	assert.equal(rejected.statusCode, 429);
 
 	while (pending.length) {
