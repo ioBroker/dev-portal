@@ -2,7 +2,11 @@ const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const repochecker = require("@iobroker/repochecker");
 const { COOKIE_NAME_PORTAL_TOKEN } = require("../src/auth");
-const router = require("../src/api/repochecker").default;
+const {
+	default: router,
+	MAX_PARALLEL_CHECKS,
+	MAX_QUEUED_CHECKS,
+} = require("../src/api/repochecker");
 const routeStack = router.stack[0].route.stack;
 const route = routeStack[routeStack.length - 1].handle;
 
@@ -63,6 +67,18 @@ test("rejects requests without a login cookie", async (t) => {
 	assert.equal(handler.mock.calls.length, 0);
 });
 
+// Completes pending checks one by one until none are left.
+async function drain(pending) {
+	while (pending.length) {
+		const { request, callback } = pending.shift();
+		callback(null, {
+			statusCode: 200,
+			body: request.queryStringParameters.githubToken,
+		});
+		await tick();
+	}
+}
+
 test("allows only one check per user at a time", async (t) => {
 	const pending = [];
 	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
@@ -80,19 +96,17 @@ test("allows only one check per user at a time", async (t) => {
 	const other = response();
 	const otherCheck = route(request("other-token"), other);
 	await tick();
-	assert.equal(pending.length, 2);
-	assert.equal(pending[1].request.queryStringParameters.githubToken, "other-token");
+	assert.equal(other.statusCode, undefined);
 
-	pending[0].callback(null, { statusCode: 200, body: "first" });
-	pending[1].callback(null, { statusCode: 200, body: "other" });
+	await drain(pending);
 	await Promise.all([firstCheck, otherCheck]);
-	assert.equal(first.body, "first");
-	assert.equal(other.body, "other");
+	assert.equal(first.body, "user-token");
+	assert.equal(other.body, "other-token");
 
 	const retry = response();
 	const retryCheck = route(request("user-token"), retry);
 	await tick();
-	pending[2].callback(null, { statusCode: 200, body: "retry" });
+	await drain(pending);
 	await retryCheck;
 	assert.equal(retry.statusCode, 200);
 });
@@ -102,20 +116,14 @@ test("queues checks beyond the parallel limit", async (t) => {
 	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
 		pending.push({ request, callback });
 	});
-	const tokens = ["a", "b", "c", "d"];
+	const tokens = Array.from({ length: MAX_PARALLEL_CHECKS + 1 }, (_, i) => `token-${i}`);
 	const responses = tokens.map(() => response());
 	const checks = tokens.map((token, i) => route(request(token), responses[i]));
 	await tick();
-	assert.equal(pending.length, 3);
+	assert.equal(pending.length, MAX_PARALLEL_CHECKS);
+	assert.equal(responses[MAX_PARALLEL_CHECKS].statusCode, undefined);
 
-	pending[0].callback(null, { statusCode: 200, body: "a" });
-	await tick();
-	assert.equal(pending.length, 4);
-	assert.equal(pending[3].request.queryStringParameters.githubToken, "d");
-
-	for (const p of pending.slice(1)) {
-		p.callback(null, { statusCode: 200, body: p.request.queryStringParameters.githubToken });
-	}
+	await drain(pending);
 	await Promise.all(checks);
 	assert.deepEqual(responses.map((r) => r.body), tokens);
 });
@@ -125,20 +133,20 @@ test("rejects checks when the queue is full", async (t) => {
 	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
 		pending.push({ request, callback });
 	});
-	// 3 running + 10 queued, each from a different user
-	const accepted = Array.from({ length: 13 }, () => response());
+	// fill all running slots and the queue, each from a different user
+	const accepted = Array.from(
+		{ length: MAX_PARALLEL_CHECKS + MAX_QUEUED_CHECKS },
+		() => response(),
+	);
 	const checks = accepted.map((res, i) => route(request(`token-${i}`), res));
 	await tick();
-	assert.equal(pending.length, 3);
+	assert.equal(pending.length, MAX_PARALLEL_CHECKS);
 
 	const rejected = response();
-	await route(request("token-13"), rejected);
+	await route(request("one-too-many"), rejected);
 	assert.equal(rejected.statusCode, 429);
 
-	while (pending.length) {
-		pending.shift().callback(null, { statusCode: 200, body: "ok" });
-		await tick();
-	}
+	await drain(pending);
 	await Promise.all(checks);
 	assert.ok(accepted.every((res) => res.statusCode === 200));
 });

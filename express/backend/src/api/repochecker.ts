@@ -8,8 +8,13 @@ const router = Router();
 
 // Each check performs many HTTP requests, so only a few may run at once;
 // additional checks wait in a bounded queue until a slot becomes free.
-const MAX_PARALLEL_CHECKS = 3;
-const MAX_QUEUED_CHECKS = 10;
+// TODO: Raise to 3 once repochecker isolates credentials per check. It
+// currently keeps a module-level Axios instance (used by downloadURL and
+// getFilesList) and log redaction state, so parallel checks could use or log
+// another user's GitHub token.
+// See https://github.com/ioBroker/ioBroker.repochecker/issues/1193
+export const MAX_PARALLEL_CHECKS = 1;
+export const MAX_QUEUED_CHECKS = 10;
 let runningChecks = 0;
 const waitingChecks: (() => void)[] = [];
 
