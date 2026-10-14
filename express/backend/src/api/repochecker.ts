@@ -50,8 +50,13 @@ async function withCheckSlot<T>(fn: () => Promise<T>): Promise<T> {
 
 let lastCheckId = 0;
 
-function seconds(fromMs: number) {
-	return `${((Date.now() - fromMs) / 1000).toFixed(1)}s`;
+function seconds(fromMs: number, toMs = Date.now()) {
+	return `${((toMs - fromMs) / 1000).toFixed(1)}s`;
+}
+
+function count(items: unknown, word: string) {
+	const n = Array.isArray(items) ? items.length : "?";
+	return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
 // Only used for logging, so a failed lookup must not fail the check.
@@ -66,7 +71,7 @@ async function getLoginForLog(req: Request) {
 function describeResult(result: CheckResult) {
 	try {
 		const body = JSON.parse(result.body);
-		return `status ${result.statusCode} (${body.errors?.length ?? "?"} errors, ${body.warnings?.length ?? "?"} warnings)`;
+		return `status ${result.statusCode} (${count(body.errors, "error")}, ${count(body.warnings, "warning")})`;
 	} catch {
 		return `status ${result.statusCode}`;
 	}
@@ -104,32 +109,47 @@ router.get("/api/repochecker/", cookiesMiddleware(), async function (req, res) {
 		return;
 	}
 
+	// Everything up to the first await runs synchronously, so the capacity
+	// checks above and the queue admission in withCheckSlot() stay atomic.
 	activeTokens.add(ghToken);
 	const url = req.query.url as string;
 	const branch = req.query.branch as string | undefined;
 	const checkId = ++lastCheckId;
 	const requestedAt = Date.now();
-	const login = await getLoginForLog(req);
-	const what = `#${checkId} by ${login} for ${JSON.stringify(url)}${branch ? ` (branch ${JSON.stringify(branch)})` : ""}`;
-	let startedAt = requestedAt;
-	console.log(
-		`Repochecker ${what} requested (running: ${runningChecks}, queued: ${waitingChecks.length})`,
+	const queueState = `running: ${runningChecks}, queued: ${waitingChecks.length}`;
+
+	// The GitHub login is only needed for the log, so it is resolved in parallel
+	// to the check. Log lines are chained on it, which keeps them in order; all
+	// times are taken when the event happens, not when the line is written.
+	const what = getLoginForLog(req).then(
+		(login) =>
+			`#${checkId} by ${login} for ${JSON.stringify(url)}${branch ? ` (branch ${JSON.stringify(branch)})` : ""}`,
 	);
+	const log = (write: (what: string) => void) => void what.then(write);
+
+	log((what) => console.log(`Repochecker ${what} requested (${queueState})`));
 
 	// A proxy (e.g. nginx with its 60s default timeout) may give up before the check is done
 	res.on("close", () => {
 		if (!res.writableFinished) {
-			console.warn(
-				`Repochecker ${what}: connection closed by client or proxy after ${seconds(requestedAt)}, before the result was sent`,
+			const closedAfter = seconds(requestedAt);
+			log((what) =>
+				console.warn(
+					`Repochecker ${what}: connection closed by client or proxy after ${closedAfter}, before the result was sent`,
+				),
 			);
 		}
 	});
 
+	let startedAt = requestedAt;
 	try {
 		const result = await withCheckSlot(() => {
 			startedAt = Date.now();
-			console.log(
-				`Repochecker ${what} started after ${seconds(requestedAt)} in queue`,
+			const queued = seconds(requestedAt, startedAt);
+			log((what) =>
+				console.log(
+					`Repochecker ${what} started after ${queued} in queue`,
+				),
 			);
 			return runRepochecker({
 				queryStringParameters: {
@@ -139,13 +159,19 @@ router.get("/api/repochecker/", cookiesMiddleware(), async function (req, res) {
 				},
 			});
 		});
-		console.log(
-			`Repochecker ${what} finished with ${describeResult(result)}, time needed ${seconds(requestedAt)} (queued ${((startedAt - requestedAt) / 1000).toFixed(1)}s, checking ${seconds(startedAt)})`,
+		const finishedAt = Date.now();
+		log((what) =>
+			console.log(
+				`Repochecker ${what} finished with ${describeResult(result)}, time needed ${seconds(requestedAt, finishedAt)} (queued ${seconds(requestedAt, startedAt)}, checking ${seconds(startedAt, finishedAt)})`,
+			),
 		);
 		res.status(result.statusCode).send(result.body);
 	} catch {
-		console.error(
-			`Repochecker ${what} failed, time needed ${seconds(requestedAt)}`,
+		const failedAfter = seconds(requestedAt);
+		log((what) =>
+			console.error(
+				`Repochecker ${what} failed, time needed ${failedAfter}`,
+			),
 		);
 		res.status(500).send("Repochecker request failed");
 	} finally {

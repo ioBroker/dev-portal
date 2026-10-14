@@ -13,9 +13,15 @@ const route = routeStack[routeStack.length - 1].handle;
 
 const url = "https://github.com/example/ioBroker.test";
 
+// Lookups for tokens starting with "slow-" wait until this is resolved.
+let slowLogins = Promise.resolve();
+
 // avoid GitHub requests when resolving the user name for the log
 user.getGitHubLogin = async (req) => {
 	const token = req.universalCookies.get(COOKIE_NAME_PORTAL_TOKEN);
+	if (token.startsWith("slow-")) {
+		await slowLogins;
+	}
 	if (token === "unknown-user-token") {
 		throw new Error("lookup failed");
 	}
@@ -196,6 +202,7 @@ test("logs start and end of a check with user, repository and time needed", asyn
 		});
 	});
 	await route(request("test-token", { url, branch: "dev" }), response());
+	await tick();
 
 	const lines = logLines(log);
 	assert.equal(lines.length, 3);
@@ -206,7 +213,7 @@ test("logs start and end of a check with user, repository and time needed", asyn
 	assert.match(lines[1], /started after \d+\.\ds in queue/);
 	assert.match(
 		lines[2],
-		/finished with status 200 \(2 errors, 1 warnings\), time needed \d+\.\ds \(queued \d+\.\ds, checking \d+\.\ds\)/,
+		/finished with status 200 \(2 errors, 1 warning\), time needed \d+\.\ds \(queued \d+\.\ds, checking \d+\.\ds\)/,
 	);
 	assert.equal(warn.mock.calls.length, 0);
 });
@@ -222,6 +229,7 @@ test("logs when the connection closes before the result is sent", async (t) => {
 	const check = route(request("unknown-user-token"), res);
 	await tick();
 	res.close();
+	await tick();
 	assert.match(
 		logLines(warn)[0],
 		/#\d+ by unknown for .* connection closed by client or proxy after \d+\.\ds, before the result was sent/,
@@ -230,6 +238,52 @@ test("logs when the connection closes before the result is sent", async (t) => {
 	finish(null, { statusCode: 200, body: "{}" });
 	await check;
 	assert.equal(warn.mock.calls.length, 1);
+});
+
+test("slow login lookups do not let requests bypass the queue limit", async (t) => {
+	t.mock.method(console, "log", () => {});
+	const pending = [];
+	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
+		pending.push({ request, callback });
+	});
+	let releaseLogins;
+	slowLogins = new Promise((resolve) => (releaseLogins = resolve));
+
+	const total = MAX_PARALLEL_CHECKS + MAX_QUEUED_CHECKS;
+	const responses = Array.from({ length: total + 1 }, () => response());
+	const checks = responses.map((res, i) => route(request(`slow-${i}`), res));
+	// the last request is rejected right away, while all lookups are pending
+	assert.equal(responses[total].statusCode, 429);
+
+	releaseLogins();
+	await tick();
+	assert.equal(pending.length, MAX_PARALLEL_CHECKS);
+	await drain(pending);
+	await Promise.all(checks);
+	assert.ok(responses.slice(0, total).every((res) => res.statusCode === 200));
+});
+
+test("logs a disconnect that happens during the login lookup", async (t) => {
+	t.mock.method(console, "log", () => {});
+	const warn = t.mock.method(console, "warn", () => {});
+	let finish;
+	t.mock.method(repochecker, "handler", (request, ctx, callback) => {
+		finish = callback;
+	});
+	let releaseLogins;
+	slowLogins = new Promise((resolve) => (releaseLogins = resolve));
+
+	const res = response();
+	const check = route(request("slow-token"), res);
+	res.close();
+	releaseLogins();
+	await tick();
+	assert.match(
+		logLines(warn)[0],
+		/#\d+ by login-of-slow-token for .* connection closed by client or proxy after \d+\.\ds/,
+	);
+	finish(null, { statusCode: 200, body: "{}" });
+	await check;
 });
 
 test("does not expose errors or tokens in responses or logs", async (t) => {
@@ -250,6 +304,7 @@ test("does not expose errors or tokens in responses or logs", async (t) => {
 		assert.equal(res.statusCode, 500);
 		assert.equal(res.body, "Repochecker request failed");
 	}
+	await tick();
 	assert.equal(log.mock.calls.length, 3);
 	for (const line of logLines(log)) {
 		assert.match(
