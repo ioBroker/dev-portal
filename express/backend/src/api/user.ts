@@ -16,7 +16,7 @@ const loginCache = new NodeCache({
 	useClones: false,
 });
 
-async function getGitHubLogin(req: Request) {
+export async function getGitHubLogin(req: Request) {
 	const cookies = (req as any)["universalCookies"] as Cookies;
 	const ghToken = cookies.get(COOKIE_NAME_PORTAL_TOKEN);
 	if (!ghToken) {
